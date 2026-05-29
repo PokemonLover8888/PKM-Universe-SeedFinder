@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PKM Universe · Raid Seed Finder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d4af37'/%3E%3Ctext x='16' y='23' font-size='15' font-weight='800' text-anchor='middle' fill='%23000' font-family='sans-serif'%3EPU%3C/text%3E%3C/svg%3E" />
+<meta name="description" content="Find a seed for the exact shiny Tera Raid Pokémon you want — then host it on Raid-SV. Powered by the bot's own engine, so every seed is accurate." />
+<meta name="theme-color" content="#d4af37" />
+<meta property="og:title" content="PKM Universe · Raid Seed Finder" />
+<meta property="og:description" content="Find a seed for the exact shiny Tera Raid Pokémon you want — then host it on Raid-SV with one click." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://seeds.pkm-universe.com" />
+<meta property="og:image" content="https://pkm-universe.com/pkm-universe-icon.png" />
+<meta property="og:site_name" content="PKM Universe Reborn" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="PKM Universe · Raid Seed Finder" />
+<meta name="twitter:description" content="Find a seed for any shiny Tera Raid Pokémon, then host it on Raid-SV." />
+<meta name="twitter:image" content="https://pkm-universe.com/pkm-universe-icon.png" />
+<style>
+  :root{ --gold:#d4af37; --gold-lt:#f3d979; --gold-dim:#9c8128; --bg:#0c0c0f; --panel:#15151b; --panel2:#1e1e27; --line:#2c2c36; --text:#e8e8ea; --muted:#9a9aa6; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 700px at 50% -15%,#20202c,var(--bg));color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+  .wrap{max-width:1120px;margin:0 auto;padding:30px 20px 110px;position:relative;z-index:1;}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  .authchip{margin-left:auto;font-size:13px;}
+  .authchip a,.authchip button{background:#5865f2;color:#fff;border:none;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+  .authchip .me{background:#16261a;color:#7fe39a;border:1px solid #2e7d46;cursor:default;}
+  .authchip .lo{background:transparent;color:var(--muted);border:1px solid var(--line);margin-left:8px;padding:9px 12px;}
+  header .logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;font-size:21px;box-shadow:0 0 30px rgba(212,175,55,.45);}
+  h1{font-size:26px;margin:0;font-weight:800;}
+  h1 .grad{background:linear-gradient(90deg,var(--gold),#fff6d8,var(--gold-lt),var(--gold));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 3s linear infinite;}
+  @keyframes shimmer{to{background-position:200% center;}}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 22px;max-width:800px;}
+  .nowhosting{display:none;align-items:center;gap:14px;background:linear-gradient(90deg,#161b16,#13131a);border:1px solid #2e7d46;border-radius:14px;padding:12px 16px;margin-bottom:18px;}
+  .nowhosting.on{display:flex;}
+  .nowhosting .livedot{width:9px;height:9px;border-radius:50%;background:#3ee06a;animation:pulse 1.6s infinite;flex:0 0 9px;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(62,224,106,.6);}70%{box-shadow:0 0 0 8px rgba(62,224,106,0);}100%{box-shadow:0 0 0 0 rgba(62,224,106,0);}}
+  .nowhosting img{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 2px 4px #000);}
+  .nowhosting .nh-txt{flex:1;min-width:0;}.nowhosting .nh-txt .big{font-size:15px;font-weight:800;}.nowhosting .nh-txt .sub2{color:var(--muted);font-size:12px;}
+  .nowhosting .cd{font-weight:800;color:var(--gold-lt);font-size:14px;}.nowhosting .live-label{font-size:10px;font-weight:800;letter-spacing:1px;color:#3ee06a;text-transform:uppercase;}
+  .upnext{margin-bottom:18px;display:none;}
+  .upnext.on{display:block;}
+  .upnext h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin:0 0 10px;}
+  .upnext .strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;}
+  .qcard{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;min-width:94px;position:relative;}
+  .qcard.shiny{border-color:var(--gold-dim);background:#1d1a12;}
+  .qcard img{width:52px;height:52px;object-fit:contain;}
+  .qcard .qn{font-size:11px;font-weight:700;margin-top:3px;}
+  .qcard .qs{font-size:10px;color:var(--gold);letter-spacing:1px;}
+  .qcard .qbadge{position:absolute;top:4px;left:6px;font-size:10px;color:var(--gold-lt);text-shadow:0 0 6px var(--gold);}
+  .qcard .qnow{position:absolute;top:4px;right:5px;font-size:8px;font-weight:800;color:#3ee06a;letter-spacing:.5px;}
+  .card{background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.35);}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .preset{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;}.preset:hover{border-color:var(--gold);color:var(--gold);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;}
+  label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px;font-size:14px;}
+  input:focus,select:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(212,175,55,.15);}
+  .rewardchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;}.rchip{font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:7px 13px;cursor:pointer;color:var(--muted);}.rchip.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);font-weight:700;}
+  .actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap;}
+  button.go{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:11px;padding:12px 26px;font-size:15px;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,.3);}button.go:disabled{opacity:.55;cursor:not-allowed;}
+  button.surprise{background:var(--panel2);border:1px solid var(--gold-dim);color:var(--gold-lt);font-weight:700;border-radius:11px;padding:12px 18px;font-size:14px;cursor:pointer;}
+  .status{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:9px;}
+  .spinner{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;}@keyframes sp{to{transform:rotate(360deg);}}
+  .results{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:20px;perspective:1300px;}
+  .r{position:relative;border-radius:18px;height:100%;transform-style:preserve-3d;transition:transform .1s ease;animation:rise .45s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .flipper{position:relative;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1);}.r.flipped .flipper{transform:rotateY(180deg);}
+  .face{border-radius:18px;padding:18px;overflow:hidden;background:linear-gradient(180deg,var(--panel),#101016);border:1px solid var(--line);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 14px 40px rgba(0,0,0,.5);}
+  .face.back{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;}
+  .r.shiny .face{border-color:transparent;background:linear-gradient(180deg,var(--panel),#101016) padding-box,linear-gradient(120deg,var(--gold-dim),var(--gold-lt),#fff3cf,var(--gold),var(--gold-dim)) border-box;border:1px solid transparent;background-size:100% 100%,300% 300%;animation:border-flow 6s linear infinite;}
+  @keyframes border-flow{to{background-position:0 0,300% 0;}}
+  .ambient{position:absolute;inset:0;opacity:.16;pointer-events:none;border-radius:18px;}.accent{position:absolute;top:0;left:0;right:0;height:3px;z-index:2;}
+  .watermark{position:absolute;right:-18px;bottom:-22px;width:150px;height:150px;opacity:.06;pointer-events:none;}
+  .foil{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.20) 47%,rgba(140,210,255,.28) 50%,rgba(255,210,140,.24) 53%,transparent 66%);background-size:200% 200%;mix-blend-mode:screen;transition:opacity .25s;border-radius:18px;}.r.shiny:hover .foil{opacity:1;}
+  .chk{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:6px;border:2px solid var(--gold-dim);background:#0008;cursor:pointer;z-index:5;display:grid;place-items:center;color:transparent;font-weight:800;font-size:13px;}.chk.on{background:var(--gold);color:#000;border-color:var(--gold);}
+  .particle{position:absolute;color:var(--gold-lt);pointer-events:none;opacity:0;text-shadow:0 0 6px var(--gold);animation:float 4s ease-in-out infinite;}@keyframes float{0%{opacity:0;transform:translateY(8px) scale(.6);}30%{opacity:.9;}70%{opacity:.7;}100%{opacity:0;transform:translateY(-26px) scale(1.1);}}
+  .burst{position:absolute;left:50%;top:50%;color:#fff;pointer-events:none;text-shadow:0 0 8px var(--gold-lt);opacity:0;}.burst.go{animation:burst .8s ease-out forwards;}@keyframes burst{0%{opacity:1;transform:translate(-50%,-50%) scale(.3);}100%{opacity:0;transform:translate(calc(-50% + var(--bx)),calc(-50% + var(--by))) scale(1.1);}}
+  .rarity{position:absolute;top:0;left:0;font-size:10px;font-weight:800;letter-spacing:1px;padding:4px 12px 5px;border-bottom-right-radius:12px;text-transform:uppercase;z-index:3;}.rarity.flawless{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;}.rarity.shiny{background:#2a2440;color:var(--gold-lt);border:1px solid var(--gold-dim);}
+  .head{display:flex;gap:14px;align-items:center;margin:6px 0;position:relative;}
+  .spritewrap{position:relative;flex:0 0 84px;width:84px;height:84px;display:grid;place-items:center;cursor:pointer;}.spritewrap .aura{position:absolute;width:76px;height:76px;border-radius:50%;filter:blur(16px);opacity:.55;}
+  .sprite{width:84px;height:84px;object-fit:contain;position:relative;filter:drop-shadow(0 4px 7px rgba(0,0,0,.6));animation:bob 3.4s ease-in-out infinite;}@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  .spk{position:absolute;left:6px;bottom:2px;font-size:10px;background:#0008;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;}
+  .ttl{flex:1;min-width:0;}.name{font-size:20px;font-weight:800;display:flex;align-items:center;gap:7px;}.name .sh{color:var(--gold-lt);text-shadow:0 0 12px var(--gold);}
+  .stars{color:var(--gold);font-size:15px;letter-spacing:2px;margin-top:2px;}
+  .gem{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;padding:5px 11px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}.gem .dot{width:9px;height:9px;border-radius:50%;}
+  .body{display:flex;gap:14px;align-items:center;margin:8px 0;}.radarwrap{flex:0 0 128px;}
+  .meta{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12px;}.meta .row{display:flex;justify-content:space-between;color:var(--muted);gap:8px;}.meta .row b{color:var(--text);font-weight:600;text-align:right;}.meta .perfect{color:var(--gold-lt);font-weight:700;}
+  .ha{font-size:9px;font-weight:800;background:#3a2a4a;color:#d6a8ff;border:1px solid #6a4a8a;border-radius:4px;padding:1px 4px;margin-left:5px;}
+  .up{color:#63e08a;}.down{color:#f07a7a;}
+  .label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin:8px 0 5px;}
+  .moves{display:grid;grid-template-columns:1fr 1fr;gap:5px;}.move{display:flex;align-items:center;gap:6px;font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 8px;}.move .mt{width:8px;height:8px;border-radius:2px;flex:0 0 8px;}
+  .typchips{display:flex;flex-wrap:wrap;gap:5px;}.tchip{font-size:11px;font-weight:700;border-radius:7px;padding:4px 9px;}
+  .rewards{display:flex;flex-wrap:wrap;gap:5px;}.rw{font-size:10.5px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 7px;color:var(--muted);}.rw.rare{border-color:var(--gold-dim);color:var(--gold-lt);background:#241f10;font-weight:700;}
+  .seed{font-family:Consolas,monospace;font-size:15px;letter-spacing:1.5px;background:var(--panel2);padding:9px;border-radius:9px;border:1px solid var(--line);margin:11px 0 10px;text-align:center;color:var(--gold-lt);}
+  .host{width:100%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:11px;padding:12px;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,.3);display:flex;align-items:center;justify-content:center;gap:8px;}.host.done{background:#1f3a22;color:#7fe39a;box-shadow:none;}
+  .btns{display:flex;gap:8px;margin-top:8px;}.btns button{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;}.btns button:hover{border-color:var(--gold);color:var(--gold);}
+  .back .bhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}.back .bname{font-size:17px;font-weight:800;}
+  .basestats{display:flex;flex-direction:column;gap:5px;}.bstat{display:grid;grid-template-columns:30px 1fr 28px;align-items:center;gap:8px;font-size:11px;}.bstat small{color:var(--muted);font-weight:700;}.bstat .bt{height:6px;background:var(--panel2);border-radius:4px;overflow:hidden;}.bstat .bf{height:100%;border-radius:4px;}.bstat .bv{text-align:right;font-weight:700;}
+  .flipbtn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;}.flipbtn:hover{border-color:var(--gold);color:var(--gold);}
+  .confetti{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:60;animation:conf .9s ease-out forwards;}@keyframes conf{to{transform:translate(var(--dx),var(--dy)) rotate(320deg);opacity:0;}}
+  #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(160px);background:linear-gradient(135deg,#1f3a22,#16261a);border:1px solid #2e7d46;color:#aef2c4;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.3,.4,1);z-index:50;}#toast.show{transform:translateX(-50%) translateY(0);}
+  #playlist{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(120px);display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1a1a22,#101016);border:1px solid var(--gold-dim);border-radius:14px;padding:12px 18px;box-shadow:0 16px 50px rgba(0,0,0,.6);z-index:55;transition:transform .35s cubic-bezier(.2,1.2,.4,1);}#playlist.show{transform:translateX(-50%) translateY(0);}#playlist .cnt{font-weight:800;color:var(--gold-lt);}#playlist .pl-host{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;}#playlist .pl-clear{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 14px;cursor:pointer;}
+  #bgstars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  .empty{color:var(--muted);text-align:center;padding:50px 20px;font-size:14px;}
+  .lookup{margin-top:16px;background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:14px;padding:0 18px 18px;}
+  .lookup summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;}
+  .lookup summary::-webkit-details-marker{display:none;}
+  .lookup summary::before{content:"▸ ";}
+  .lookup[open] summary::before{content:"▾ ";}
+  .lookup textarea{width:100%;min-height:84px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px;font-family:Consolas,monospace;font-size:13px;resize:vertical;margin-bottom:12px;}
+  .lookup textarea:focus{border-color:var(--gold);outline:none;}
+  .lookup .actions{margin-top:0;}
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}#modal.show{display:flex;}
+  .dwrap{background:#313338;border-radius:12px;max-width:480px;width:100%;padding:16px;font-size:14px;}.dwrap .dclose{float:right;color:#b5bac1;cursor:pointer;font-size:18px;}
+  .dmsg{display:flex;gap:12px;}.davatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;flex:0 0 40px;}.dauthor{color:#f2f3f5;font-weight:600;}.dapp{background:#5865f2;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:5px;}.dtime{color:#949ba4;font-size:11px;margin-left:6px;}
+  .dembed{margin-top:6px;background:#2b2d31;border-left:4px solid var(--gold);border-radius:4px;padding:14px 16px;position:relative;}.dembed .deimg{position:absolute;top:14px;right:14px;width:72px;height:72px;object-fit:contain;}.detitle{color:#fff;font-weight:700;font-size:15px;margin-bottom:8px;max-width:330px;}.degrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;max-width:340px;}.deh{color:#fff;font-weight:700;font-size:12px;margin-bottom:2px;}.dev{color:#dbdee1;font-size:12px;line-height:1.5;}.defoot{color:#949ba4;font-size:11px;margin-top:10px;}.debtns{display:flex;gap:8px;margin-top:8px;}.debtn{background:#5865f2;color:#fff;border:none;border-radius:4px;padding:8px 14px;font-size:13px;font-weight:600;}.debtn.sec{background:#4e5058;}.debtn.link{background:transparent;border:1px solid #4e5058;color:#dbdee1;}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}footer a{color:var(--gold);text-decoration:none;}
+</style>
+</head>
+<body>
+<canvas id="bgstars"></canvas>
+<div class="wrap">
+  <header><div class="logo">PU</div><h1>PKM Universe · <span class="grad">Raid Seed Finder</span></h1>
+    <div class="authchip" id="authchip"><a href="/api/auth/login">🔑 Login with Discord</a></div>
+  </header>
+  <p class="sub">Find a seed for the exact Tera Raid Pokémon you want, then host it on Raid-SV. Powered by the same engine the bot uses, so every seed is guaranteed accurate. Click a sprite for its cry · 🃏 flip for base stats · 👁 preview the Discord embed.</p>
+
+  <div class="nowhosting" id="nowhosting">
+    <span class="livedot"></span><div><div class="live-label">Live</div></div>
+    <img id="nh-sprite" alt=""/>
+    <div class="nh-txt"><div class="big" id="nh-name">—</div><div class="sub2" id="nh-sub">—</div></div>
+    <div style="text-align:right"><div class="sub2">Trainers</div><div class="cd" id="nh-joined">—</div></div>
+    <div style="text-align:right"><div class="sub2">Timer</div><div class="cd" id="nh-cd">—</div></div>
+  </div>
+
+  <div class="upnext" id="upnext"><h3>⏭ Up Next in the Rotation</h3><div class="strip" id="upnextstrip"></div></div>
+
+  <div class="card">
+    <div class="presets" id="presets"></div>
+    <div class="grid">
+      <div><label>Game</label><select id="game"><option>Scarlet</option><option>Violet</option></select></div>
+      <div><label>Location</label><select id="location"><option>Paldea</option><option selected>Kitakami</option><option>Blueberry</option></select></div>
+      <div><label>Story Progress</label><select id="progress"><option value="6" selected>Post-Game (6★)</option><option value="5">5★</option><option value="4">4★</option><option value="3">3★</option></select></div>
+      <div><label>Stars</label><select id="stars"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option value="4" selected>4</option><option>5</option><option>6</option></select></div>
+      <div><label>Species</label><input id="species" list="specieslist" placeholder="e.g. Quagsire" autocomplete="off"/><datalist id="specieslist"></datalist></div>
+      <div><label>Shiny</label><select id="shiny"><option value="true" selected>Shiny only</option><option value="">Any</option><option value="false">Not shiny</option></select></div>
+      <div><label>Tera Type</label><select id="tera"><option value="">Any</option></select></div>
+      <div><label>Min Perfect IVs</label><select id="ivs"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div><label>Max Results</label><select id="max"><option>10</option><option selected>25</option><option>50</option></select></div>
+    </div>
+    <div class="actions"><button class="go" id="go">Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><span class="status" id="status"></span></div>
+  </div>
+
+  <details class="lookup">
+    <summary>🔁 Reverse / batch lookup — paste seeds or !ra commands to see what they are</summary>
+    <textarea id="lookupinput" placeholder="One per line. Bare seeds (02AEAC78) or full commands (!ra 02AEAC78 6 6). Great for verifying community seeds or importing a whole list."></textarea>
+    <div class="actions"><button class="go" id="lookupbtn">Look up</button><span class="status" id="lookupstatus"></span></div>
+  </details>
+
+  <div class="results" id="results"></div>
+  <div class="empty" id="empty">Set your filters and hit <b>Find Seeds</b> — or tap a <b>preset</b>.</div>
+  <footer>PKM Universe Reborn · seeds work in <b>!ra &lt;seed&gt; &lt;stars&gt; &lt;progress&gt;</b> · <a href="https://creator.pkm-universe.com">creator.pkm-universe.com</a></footer>
+</div>
+<div id="toast"></div>
+<div id="playlist"><span class="cnt" id="pl-count">0 selected</span><button class="pl-host" id="pl-host">📋 Copy all !ra commands</button><button class="pl-clear" id="pl-clear">Clear</button></div>
+<div id="modal"><div class="dwrap" id="dwrap"></div></div>
+
+<script>
+const TC={Normal:"#9099a1",Fighting:"#ce4069",Flying:"#8fa8dd",Poison:"#ab6ac8",Ground:"#d97746",Rock:"#c7b78b",Bug:"#90c12c",Ghost:"#5269ac",Steel:"#5a8ea1",Fire:"#ff9d55",Water:"#4d90d5",Grass:"#63bb5b",Electric:"#f3d23b",Psychic:"#f97176",Ice:"#74cec0",Dragon:"#0a6dc4",Dark:"#5a5366",Fairy:"#ec8fe6"};
+const TERA=Object.keys(TC);
+const WEAK={Normal:["Fighting"],Fighting:["Flying","Psychic","Fairy"],Flying:["Rock","Electric","Ice"],Poison:["Ground","Psychic"],Ground:["Water","Grass","Ice"],Rock:["Fighting","Ground","Steel","Water","Grass"],Bug:["Flying","Rock","Fire"],Ghost:["Ghost","Dark"],Steel:["Fighting","Ground","Fire"],Fire:["Ground","Rock","Water"],Water:["Grass","Electric"],Grass:["Flying","Poison","Bug","Fire","Ice"],Electric:["Ground"],Psychic:["Bug","Ghost","Dark"],Ice:["Fighting","Rock","Steel","Fire"],Dragon:["Ice","Dragon","Fairy"],Dark:["Fighting","Bug","Fairy"],Fairy:["Poison","Steel"]};
+const NAT={Adamant:["Atk","SpA"],Bold:["Def","Atk"],Calm:["SpD","Atk"],Careful:["SpD","SpA"],Gentle:["SpD","Def"],Hasty:["Spe","Def"],Impish:["Def","SpA"],Jolly:["Spe","SpA"],Lax:["Def","SpD"],Lonely:["Atk","Def"],Mild:["SpA","Def"],Modest:["SpA","Atk"],Naive:["Spe","SpD"],Naughty:["Atk","SpD"],Quiet:["SpA","Spe"],Rash:["SpA","SpD"],Relaxed:["Def","Spe"],Sassy:["SpD","Spe"],Timid:["Spe","Atk"],Brave:["Atk","Spe"]};
+const RARE=["Herba Mystica","Ability Patch","Bottle Cap","Ability Capsule","PP Max","Sweet Herba Mystica","Salty Herba Mystica","Sour Herba Mystica","Bitter Herba Mystica","Spicy Herba Mystica"];
+const PRESETS=[["💎 Perfect Shiny 6★",{stars:"6",ivs:"6",shiny:"true"}],["✦ Any Shiny (Kitakami)",{stars:"6",ivs:"",shiny:"true"}],["🧢 5IV+ Shiny",{ivs:"5",shiny:"true"}]];
+const BSTAT_LABELS=["HP","Atk","Def","SpA","SpD","Spe"];
+let nameToId={};
+
+(async()=>{
+  const tera=document.getElementById('tera');TERA.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t;tera.appendChild(o);});
+  const presetsBox=document.getElementById('presets');PRESETS.forEach(([lbl,v])=>{const b=document.createElement('button');b.className='preset';b.textContent=lbl;b.onclick=()=>{if(v.stars!==undefined)document.getElementById('stars').value=v.stars;if(v.ivs!==undefined)document.getElementById('ivs').value=v.ivs;if(v.shiny!==undefined)document.getElementById('shiny').value=v.shiny;toast('Preset applied: '+lbl);};presetsBox.appendChild(b);});
+  try{const sp=await(await fetch('/api/species')).json();const dl=document.getElementById('specieslist');sp.forEach(s=>{nameToId[s.name.toLowerCase()]=s.id;const o=document.createElement('option');o.value=s.name;dl.appendChild(o);});}catch(e){}
+})();
+
+function val(id){const v=document.getElementById(id).value;return v===""?null:v;}
+function scaleLabel(s){if(s==null)return"?";if(s===0)return"XXXS";if(s===255)return"XXXL";if(s<=50)return"XS";if(s<=110)return"S";if(s<=170)return"M";return"L";}
+function spriteChain(id,shiny){const b="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";return shiny?[`${b}/other/home/shiny/${id}.png`,`${b}/other/official-artwork/shiny/${id}.png`,`${b}/shiny/${id}.png`,`${b}/other/home/${id}.png`]:[`${b}/other/home/${id}.png`,`${b}/other/official-artwork/${id}.png`,`${b}/${id}.png`];}
+function radar(ivs,color){if(!ivs)return'';const order=[0,1,2,5,4,3],labels=["HP","Atk","Def","Spe","SpD","SpA"];const cx=64,cy=64,R=44,grid=[],axes=[],pts=[],labs=[];for(let k=0;k<6;k++){const a=(-90+k*60)*Math.PI/180,gx=cx+Math.cos(a)*R,gy=cy+Math.sin(a)*R;grid.push([gx,gy]);axes.push(`<line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" stroke="#33333f"/>`);const v=ivs[order[k]],rr=R*(v/31),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;pts.push(`${px},${py}`);const lx=cx+Math.cos(a)*(R+11),ly=cy+Math.sin(a)*(R+11),c=v===31?'#f3d979':'#9a9aa6';labs.push(`<text x="${lx}" y="${ly+3}" fill="${c}" font-size="9" font-weight="700" text-anchor="middle">${labels[k]}</text>`);}const ring=f=>grid.map(([x,y])=>`${cx+(x-cx)*f},${cy+(y-cy)*f}`).join(' ');return `<svg width="128" height="128" viewBox="0 0 128 128"><polygon points="${ring(1)}" fill="none" stroke="#2c2c36"/><polygon points="${ring(.66)}" fill="none" stroke="#23232c"/><polygon points="${ring(.33)}" fill="none" stroke="#23232c"/>${axes.join('')}<polygon points="${pts.join(' ')}" fill="${color}55" stroke="${color}" stroke-width="2"/>${pts.map(p=>{const[x,y]=p.split(',');return `<circle cx="${x}" cy="${y}" r="2" fill="${color}"/>`}).join('')}${labs.join('')}</svg>`;}
+function teraGem(color){return `<svg class="watermark" viewBox="0 0 100 100"><polygon points="50,4 84,32 68,96 32,96 16,32" fill="${color}"/><polygon points="50,4 84,32 50,40 16,32" fill="#fff" opacity=".3"/></svg>`;}
+function natureStr(nat){const m=NAT[nat];return m?`${nat} <span class="up">↑${m[0]}</span> <span class="down">↓${m[1]}</span>`:`${nat}`;}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function confetti(x,y){const cols=['#d4af37','#f3d979','#fff','#63bb5b','#4d90d5','#ec8fe6'];for(let i=0;i<24;i++){const c=document.createElement('i');c.className='confetti';c.style.left=x+'px';c.style.top=y+'px';c.style.background=cols[i%cols.length];const a=Math.random()*6.28,d=40+Math.random()*90;c.style.setProperty('--dx',Math.cos(a)*d+'px');c.style.setProperty('--dy',(Math.sin(a)*d-40)+'px');document.body.appendChild(c);setTimeout(()=>c.remove(),900);}}
+function playCry(id){try{const a=new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`);a.volume=.4;a.play().catch(()=>{});}catch(e){}}
+function sparkleBurst(w){for(let i=0;i<10;i++){const s=document.createElement('span');s.className='burst go';s.textContent='✦';const a=Math.random()*6.28,d=22+Math.random()*30;s.style.setProperty('--bx',Math.cos(a)*d+'px');s.style.setProperty('--by',Math.sin(a)*d+'px');s.style.fontSize=(8+Math.random()*7)+'px';w.appendChild(s);setTimeout(()=>s.remove(),800);}}
+
+const selected=new Map();
+function updatePlaylist(){const pl=document.getElementById('playlist');document.getElementById('pl-count').textContent=selected.size+' selected';pl.classList.toggle('show',selected.size>0);}
+document.getElementById('pl-clear').onclick=()=>{selected.clear();document.querySelectorAll('.chk').forEach(c=>c.classList.remove('on'));updatePlaylist();};
+document.getElementById('pl-host').onclick=e=>{if(!selected.size)return;const cmds=[...selected.values()].map(r=>r.raCommand).join('\n');navigator.clipboard.writeText(cmds);confetti(e.clientX,e.clientY);toast(`📋 Copied ${selected.size} !ra commands — paste them in #raid-kitakami to queue a rotation!`);};
+
+function showEmbed(r){const color=TC[r.teraName]||'#888',urls=spriteChain(r.species,r.shiny),counters=(WEAK[r.teraName]||[]).join(', ');const movesTxt=(r.moves||[]).map(m=>'- '+m.name).join('<br>')||'—';const rewardsTxt=(r.rewards||[]).slice(0,5).map(x=>`<b>${x.name}</b> ×${x.qty}`).join('<br>')||'—';
+  document.getElementById('dwrap').innerHTML=`<span class="dclose" onclick="document.getElementById('modal').classList.remove('show')">✕</span><div style="color:#949ba4;font-size:11px;margin-bottom:8px">How it appears in <b style="color:#dbdee1">#raid-kitakami</b></div><div class="dmsg"><div class="davatar">PU</div><div style="flex:1"><div><span class="dauthor">Electivire-SV-Raid-Bot</span><span class="dapp">APP</span><span class="dtime">today</span></div><div class="dembed" style="border-left-color:${color}"><img class="deimg" src="${urls[0]}"/><div class="detitle">${'★'.repeat(r.stars)} ${r.shiny?'Shiny ':''}${r.speciesName}</div><div class="degrid"><div><div class="deh">Stats</div><div class="dev"><b>Nature:</b> ${r.nature}<br><b>Ability:</b> ${r.ability}<br><b>IVs:</b> ${(r.iVs||[]).join('/')}<br><b>Scale:</b> ${scaleLabel(r.scale)}</div></div><div><div class="deh">Moves</div><div class="dev">${movesTxt}</div></div><div><div class="deh">Counter with</div><div class="dev" style="color:${color}">${counters}</div></div><div><div class="deh">Rewards</div><div class="dev">${rewardsTxt}</div></div></div><div class="deh" style="margin-top:10px">Raid Starting: <span style="color:#dbdee1;font-weight:400">in 3 minutes</span></div><div class="defoot">🏆 pkm-universe.com</div></div><div class="debtns"><button class="debtn">🔑 Get Code</button><button class="debtn sec">📋 Rules</button><button class="debtn link">pkm-universe.com ↗</button></div></div></div>`;
+  document.getElementById('modal').classList.add('show');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')e.currentTarget.classList.remove('show');});
+
+const box=document.getElementById('results');
+function card(r,idx){
+  const color=TC[r.teraName]||'#888',allMax=(r.iVs||[]).every(v=>v===31),urls=spriteChain(r.species,r.shiny);
+  const rarity=allMax?`<div class="rarity flawless">✦ Flawless 6IV</div>`:(r.shiny?`<div class="rarity shiny">Shiny</div>`:``);
+  const moves=(r.moves||[]).map(m=>`<div class="move"><span class="mt" style="background:${TC[m.type]||'#555'}"></span>${m.name}</div>`).join('')||'<span style="color:var(--muted);font-size:11px">—</span>';
+  const counters=(WEAK[r.teraName]||[]).map(t=>`<span class="tchip" style="background:${TC[t]}22;color:${TC[t]};border:1px solid ${TC[t]}66">${t}</span>`).join('');
+  const rewards=(r.rewards||[]).map(x=>`<span class="rw ${RARE.includes(x.name)?'rare':''}">${x.name} ×${x.qty}</span>`).join('')||'<span style="color:var(--muted);font-size:11px">—</span>';
+  const bs=r.baseStats||[];const bmax=Math.max(...(bs.length?bs:[1]),150);const basebars=bs.map((v,i)=>{const c=v>=120?'#63bb5b':v>=90?'#c9b35a':v>=60?'#d97746':'#9c5a5a';return `<div class="bstat"><small>${BSTAT_LABELS[i]}</small><div class="bt"><div class="bf" style="width:${v/bmax*100}%;background:${c}"></div></div><span class="bv">${v}</span></div>`;}).join('');
+  const el=document.createElement('div');el.className='r'+(r.shiny?' shiny':'');el.style.animationDelay=(idx*60)+'ms';
+  el.innerHTML=`<div class="flipper">
+    <div class="face front">
+      <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div><div class="accent" style="background:linear-gradient(90deg,transparent,${color},transparent)"></div>${teraGem(color)}<div class="foil"></div>${rarity}
+      <div class="chk" title="Select for bulk copy">✓</div>
+      <div class="head"><div class="spritewrap" title="Click for cry + sparkle"><div class="aura" style="background:${color}"></div><img class="sprite" src="${urls[0]}" data-f='${JSON.stringify(urls.slice(1))}' alt="${r.speciesName}" onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><span class="spk">🔊</span></div>
+        <div class="ttl"><div class="name">${r.shiny?'<span class="sh">✦</span>':''}${r.speciesName}</div><div class="stars">${'★'.repeat(r.stars)}</div></div>
+        <div class="gem" style="background:${color}22;color:${color};border:1px solid ${color}55"><span class="dot" style="background:${color}"></span>${r.teraName}</div></div>
+      <div class="body"><div class="radarwrap">${radar(r.iVs,color)}</div>
+        <div class="meta"><div class="row"><span>Ability</span><b>${r.ability||'—'}${r.hidden?'<span class="ha">HA</span>':''}</b></div><div class="row"><span>Nature</span><b>${natureStr(r.nature)}</b></div><div class="row"><span>Gender</span><b>${r.gender||'—'}</b></div><div class="row"><span>Scale</span><b>${r.scale} · ${scaleLabel(r.scale)}</b></div><div class="row"><span>Perfect IVs</span><b class="perfect">${r.flawlessIVs}/6</b></div></div></div>
+      <div class="label">Moves</div><div class="moves">${moves}</div>
+      <div class="label">⚔️ Weak to — counter with</div><div class="typchips">${counters}</div>
+      <div class="label">Rewards</div><div class="rewards">${rewards}</div>
+      <div class="seed">${r.seed}</div>
+      <button class="host">🚀 Host on Raid-SV</button>
+      <div class="btns"><button data-c="${r.seed}">Copy Seed</button><button class="prev">👁 Embed</button><button class="flipbtn doflip">🃏 Flip</button></div>
+    </div>
+    <div class="face back">
+      <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div>
+      <div class="bhead"><div class="bname">${r.speciesName}</div><button class="flipbtn doflip">↩ Back</button></div>
+      <div class="label">Base Stats</div><div class="basestats">${basebars||'<span style="color:var(--muted);font-size:11px">—</span>'}</div>
+      <div class="label" style="margin-top:12px">Raid Moves</div><div class="moves">${moves}</div>
+      <div class="label" style="margin-top:12px">Ability</div><div class="dev" style="font-size:13px;color:var(--text)">${r.ability||'—'}${r.hidden?'<span class="ha">HA</span>':''} · ${natureStr(r.nature)}</div>
+    </div></div>`;
+  const sw=el.querySelector('.spritewrap');sw.addEventListener('click',()=>{playCry(r.species);sparkleBurst(sw);});
+  const chk=el.querySelector('.chk');chk.addEventListener('click',ev=>{ev.stopPropagation();chk.classList.toggle('on');if(chk.classList.contains('on'))selected.set(r.seed,r);else selected.delete(r.seed);updatePlaylist();});
+  const hb=el.querySelector('.host');hb.addEventListener('click',async()=>{
+    if(hb.classList.contains('done'))return;
+    if(!authState.loggedIn){toast('Log in with Discord to host →');location.href='/api/auth/login';return;}
+    if(!authState.verified){toast('You need the Member role in the server to host.');return;}
+    const orig=hb.innerHTML;hb.innerHTML='<span class="spin"></span> Queuing…';
+    try{
+      const loc=document.getElementById('location').value;const prog=parseInt(document.getElementById('progress').value||'6');
+      const resp=await(await fetch('/api/host',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:r.seed,stars:r.stars,progress:prog,location:loc})})).json();
+      if(resp.ok){const b=hb.getBoundingClientRect();confetti(b.left+b.width/2,b.top);hb.classList.add('done');hb.textContent='✓ Queued on Raid-SV!';toast(`🚀 ${r.speciesName} queued — hosting next on Raid-SV!`);setTimeout(()=>{hb.classList.remove('done');hb.innerHTML=orig;},2800);}
+      else{toast('Couldn\'t host: '+(resp.error||'error'));hb.innerHTML=orig;}
+    }catch(e){toast('Host failed: '+e.message);hb.innerHTML=orig;}
+  });
+  el.querySelector('.prev').addEventListener('click',()=>showEmbed(r));
+  el.querySelectorAll('.doflip').forEach(b=>b.addEventListener('click',()=>el.classList.toggle('flipped')));
+  el.querySelector('button[data-c]').addEventListener('click',ev=>{const btn=ev.currentTarget;navigator.clipboard.writeText(btn.dataset.c);const t=btn.textContent;btn.textContent='Copied!';btn.style.color='var(--gold)';setTimeout(()=>{btn.textContent=t;btn.style.color='';},1100);});
+  if(r.shiny)for(let p=0;p<5;p++){const s=document.createElement('i');s.className='particle';s.textContent='✦';s.style.left=(10+Math.random()*80)+'%';s.style.bottom=(10+Math.random()*40)+'%';s.style.animationDelay=(Math.random()*4)+'s';s.style.fontSize=(7+Math.random()*5)+'px';el.querySelector('.front').appendChild(s);}
+  return el;
+}
+function bindTilt(){document.querySelectorAll('.r').forEach(card=>{const foil=card.querySelector('.foil');card.addEventListener('mousemove',e=>{if(card.classList.contains('flipped'))return;const b=card.getBoundingClientRect();const x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;card.style.transform=`rotateY(${(x-.5)*6}deg) rotateX(${-(y-.5)*6}deg)`;if(foil)foil.style.backgroundPosition=`${x*200}% ${y*200}%`;});card.addEventListener('mouseleave',()=>{card.style.transform='';});});}
+
+async function search(){
+  const go=document.getElementById('go'),status=document.getElementById('status');
+  const speciesRaw=document.getElementById('species').value.trim();let species=null;
+  if(speciesRaw){species=/^\d+$/.test(speciesRaw)?parseInt(speciesRaw):(nameToId[speciesRaw.toLowerCase()]||null);if(!species){status.innerHTML="Unknown species — pick from the list.";return;}}
+  const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')),stars:val('stars')?parseInt(val('stars')):null,species,shiny:val('shiny')===null?null:val('shiny')==='true',teraType:val('tera')?parseInt(val('tera')):null,minFlawlessIVs:val('ivs')?parseInt(val('ivs')):null,maxResults:parseInt(val('max'))};
+  go.disabled=true;status.innerHTML='<span class="spinner"></span> Searching the seed space…';document.getElementById('empty').style.display='none';box.innerHTML='';
+  try{const res=await(await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(!res.results.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='No matches — widen your filters (Any tera, fewer IVs, or a species that appears at this star level).';}
+    res.results.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
+    status.innerHTML=`<b style="color:var(--gold)">${res.results.length}</b>&nbsp;found · scanned ${res.scanned.toLocaleString()} seeds · ${res.elapsedMs} ms${res.hitLimit?' · try widening filters':''}`;
+  }catch(e){status.innerHTML="Error: "+e.message;}
+  go.disabled=false;
+}
+document.getElementById('go').addEventListener('click',search);
+document.getElementById('surprise').addEventListener('click',e=>{document.getElementById('species').value='';document.getElementById('shiny').value='true';document.getElementById('ivs').value='';confetti(e.clientX,e.clientY);toast('🎲 Rolling random shinies…');search();});
+document.getElementById('lookupbtn').addEventListener('click',async()=>{
+  const lines=document.getElementById('lookupinput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const st=document.getElementById('lookupstatus');
+  if(!lines.length){st.textContent='Paste at least one seed.';return;}
+  st.innerHTML='<span class="spinner"></span> Looking up…';document.getElementById('empty').style.display='none';box.innerHTML='';
+  try{
+    const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')||'6'),stars:val('stars')?parseInt(val('stars')):6,seeds:lines};
+    const res=await(await fetch('/api/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    res.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
+    st.innerHTML=`Resolved <b style="color:var(--gold)">${res.length}</b> / ${lines.length} seed(s)`;
+    if(!res.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='None resolved — check they are valid 8-character hex seeds.';}
+  }catch(e){st.textContent='Error: '+e.message;}
+});
+
+// --- Auth state (Discord login → Member-role gate for one-click host) ---
+let authState={loggedIn:false,verified:false,name:null};
+async function checkAuth(){
+  try{ authState=await(await fetch('/api/auth/me',{cache:'no-store'})).json(); }catch(e){ authState={loggedIn:false,verified:false}; }
+  const chip=document.getElementById('authchip');
+  if(authState.loggedIn){
+    const tag=authState.verified?'✓ Verified':'⚠ Not a member';
+    chip.innerHTML=`<span class="me">👤 ${authState.name} · ${tag}</span><button class="lo" id="logoutBtn">Log out</button>`;
+    document.getElementById('logoutBtn').onclick=async()=>{await fetch('/api/auth/logout',{method:'POST'});location.href='/';};
+  } else {
+    chip.innerHTML=`<a href="/api/auth/login">🔑 Login with Discord</a>`;
+  }
+}
+checkAuth();
+// login-result toast
+(()=>{const p=new URLSearchParams(location.search).get('login');if(p==='ok')toast('✓ Logged in — you can host raids now!');else if(p==='notmember')toast('Logged in, but you need the Member role to host.');else if(p)toast('Login failed — try again.');if(p)history.replaceState({},'',location.pathname);})();
+
+// Live "Now Hosting" — poll the bot's read-only status every 5s
+async function pollNow(){
+  try{
+    const d=await(await fetch('/api/nowhosting',{cache:'no-store'})).json();
+    const w=document.getElementById('nowhosting');
+    if(d&&d.active){
+      w.classList.add('on');
+      document.getElementById('nh-name').innerHTML=(d.shiny?'<span style="color:var(--gold-lt)">✦ </span>Shiny ':'')+(d.species||'Raid');
+      document.getElementById('nh-sub').textContent='★'.repeat(d.stars||0)+(d.tera?(' · '+d.tera+' Tera'):'')+(d.meta?(' · '+d.meta):'');
+      document.getElementById('nh-joined').textContent=(d.joined??0)+'/'+(d.capacity??4);
+      const t=d.timer;document.getElementById('nh-cd').textContent=(t>=0)?(Math.floor(t/60)+':'+String(t%60).padStart(2,'0')):'live';
+      const img=document.getElementById('nh-sprite');if(d.sprite){img.src=d.sprite;img.style.display='';}else{img.style.display='none';}
+    } else { w.classList.remove('on'); }
+  }catch(e){document.getElementById('nowhosting').classList.remove('on');}
+}
+pollNow();setInterval(pollNow,5000);
+
+// Up Next — poll the bot's raid queue every 10s
+async function pollQueue(){
+  try{
+    const q=await(await fetch('/api/queue',{cache:'no-store'})).json();
+    const box=document.getElementById('upnext'),strip=document.getElementById('upnextstrip');
+    if(!Array.isArray(q)||!q.length){box.classList.remove('on');return;}
+    box.classList.add('on');
+    strip.innerHTML=q.map((r,i)=>{
+      const urls=spriteChain(r.species,r.shiny);
+      return `<div class="qcard ${r.shiny?'shiny':''}">${i===0?'<span class="qnow">NOW</span>':''}${r.shiny?'<span class="qbadge">✦</span>':''}<img src="${r.species>0?urls[0]:''}" data-f='${JSON.stringify(urls.slice(1))}' onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><div class="qn">${r.name}</div><div class="qs">${'★'.repeat(r.stars)}</div></div>`;
+    }).join('');
+  }catch(e){document.getElementById('upnext').classList.remove('on');}
+}
+pollQueue();setInterval(pollQueue,10000);
+
+const cv=document.getElementById('bgstars'),ctx=cv.getContext('2d');let W,H,ds;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;ds=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.3,s:Math.random()*.25+.05}));}rs();addEventListener('resize',rs);(function lp(){ctx.clearRect(0,0,W,H);for(const d of ds){d.y-=d.s;if(d.y<0){d.y=H;d.x=Math.random()*W;}ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,7);ctx.fillStyle='rgba(212,175,55,'+(d.r*.35)+')';ctx.fill();}requestAnimationFrame(lp);})();
+</script>
+</body>
+</html>

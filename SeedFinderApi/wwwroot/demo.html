@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PKM Universe · Seed Finder — Advanced Demo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d4af37'/%3E%3Ctext x='16' y='23' font-size='15' font-weight='800' text-anchor='middle' fill='%23000' font-family='sans-serif'%3EPU%3C/text%3E%3C/svg%3E" />
+<style>
+  :root{ --gold:#d4af37; --gold-lt:#f3d979; --gold-dim:#9c8128; --bg:#0c0c0f; --panel:#15151b; --panel2:#1e1e27; --line:#2c2c36; --text:#e8e8ea; --muted:#9a9aa6; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 700px at 50% -15%,#20202c,var(--bg));color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 110px;position:relative;z-index:1;}
+  .demobanner{background:linear-gradient(90deg,#2a2410,#1a1a22);border:1px solid var(--gold-dim);border-radius:12px;padding:12px 18px;margin-bottom:22px;font-size:13px;color:var(--gold-lt);}
+  .demobanner b{color:var(--gold);}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  header .logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;font-size:21px;box-shadow:0 0 30px rgba(212,175,55,.45);}
+  h1{font-size:26px;margin:0;font-weight:800;}
+  h1 .grad{background:linear-gradient(90deg,var(--gold),#fff6d8,var(--gold-lt),var(--gold));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 3s linear infinite;}
+  @keyframes shimmer{to{background-position:200% center;}}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 20px;max-width:820px;}
+  .nowhosting{display:flex;align-items:center;gap:14px;background:linear-gradient(90deg,#161b16,#13131a);border:1px solid #2e7d46;border-radius:14px;padding:12px 16px;margin-bottom:18px;}
+  .nowhosting .livedot{width:9px;height:9px;border-radius:50%;background:#3ee06a;animation:pulse 1.6s infinite;flex:0 0 9px;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(62,224,106,.6);}70%{box-shadow:0 0 0 8px rgba(62,224,106,0);}100%{box-shadow:0 0 0 0 rgba(62,224,106,0);}}
+  .nowhosting img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 2px 4px #000);}
+  .nowhosting .nh-txt{flex:1;font-size:13px;}.nowhosting .nh-txt .big{font-size:15px;font-weight:800;}.nowhosting .nh-txt .sub2{color:var(--muted);font-size:12px;}
+  .nowhosting .code{font-family:Consolas,monospace;color:var(--gold-lt);font-weight:700;}.nowhosting .cd{font-weight:800;color:var(--gold-lt);font-size:14px;}.live-label{font-size:10px;font-weight:800;letter-spacing:1px;color:#3ee06a;text-transform:uppercase;}
+  .card{background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.35);}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .preset{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;}.preset:hover{border-color:var(--gold);color:var(--gold);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;}
+  label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px;font-size:14px;}
+  .rewardchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;}.rchip{font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:7px 13px;cursor:pointer;color:var(--muted);}.rchip.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);font-weight:700;}
+  .actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap;}
+  button.go{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:11px;padding:12px 26px;font-size:15px;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,.3);}
+  button.surprise{background:var(--panel2);border:1px solid var(--gold-dim);color:var(--gold-lt);font-weight:700;border-radius:11px;padding:12px 18px;font-size:14px;cursor:pointer;}
+  .results{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:20px;perspective:1300px;}
+  .r{position:relative;border-radius:18px;height:100%;transform-style:preserve-3d;transition:transform .1s ease;animation:rise .45s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .flipper{position:relative;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1);}
+  .r.flipped .flipper{transform:rotateY(180deg);}
+  .face{border-radius:18px;padding:18px;overflow:hidden;background:linear-gradient(180deg,var(--panel),#101016);border:1px solid var(--line);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 14px 40px rgba(0,0,0,.5);}
+  .face.back{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;}
+  .r.shiny .face{border-color:transparent;background:linear-gradient(180deg,var(--panel),#101016) padding-box,linear-gradient(120deg,var(--gold-dim),var(--gold-lt),#fff3cf,var(--gold),var(--gold-dim)) border-box;border:1px solid transparent;background-size:100% 100%,300% 300%;animation:border-flow 6s linear infinite;}
+  @keyframes border-flow{to{background-position:0 0,300% 0;}}
+  .ambient{position:absolute;inset:0;opacity:.16;pointer-events:none;border-radius:18px;}
+  .accent{position:absolute;top:0;left:0;right:0;height:3px;z-index:2;}
+  .watermark{position:absolute;right:-18px;bottom:-22px;width:150px;height:150px;opacity:.06;pointer-events:none;}
+  .foil{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.20) 47%,rgba(140,210,255,.28) 50%,rgba(255,210,140,.24) 53%,transparent 66%);background-size:200% 200%;mix-blend-mode:screen;transition:opacity .25s;border-radius:18px;}
+  .r.shiny:hover .foil{opacity:1;}
+  .chk{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:6px;border:2px solid var(--gold-dim);background:#0008;cursor:pointer;z-index:5;display:grid;place-items:center;color:transparent;font-weight:800;font-size:13px;}
+  .chk.on{background:var(--gold);color:#000;border-color:var(--gold);}
+  .particle{position:absolute;color:var(--gold-lt);pointer-events:none;opacity:0;text-shadow:0 0 6px var(--gold);animation:float 4s ease-in-out infinite;}
+  @keyframes float{0%{opacity:0;transform:translateY(8px) scale(.6);}30%{opacity:.9;}70%{opacity:.7;}100%{opacity:0;transform:translateY(-26px) scale(1.1);}}
+  .burst{position:absolute;left:50%;top:50%;color:#fff;pointer-events:none;text-shadow:0 0 8px var(--gold-lt);opacity:0;}.burst.go{animation:burst .8s ease-out forwards;}@keyframes burst{0%{opacity:1;transform:translate(-50%,-50%) scale(.3);}100%{opacity:0;transform:translate(calc(-50% + var(--bx)),calc(-50% + var(--by))) scale(1.1);}}
+  .rarity{position:absolute;top:0;left:0;font-size:10px;font-weight:800;letter-spacing:1px;padding:4px 12px 5px;border-bottom-right-radius:12px;text-transform:uppercase;z-index:3;}.rarity.flawless{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;}.rarity.shiny{background:#2a2440;color:var(--gold-lt);border:1px solid var(--gold-dim);}
+  .head{display:flex;gap:14px;align-items:center;margin:6px 0;position:relative;}
+  .spritewrap{position:relative;flex:0 0 84px;width:84px;height:84px;display:grid;place-items:center;cursor:pointer;}.spritewrap .aura{position:absolute;width:76px;height:76px;border-radius:50%;filter:blur(16px);opacity:.55;}
+  .sprite{width:84px;height:84px;object-fit:contain;position:relative;filter:drop-shadow(0 4px 7px rgba(0,0,0,.6));animation:bob 3.4s ease-in-out infinite;}@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  .spk{position:absolute;left:6px;bottom:2px;font-size:10px;background:#0008;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;}
+  .ttl{flex:1;min-width:0;}.name{font-size:20px;font-weight:800;display:flex;align-items:center;gap:7px;}.name .sh{color:var(--gold-lt);text-shadow:0 0 12px var(--gold);}
+  .stars{color:var(--gold);font-size:15px;letter-spacing:2px;margin-top:2px;}
+  .gem{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;padding:5px 11px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}.gem .dot{width:9px;height:9px;border-radius:50%;}
+  .odds{display:inline-block;font-size:10px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;margin-top:6px;}
+  .body{display:flex;gap:14px;align-items:center;margin:8px 0;}.radarwrap{flex:0 0 128px;}
+  .meta{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12px;}.meta .row{display:flex;justify-content:space-between;color:var(--muted);}.meta .row b{color:var(--text);font-weight:600;}.meta .perfect{color:var(--gold-lt);font-weight:700;}
+  .ha{font-size:9px;font-weight:800;background:#3a2a4a;color:#d6a8ff;border:1px solid #6a4a8a;border-radius:4px;padding:1px 4px;margin-left:5px;}
+  .up{color:#63e08a;}.down{color:#f07a7a;}
+  .label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin:8px 0 5px;}
+  .moves{display:grid;grid-template-columns:1fr 1fr;gap:5px;}.move{display:flex;align-items:center;gap:6px;font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 8px;}.move .mt{width:8px;height:8px;border-radius:2px;flex:0 0 8px;}
+  .typchips{display:flex;flex-wrap:wrap;gap:5px;}.tchip{font-size:11px;font-weight:700;border-radius:7px;padding:4px 9px;}
+  .rewards{display:flex;flex-wrap:wrap;gap:5px;}.rw{font-size:10.5px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 7px;color:var(--muted);}.rw.rare{border-color:var(--gold-dim);color:var(--gold-lt);background:#241f10;font-weight:700;}
+  .seed{font-family:Consolas,monospace;font-size:15px;letter-spacing:1.5px;background:var(--panel2);padding:9px;border-radius:9px;border:1px solid var(--line);margin:11px 0 10px;text-align:center;color:var(--gold-lt);}
+  .host{width:100%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:11px;padding:12px;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,.3);display:flex;align-items:center;justify-content:center;gap:8px;}.host.done{background:#1f3a22;color:#7fe39a;box-shadow:none;}
+  .btns{display:flex;gap:8px;margin-top:8px;}.btns button{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;}.btns button:hover{border-color:var(--gold);color:var(--gold);}
+  /* back face */
+  .back .bhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}.back .bname{font-size:17px;font-weight:800;}
+  .dex{font-size:12px;color:#c9c9d2;line-height:1.55;font-style:italic;background:var(--panel2);border-left:3px solid var(--gold-dim);border-radius:6px;padding:9px 11px;margin-bottom:10px;}
+  .movepool{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;}
+  .basestats{display:flex;flex-direction:column;gap:4px;margin-top:auto;}
+  .bstat{display:grid;grid-template-columns:30px 1fr 28px;align-items:center;gap:8px;font-size:11px;}.bstat small{color:var(--muted);font-weight:700;}.bstat .bt{height:6px;background:var(--panel2);border-radius:4px;overflow:hidden;}.bstat .bf{height:100%;border-radius:4px;}.bstat .bv{text-align:right;font-weight:700;}
+  .flipbtn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;}.flipbtn:hover{border-color:var(--gold);color:var(--gold);}
+  .spin{width:15px;height:15px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:sp .7s linear infinite;}@keyframes sp{to{transform:rotate(360deg);}}
+  .confetti{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:60;animation:conf .9s ease-out forwards;}@keyframes conf{to{transform:translate(var(--dx),var(--dy)) rotate(320deg);opacity:0;}}
+  #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(160px);background:linear-gradient(135deg,#1f3a22,#16261a);border:1px solid #2e7d46;color:#aef2c4;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.3,.4,1);z-index:50;}#toast.show{transform:translateX(-50%) translateY(0);}
+  /* playlist bar */
+  #playlist{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(120px);display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1a1a22,#101016);border:1px solid var(--gold-dim);border-radius:14px;padding:12px 18px;box-shadow:0 16px 50px rgba(0,0,0,.6);z-index:55;transition:transform .35s cubic-bezier(.2,1.2,.4,1);}
+  #playlist.show{transform:translateX(-50%) translateY(0);}
+  #playlist .cnt{font-weight:800;color:var(--gold-lt);}
+  #playlist .pl-host{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;}
+  #playlist .pl-clear{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 14px;cursor:pointer;}
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}#modal.show{display:flex;}
+  .dwrap{background:#313338;border-radius:12px;max-width:480px;width:100%;padding:16px;font-size:14px;}.dwrap .dclose{float:right;color:#b5bac1;cursor:pointer;font-size:18px;}
+  .dmsg{display:flex;gap:12px;}.davatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;flex:0 0 40px;}
+  .dauthor{color:#f2f3f5;font-weight:600;}.dapp{background:#5865f2;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:5px;}.dtime{color:#949ba4;font-size:11px;margin-left:6px;}
+  .dembed{margin-top:6px;background:#2b2d31;border-left:4px solid var(--gold);border-radius:4px;padding:14px 16px;position:relative;}.dembed .deimg{position:absolute;top:14px;right:14px;width:72px;height:72px;object-fit:contain;}
+  .detitle{color:#fff;font-weight:700;font-size:15px;margin-bottom:8px;max-width:330px;}.degrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;max-width:340px;}.deh{color:#fff;font-weight:700;font-size:12px;margin-bottom:2px;}.dev{color:#dbdee1;font-size:12px;line-height:1.5;}.defoot{color:#949ba4;font-size:11px;margin-top:10px;}
+  .debtns{display:flex;gap:8px;margin-top:8px;}.debtn{background:#5865f2;color:#fff;border:none;border-radius:4px;padding:8px 14px;font-size:13px;font-weight:600;}.debtn.sec{background:#4e5058;}.debtn.link{background:transparent;border:1px solid #4e5058;color:#dbdee1;}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}footer a{color:var(--gold);text-decoration:none;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="wrap">
+  <div class="demobanner">🎨 <b>ADVANCED DEMO</b> — now with <b>① bulk-host playlist</b> (tick the ☑ corners), <b>② shiny odds + nature arrows + Hidden Ability</b>, and <b>③ card flip 🃏</b> (Flip button → movepool + Pokédex). Click sprites for cries!</div>
+  <header><div class="logo">PU</div><h1>PKM Universe · <span class="grad">Raid Seed Finder</span></h1></header>
+  <p class="sub">Premium tier — select multiple shinies and host them as a rotation, see shiny odds + nature arrows + HA, and flip any card for its movepool &amp; dex entry.</p>
+
+  <div class="nowhosting"><span class="livedot"></span><div><div class="live-label">Live</div></div><img id="nh-sprite" alt=""/>
+    <div class="nh-txt"><div class="big">✦ Shiny Tinkaton</div><div class="sub2">★★★★★★ · Fairy Tera · 12 trainers joined</div></div>
+    <div style="text-align:right"><div class="sub2">Join code</div><div class="code">RAID42</div></div>
+    <div style="text-align:right"><div class="sub2">Starts in</div><div class="cd" id="nh-cd">1:48</div></div></div>
+
+  <div class="card">
+    <div class="presets" id="presets"></div>
+    <div class="grid">
+      <div><label>Game</label><select><option>Scarlet</option></select></div>
+      <div><label>Location</label><select><option selected>Kitakami</option></select></div>
+      <div><label>Stars</label><select id="f-stars"><option>4</option><option selected>6</option></select></div>
+      <div><label>Species</label><input id="f-species" placeholder="Any"/></div>
+      <div><label>Shiny</label><select id="f-shiny"><option selected>Shiny only</option><option>Any</option></select></div>
+      <div><label>Min Perfect IVs</label><select id="f-ivs"><option>Any</option><option>5</option><option>6</option></select></div>
+    </div>
+    <label style="margin-top:16px">Reward-based search — drops at least one of:</label>
+    <div class="rewardchips" id="rewardchips"></div>
+    <div class="actions"><button class="go">Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><span style="color:var(--muted);font-size:13px">6 found · 540 ms · tip: tick the ☑ to bulk-host</span></div>
+  </div>
+  <div class="results" id="results"></div>
+  <footer>PKM Universe Reborn · advanced cosmetics preview · <a href="/">back to the live finder</a></footer>
+</div>
+<div id="toast"></div>
+<div id="playlist"><span class="cnt" id="pl-count">0 selected</span><button class="pl-host" id="pl-host">🚀 Host all as rotation</button><button class="pl-clear" id="pl-clear">Clear</button></div>
+<div id="modal"><div class="dwrap" id="dwrap"></div></div>
+
+<script>
+const TC={Normal:"#9099a1",Fighting:"#ce4069",Flying:"#8fa8dd",Poison:"#ab6ac8",Ground:"#d97746",Rock:"#c7b78b",Bug:"#90c12c",Ghost:"#5269ac",Steel:"#5a8ea1",Fire:"#ff9d55",Water:"#4d90d5",Grass:"#63bb5b",Electric:"#f3d23b",Psychic:"#f97176",Ice:"#74cec0",Dragon:"#0a6dc4",Dark:"#5a5366",Fairy:"#ec8fe6"};
+const WEAK={Normal:["Fighting"],Fighting:["Flying","Psychic","Fairy"],Flying:["Rock","Electric","Ice"],Poison:["Ground","Psychic"],Ground:["Water","Grass","Ice"],Rock:["Fighting","Ground","Steel","Water","Grass"],Bug:["Flying","Rock","Fire"],Ghost:["Ghost","Dark"],Steel:["Fighting","Ground","Fire"],Fire:["Ground","Rock","Water"],Water:["Grass","Electric"],Grass:["Flying","Poison","Bug","Fire","Ice"],Electric:["Ground"],Psychic:["Bug","Ghost","Dark"],Ice:["Fighting","Rock","Steel","Fire"],Dragon:["Ice","Dragon","Fairy"],Dark:["Fighting","Bug","Fairy"],Fairy:["Poison","Steel"]};
+const NAT={Adamant:["Atk","SpA"],Bold:["Def","Atk"],Calm:["SpD","Atk"],Careful:["SpD","SpA"],Jolly:["Spe","SpA"],Modest:["SpA","Atk"],Timid:["Spe","Atk"],Quiet:["SpA","Spe"],Impish:["Def","SpA"]};
+const RARE=["Herba Mystica","Ability Patch","Bottle Cap","Ability Capsule"];
+const PRESETS=[["💎 Perfect Shiny 6★",{stars:"6",ivs:"6"}],["✦ Any Shiny",{stars:"6",ivs:"Any"}],["🎁 Herba Mystica",{reward:"Herba Mystica"}],["🔧 Ability Patch",{reward:"Ability Patch"}]];
+const REWARD_FILTERS=["Herba Mystica","Ability Patch","Bottle Cap","Exp. Candy XL","Tera Shard"];
+const SAMPLE=[
+  {id:945,name:"Grafaiai",shiny:true,stars:6,tera:"Ghost",ability:"Poison Touch",ha:false,nature:"Careful",gender:"Male",scale:58,flaw:5,ivs:[31,31,31,31,31,24],seed:"02AEAC78",odds:286000,base:[63,95,65,80,72,110],dex:"It secretes toxic saliva and paints patterns on trees with poison-dipped fingers to mark its turf.",moves:[["Gunk Shot","Poison"],["Slash","Normal"],["Acrobatics","Flying"],["Mud Shot","Ground"]],movepool:["Doodle","Flatter","Toxic","Fling","Venoshock","Sucker Punch","Knock Off","Encore"],rewards:[["Ability Patch",1],["Exp. Candy XL",3],["Ghost Tera Shard",5]]},
+  {id:959,name:"Tinkaton",shiny:true,stars:6,tera:"Fairy",ability:"Pickpocket",ha:true,nature:"Quiet",gender:"Female",scale:166,flaw:6,ivs:[31,31,31,31,31,31],seed:"023C3478",odds:1180000,base:[85,75,77,70,105,94],dex:"Swinging its massive hammer, it can fell even a Corviknight with a single mighty blow.",moves:[["Gigaton Hammer","Steel"],["Play Rough","Fairy"],["Thunder Wave","Electric"],["Rock Slide","Rock"]],movepool:["Fairy Wind","Metal Claw","Flash Cannon","Brick Break","Knock Off","Stealth Rock","Swagger","Covet"],rewards:[["Bottle Cap",2],["Ability Patch",1],["Fairy Tera Shard",8]]},
+  {id:6,name:"Charizard",shiny:true,stars:5,tera:"Fire",ability:"Solar Power",ha:true,nature:"Timid",gender:"Male",scale:204,flaw:4,ivs:[31,8,31,31,31,31],seed:"0A1B2C3D",odds:94000,base:[78,84,78,109,85,100],dex:"Its fiery breath can melt boulders, and it unintentionally causes forest fires.",moves:[["Flamethrower","Fire"],["Air Slash","Flying"],["Dragon Pulse","Dragon"],["Solar Beam","Grass"]],movepool:["Ember","Wing Attack","Fire Spin","Slash","Flare Blitz","Heat Wave","Inferno","Fire Blast"],rewards:[["Herba Mystica",1],["Exp. Candy XL",4],["Fire Tera Shard",6]]},
+  {id:887,name:"Dragapult",shiny:true,stars:6,tera:"Electric",ability:"Clear Body",ha:false,nature:"Jolly",gender:"Male",scale:255,flaw:5,ivs:[31,31,31,18,31,31],seed:"0091D4BE",odds:540000,base:[88,120,75,100,75,142],dex:"It launches Dreepy that rest in its horns at speeds topping 200 mph.",moves:[["Dragon Darts","Dragon"],["Phantom Force","Ghost"],["U-turn","Bug"],["Fire Blast","Fire"]],movepool:["Quick Attack","Astonish","Dragon Breath","Hex","Shadow Ball","Draco Meteor","Steel Wing","Thunderbolt"],rewards:[["Ability Patch",1],["Exp. Candy XL",5],["Dragon Tera Shard",7]]},
+  {id:195,name:"Quagsire",shiny:true,stars:4,tera:"Dark",ability:"Water Absorb",ha:false,nature:"Bold",gender:"Male",scale:157,flaw:3,ivs:[11,31,31,4,23,31],seed:"01CA2151",odds:38000,base:[95,85,85,65,65,35],dex:"A carefree Pokémon that doesn't mind bumping its head on rocks while swimming.",moves:[["Earthquake","Ground"],["Liquidation","Water"],["Toxic","Poison"],["Stockpile","Normal"]],movepool:["Water Gun","Mud Shot","Slam","Amnesia","Yawn","Earthquake","Rain Dance","Mud Bomb"],rewards:[["Exp. Candy L",5],["Big Mushroom",2],["Dark Tera Shard",3]]},
+  {id:149,name:"Dragonite",shiny:false,stars:5,tera:"Dragon",ability:"Multiscale",ha:true,nature:"Adamant",gender:"Female",scale:120,flaw:4,ivs:[31,31,28,12,31,31],seed:"0F5E9A21",odds:62000,base:[91,134,95,100,100,80],dex:"An extremely rarely seen marine Pokémon. Its intelligence is said to match that of humans.",moves:[["Outrage","Dragon"],["Hurricane","Flying"],["Earthquake","Ground"],["Fire Punch","Fire"]],movepool:["Wing Attack","Thunder Punch","Roost","Dragon Dance","Extreme Speed","Hyper Beam","Aqua Tail","Draco Meteor"],rewards:[["Bottle Cap",1],["Exp. Candy XL",3],["Dragon Tera Shard",6]]}
+];
+const BSTAT_LABELS=["HP","Atk","Def","SpA","SpD","Spe"];
+function scaleLabel(s){if(s===0)return"XXXS";if(s===255)return"XXXL";if(s<=50)return"XS";if(s<=110)return"S";if(s<=170)return"M";return"L";}
+function spriteChain(id,shiny){const b="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";return shiny?[`${b}/other/home/shiny/${id}.png`,`${b}/other/official-artwork/shiny/${id}.png`,`${b}/shiny/${id}.png`]:[`${b}/other/home/${id}.png`,`${b}/other/official-artwork/${id}.png`,`${b}/${id}.png`];}
+function radar(ivs,color){const order=[0,1,2,5,4,3],labels=["HP","Atk","Def","Spe","SpD","SpA"];const cx=64,cy=64,R=44,grid=[],axes=[],pts=[],labs=[];
+  for(let k=0;k<6;k++){const a=(-90+k*60)*Math.PI/180,gx=cx+Math.cos(a)*R,gy=cy+Math.sin(a)*R;grid.push([gx,gy]);axes.push(`<line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" stroke="#33333f"/>`);const v=ivs[order[k]],rr=R*(v/31),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;pts.push(`${px},${py}`);const lx=cx+Math.cos(a)*(R+11),ly=cy+Math.sin(a)*(R+11),c=v===31?'#f3d979':'#9a9aa6';labs.push(`<text x="${lx}" y="${ly+3}" fill="${c}" font-size="9" font-weight="700" text-anchor="middle">${labels[k]}</text>`);}
+  const ring=f=>grid.map(([x,y])=>`${cx+(x-cx)*f},${cy+(y-cy)*f}`).join(' ');
+  return `<svg width="128" height="128" viewBox="0 0 128 128"><polygon points="${ring(1)}" fill="none" stroke="#2c2c36"/><polygon points="${ring(.66)}" fill="none" stroke="#23232c"/><polygon points="${ring(.33)}" fill="none" stroke="#23232c"/>${axes.join('')}<polygon points="${pts.join(' ')}" fill="${color}55" stroke="${color}" stroke-width="2"/>${pts.map(p=>{const[x,y]=p.split(',');return `<circle cx="${x}" cy="${y}" r="2" fill="${color}"/>`}).join('')}${labs.join('')}</svg>`;}
+function teraGem(color){return `<svg class="watermark" viewBox="0 0 100 100"><polygon points="50,4 84,32 68,96 32,96 16,32" fill="${color}"/><polygon points="50,4 84,32 50,40 16,32" fill="#fff" opacity=".3"/></svg>`;}
+function natureStr(nat){const m=NAT[nat];if(!m)return nat+' (neutral)';return `${nat} <span class="up">↑${m[0]}</span> <span class="down">↓${m[1]}</span>`;}
+function oddsStr(o){return o>=1000000?`1 in ${(o/1000000).toFixed(1)}M seeds`:`1 in ${Math.round(o/1000)}K seeds`;}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function confetti(x,y){const cols=['#d4af37','#f3d979','#fff','#63bb5b','#4d90d5','#ec8fe6'];for(let i=0;i<26;i++){const c=document.createElement('i');c.className='confetti';c.style.left=x+'px';c.style.top=y+'px';c.style.background=cols[i%cols.length];const a=Math.random()*6.28,d=40+Math.random()*90;c.style.setProperty('--dx',Math.cos(a)*d+'px');c.style.setProperty('--dy',(Math.sin(a)*d-40)+'px');document.body.appendChild(c);setTimeout(()=>c.remove(),900);}}
+function playCry(id){try{const a=new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`);a.volume=.4;a.play().catch(()=>{});}catch(e){}}
+function sparkleBurst(w){for(let i=0;i<10;i++){const s=document.createElement('span');s.className='burst go';s.textContent='✦';const a=Math.random()*6.28,d=22+Math.random()*30;s.style.setProperty('--bx',Math.cos(a)*d+'px');s.style.setProperty('--by',Math.sin(a)*d+'px');s.style.fontSize=(8+Math.random()*7)+'px';w.appendChild(s);setTimeout(()=>s.remove(),800);}}
+
+// bulk playlist
+const selected=new Map();
+function updatePlaylist(){const pl=document.getElementById('playlist');document.getElementById('pl-count').textContent=selected.size+' selected';pl.classList.toggle('show',selected.size>0);}
+document.getElementById('pl-clear').onclick=()=>{selected.clear();document.querySelectorAll('.chk').forEach(c=>c.classList.remove('on'));updatePlaylist();};
+document.getElementById('pl-host').onclick=e=>{if(!selected.size)return;const n=selected.size;confetti(e.clientX,e.clientY);toast(`🚀 ${n} raids queued as a rotation on Raid-SV — they'll host back-to-back!`);selected.clear();document.querySelectorAll('.chk').forEach(c=>c.classList.remove('on'));updatePlaylist();};
+
+// embed preview
+function showEmbed(r){const color=TC[r.tera]||'#888';const urls=spriteChain(r.id,r.shiny);const counters=WEAK[r.tera].join(', ');const movesTxt=r.moves.map(m=>'- '+m[0]).join('<br>');const rewardsTxt=r.rewards.map(x=>`<b>${x[0]}</b> ×${x[1]}`).join('<br>');
+  document.getElementById('dwrap').innerHTML=`<span class="dclose" onclick="document.getElementById('modal').classList.remove('show')">✕</span>
+    <div style="color:#949ba4;font-size:11px;margin-bottom:8px">How it appears in <b style="color:#dbdee1">#raid-kitakami</b></div>
+    <div class="dmsg"><div class="davatar">PU</div><div style="flex:1"><div><span class="dauthor">Electivire-SV-Raid-Bot</span><span class="dapp">APP</span><span class="dtime">today</span></div>
+      <div class="dembed" style="border-left-color:${color}"><img class="deimg" src="${urls[0]}"/><div class="detitle">${'★'.repeat(r.stars)} ${r.shiny?'Shiny ':''}${r.name}</div>
+        <div class="degrid"><div><div class="deh">Stats</div><div class="dev"><b>Nature:</b> ${r.nature}<br><b>Ability:</b> ${r.ability}<br><b>IVs:</b> ${r.ivs.join('/')}<br><b>Scale:</b> ${scaleLabel(r.scale)}</div></div>
+        <div><div class="deh">Moves</div><div class="dev">${movesTxt}</div></div><div><div class="deh">Counter with</div><div class="dev" style="color:${color}">${counters}</div></div>
+        <div><div class="deh">Rewards</div><div class="dev">${rewardsTxt}</div></div></div>
+        <div class="deh" style="margin-top:10px">Raid Starting: <span style="color:#dbdee1;font-weight:400">in 3 minutes</span></div><div class="defoot">🏆 pkm-universe.com</div></div>
+      <div class="debtns"><button class="debtn">🔑 Get Code</button><button class="debtn sec">📋 Rules</button><button class="debtn link">pkm-universe.com ↗</button></div></div></div>`;
+  document.getElementById('modal').classList.add('show');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')e.currentTarget.classList.remove('show');});
+
+const presetsBox=document.getElementById('presets');PRESETS.forEach(([lbl,vals])=>{const b=document.createElement('button');b.className='preset';b.textContent=lbl;b.onclick=()=>{if(vals.stars)document.getElementById('f-stars').value=vals.stars;if(vals.ivs)document.getElementById('f-ivs').value=vals.ivs;if(vals.reward)document.querySelectorAll('.rchip').forEach(c=>c.classList.toggle('on',c.textContent===vals.reward));toast('Preset applied: '+lbl);};presetsBox.appendChild(b);});
+const rcBox=document.getElementById('rewardchips');REWARD_FILTERS.forEach(n=>{const c=document.createElement('span');c.className='rchip';c.textContent=n;c.onclick=()=>c.classList.toggle('on');rcBox.appendChild(c);});
+
+const box=document.getElementById('results');
+function renderAll(list){box.innerHTML='';
+  list.forEach((r,idx)=>{
+    const color=TC[r.tera]||'#888',allMax=r.ivs.every(v=>v===31),urls=spriteChain(r.id,r.shiny);
+    const rarity=allMax?`<div class="rarity flawless">✦ Flawless 6IV</div>`:(r.shiny?`<div class="rarity shiny">Shiny</div>`:``);
+    const moves=r.moves.map(([n,t])=>`<div class="move"><span class="mt" style="background:${TC[t]}"></span>${n}</div>`).join('');
+    const counters=WEAK[r.tera].map(t=>`<span class="tchip" style="background:${TC[t]}22;color:${TC[t]};border:1px solid ${TC[t]}66">${t}</span>`).join('');
+    const rewards=r.rewards.map(([n,q])=>`<span class="rw ${RARE.includes(n)?'rare':''}">${n} ×${q}</span>`).join('');
+    const movepool=r.movepool.map(m=>`<div class="move"><span class="mt" style="background:#444"></span>${m}</div>`).join('');
+    const bmax=Math.max(...r.base,150);const basebars=r.base.map((v,i)=>{const c=v>=120?'#63bb5b':v>=90?'#c9b35a':v>=60?'#d97746':'#9c5a5a';return `<div class="bstat"><small>${BSTAT_LABELS[i]}</small><div class="bt"><div class="bf" style="width:${v/bmax*100}%;background:${c}"></div></div><span class="bv">${v}</span></div>`;}).join('');
+    const el=document.createElement('div');el.className='r'+(r.shiny?' shiny':'');el.style.animationDelay=(idx*70)+'ms';
+    el.innerHTML=`<div class="flipper">
+      <div class="face front">
+        <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div>
+        <div class="accent" style="background:linear-gradient(90deg,transparent,${color},transparent)"></div>${teraGem(color)}<div class="foil"></div>${rarity}
+        <div class="chk" title="Select for bulk host">✓</div>
+        <div class="head"><div class="spritewrap" title="Click for cry + sparkle"><div class="aura" style="background:${color}"></div>
+          <img class="sprite" src="${urls[0]}" data-f='${JSON.stringify(urls.slice(1))}' alt="${r.name}" onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><span class="spk">🔊</span></div>
+          <div class="ttl"><div class="name">${r.shiny?'<span class="sh">✦</span>':''}${r.name}</div><div class="stars">${'★'.repeat(r.stars)}</div><div class="odds">✦ ${oddsStr(r.odds)}</div></div>
+          <div class="gem" style="background:${color}22;color:${color};border:1px solid ${color}55"><span class="dot" style="background:${color}"></span>${r.tera}</div></div>
+        <div class="body"><div class="radarwrap">${radar(r.ivs,color)}</div>
+          <div class="meta"><div class="row"><span>Ability</span><b>${r.ability}${r.ha?'<span class="ha">HA</span>':''}</b></div><div class="row"><span>Nature</span><b>${natureStr(r.nature)}</b></div><div class="row"><span>Gender</span><b>${r.gender}</b></div><div class="row"><span>Scale</span><b>${r.scale} · ${scaleLabel(r.scale)}</b></div><div class="row"><span>Perfect IVs</span><b class="perfect">${r.flaw}/6</b></div></div></div>
+        <div class="label">Moves</div><div class="moves">${moves}</div>
+        <div class="label">⚔️ Weak to — counter with</div><div class="typchips">${counters}</div>
+        <div class="label">Rewards</div><div class="rewards">${rewards}</div>
+        <div class="seed">${r.seed}</div>
+        <button class="host">🚀 Host on Raid-SV</button>
+        <div class="btns"><button data-c="${r.seed}">Copy Seed</button><button class="prev">👁 Embed</button><button class="flipbtn doflip">🃏 Flip</button></div>
+      </div>
+      <div class="face back">
+        <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div>
+        <div class="bhead"><div class="bname">${r.name}</div><button class="flipbtn doflip">↩ Back</button></div>
+        <div class="label">Pokédex Entry</div><div class="dex">${r.dex}</div>
+        <div class="label">Level-up Movepool</div><div class="movepool">${movepool}</div>
+        <div class="label">Base Stats</div><div class="basestats">${basebars}</div>
+      </div>
+    </div>`;
+    // interactions
+    const sw=el.querySelector('.spritewrap');sw.addEventListener('click',()=>{playCry(r.id);sparkleBurst(sw);});
+    const chk=el.querySelector('.chk');chk.addEventListener('click',ev=>{ev.stopPropagation();chk.classList.toggle('on');if(chk.classList.contains('on'))selected.set(r.seed,r);else selected.delete(r.seed);updatePlaylist();});
+    const hb=el.querySelector('.host');hb.addEventListener('click',()=>{if(hb.classList.contains('done'))return;hb.innerHTML='<span class="spin"></span> Sending to bot…';setTimeout(()=>{hb.classList.add('done');hb.textContent='✓ Queued — hosting next!';const b=hb.getBoundingClientRect();confetti(b.left+b.width/2,b.top);toast(`✦ ${r.name} queued on Raid-SV!`);},900);});
+    el.querySelector('.prev').addEventListener('click',()=>showEmbed(r));
+    el.querySelectorAll('.doflip').forEach(b=>b.addEventListener('click',()=>el.classList.toggle('flipped')));
+    el.querySelector('button[data-c]').addEventListener('click',b=>{const btn=b.currentTarget;navigator.clipboard.writeText(btn.dataset.c);const t=btn.textContent;btn.textContent='Copied!';btn.style.color='var(--gold)';setTimeout(()=>{btn.textContent=t;btn.style.color='';},1100);});
+    if(r.shiny)for(let p=0;p<5;p++){const s=document.createElement('i');s.className='particle';s.textContent='✦';s.style.left=(10+Math.random()*80)+'%';s.style.bottom=(10+Math.random()*40)+'%';s.style.animationDelay=(Math.random()*4)+'s';s.style.fontSize=(7+Math.random()*5)+'px';el.querySelector('.front').appendChild(s);}
+    box.appendChild(el);
+  });bindTilt();}
+function bindTilt(){document.querySelectorAll('.r').forEach(card=>{const foil=card.querySelector('.foil');card.addEventListener('mousemove',e=>{if(card.classList.contains('flipped'))return;const b=card.getBoundingClientRect();const x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;card.style.transform=`rotateY(${(x-.5)*6}deg) rotateX(${-(y-.5)*6}deg)`;if(foil)foil.style.backgroundPosition=`${x*200}% ${y*200}%`;});card.addEventListener('mouseleave',()=>{card.style.transform='';});});}
+document.querySelector('.go').addEventListener('click',()=>{renderAll(SAMPLE);toast('Searching… 6 results');});
+document.getElementById('surprise').addEventListener('click',e=>{const pick=SAMPLE[Math.floor(Math.random()*SAMPLE.length)];renderAll([pick,...SAMPLE.filter(s=>s!==pick)]);confetti(e.clientX,e.clientY);toast('🎲 Surprise: '+pick.name+'!');});
+renderAll(SAMPLE);
+(function(){document.getElementById('nh-sprite').src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/959.png";let t=108;const cd=document.getElementById('nh-cd');setInterval(()=>{t=t<=0?108:t-1;cd.textContent=Math.floor(t/60)+':'+String(t%60).padStart(2,'0');},1000);})();
+const cv=document.getElementById('stars'),ctx=cv.getContext('2d');let W,H,ds;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;ds=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.3,s:Math.random()*.25+.05}));}rs();addEventListener('resize',rs);(function lp(){ctx.clearRect(0,0,W,H);for(const d of ds){d.y-=d.s;if(d.y<0){d.y=H;d.x=Math.random()*W;}ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,7);ctx.fillStyle='rgba(212,175,55,'+(d.r*.35)+')';ctx.fill();}requestAnimationFrame(lp);})();
+</script>
+</body>
+</html>

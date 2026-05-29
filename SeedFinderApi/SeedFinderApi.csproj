@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SeedFinderApi</AssemblyName>
+    <RootNamespace>PkmUniverse.SeedFinder</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PKHeX.Core"><HintPath>libs/PKHeX.Core.dll</HintPath></Reference>
+    <Reference Include="RaidCrawler.Core"><HintPath>libs/RaidCrawler.Core.dll</HintPath></Reference>
+    <Reference Include="pkNX.Structures.FlatBuffers"><HintPath>libs/pkNX.Structures.FlatBuffers.dll</HintPath></Reference>
+    <Reference Include="FlatSharp.Runtime"><HintPath>libs/FlatSharp.Runtime.dll</HintPath></Reference>
+    <Reference Include="Google.FlatBuffers"><HintPath>libs/Google.FlatBuffers.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
