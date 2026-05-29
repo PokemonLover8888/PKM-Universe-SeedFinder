@@ -17,6 +17,11 @@
 <meta name="twitter:title" content="PKM Universe · Raid Seed Finder" />
 <meta name="twitter:description" content="Find a seed for any shiny Tera Raid Pokémon, then host it on Raid-SV." />
 <meta name="twitter:image" content="https://pkm-universe.com/pkm-universe-icon.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="PKM Seeds" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
   :root{ --gold:#d4af37; --gold-lt:#f3d979; --gold-dim:#9c8128; --bg:#0c0c0f; --panel:#15151b; --panel2:#1e1e27; --line:#2c2c36; --text:#e8e8ea; --muted:#9a9aa6; }
   *{box-sizing:border-box;}
@@ -39,6 +44,31 @@
   .nowhosting img{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 2px 4px #000);}
   .nowhosting .nh-txt{flex:1;min-width:0;}.nowhosting .nh-txt .big{font-size:15px;font-weight:800;}.nowhosting .nh-txt .sub2{color:var(--muted);font-size:12px;}
   .nowhosting .cd{font-weight:800;color:var(--gold-lt);font-size:14px;}.nowhosting .live-label{font-size:10px;font-weight:800;letter-spacing:1px;color:#3ee06a;text-transform:uppercase;}
+  .aibar{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
+  .aibar input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:11px;color:var(--text);padding:13px 16px;font-size:14px;}
+  .aibar input:focus{border-color:#a855f7;outline:none;box-shadow:0 0 0 3px rgba(168,85,247,.18);}
+  .aibar button{background:linear-gradient(135deg,#a855f7,#6b21a8);color:#fff;font-weight:800;border:none;border-radius:11px;padding:13px 22px;cursor:pointer;box-shadow:0 6px 20px rgba(168,85,247,.25);}
+  .aibar button:disabled{opacity:.55;cursor:not-allowed;}
+  .mypanel{display:none;background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:14px;padding:0 18px 18px;margin-top:18px;}
+  .mypanel.on{display:block;}
+  .mypanel summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;}
+  .mypanel summary::-webkit-details-marker{display:none;}.mypanel summary::before{content:"▸ ";}.mypanel[open] summary::before{content:"▾ ";}
+  .mygrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:700px){.mygrid{grid-template-columns:1fr;}}
+  .mysec h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:0 0 8px;}
+  .myitem{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:12px;margin-bottom:5px;}
+  .myitem img{width:34px;height:34px;object-fit:contain;flex:0 0 34px;}
+  .myitem .mn{font-weight:700;}.myitem .mt{color:var(--muted);font-size:10.5px;}
+  .myitem button{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;}
+  .myitem button:hover{border-color:var(--gold);color:var(--gold);}
+  .wishstar{position:absolute;top:6px;right:36px;background:transparent;border:none;font-size:18px;color:#555;cursor:pointer;z-index:4;transition:.15s;}
+  .wishstar.on{color:var(--gold-lt);text-shadow:0 0 8px var(--gold);}
+  .wishstar:hover{transform:scale(1.15);color:var(--gold);}
+  .livefeed{display:none;gap:14px;overflow-x:hidden;padding:8px 14px;margin-bottom:14px;font-size:12px;background:linear-gradient(90deg,#13131a,#0c0c0f);border:1px solid var(--line);border-radius:10px;color:var(--muted);}
+  .livefeed.on{display:flex;}
+  .livefeed .ev{flex:0 0 auto;white-space:nowrap;animation:slidein .4s ease;}
+  .livefeed .ev b{color:var(--gold-lt);margin-right:5px;}
+  @keyframes slidein{from{opacity:0;transform:translateX(-14px);}to{opacity:1;transform:translateX(0);}}
   .upnext{margin-bottom:18px;display:none;}
   .upnext.on{display:block;}
   .upnext h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin:0 0 10px;}
@@ -135,7 +165,13 @@
     <div style="text-align:right"><div class="sub2">Timer</div><div class="cd" id="nh-cd">—</div></div>
   </div>
 
+  <div class="livefeed" id="livefeed"></div>
   <div class="upnext" id="upnext"><h3>⏭ Up Next in the Rotation</h3><div class="strip" id="upnextstrip"></div></div>
+
+  <div class="aibar">
+    <input id="aiq" placeholder="✨ Ask AI: e.g. 'shiny dragon-tera 6IV Adamant Dragapult'" />
+    <button id="aigo">Ask AI</button>
+  </div>
 
   <div class="card">
     <div class="presets" id="presets"></div>
@@ -157,6 +193,14 @@
     <summary>🔁 Reverse / batch lookup — paste seeds or !ra commands to see what they are</summary>
     <textarea id="lookupinput" placeholder="One per line. Bare seeds (02AEAC78) or full commands (!ra 02AEAC78 6 6). Great for verifying community seeds or importing a whole list."></textarea>
     <div class="actions"><button class="go" id="lookupbtn">Look up</button><span class="status" id="lookupstatus"></span></div>
+  </details>
+
+  <details class="mypanel" id="mypanel" open>
+    <summary>👤 My Activity — raids you've hosted &amp; your ⭐ wishlist</summary>
+    <div class="mygrid">
+      <div class="mysec"><h4>🚀 My Hosted Raids</h4><div id="myraidslist">—</div></div>
+      <div class="mysec"><h4>⭐ Wishlist</h4><div id="mywishlist">—</div></div>
+    </div>
   </details>
 
   <div class="results" id="results"></div>
@@ -216,6 +260,7 @@ function card(r,idx){
   el.innerHTML=`<div class="flipper">
     <div class="face front">
       <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div><div class="accent" style="background:linear-gradient(90deg,transparent,${color},transparent)"></div>${teraGem(color)}<div class="foil"></div>${rarity}
+      <button class="wishstar ${typeof isWished==='function'&&isWished(r.seed)?'on':''}" title="Save to wishlist">${typeof isWished==='function'&&isWished(r.seed)?'★':'☆'}</button>
       <div class="chk" title="Select for bulk copy">✓</div>
       <div class="head"><div class="spritewrap" title="Click for cry + sparkle"><div class="aura" style="background:${color}"></div><img class="sprite" src="${urls[0]}" data-f='${JSON.stringify(urls.slice(1))}' alt="${r.speciesName}" onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><span class="spk">🔊</span></div>
         <div class="ttl"><div class="name">${r.shiny?'<span class="sh">✦</span>':''}${r.speciesName}</div><div class="stars">${'★'.repeat(r.stars)}</div></div>
@@ -238,6 +283,7 @@ function card(r,idx){
     </div></div>`;
   const sw=el.querySelector('.spritewrap');sw.addEventListener('click',()=>{playCry(r.species);sparkleBurst(sw);});
   const chk=el.querySelector('.chk');chk.addEventListener('click',ev=>{ev.stopPropagation();chk.classList.toggle('on');if(chk.classList.contains('on'))selected.set(r.seed,r);else selected.delete(r.seed);updatePlaylist();});
+  const ws=el.querySelector('.wishstar');if(ws)ws.addEventListener('click',ev=>{ev.stopPropagation();const on=toggleWish({seed:r.seed,species:r.species,speciesName:r.speciesName,shiny:r.shiny,stars:r.stars});ws.textContent=on?'★':'☆';ws.classList.toggle('on',on);});
   const hb=el.querySelector('.host');hb.addEventListener('click',async()=>{
     if(hb.classList.contains('done'))return;
     if(!authState.loggedIn){toast('Log in with Discord to host →');location.href='/api/auth/login';return;}
@@ -304,37 +350,113 @@ checkAuth();
 // login-result toast
 (()=>{const p=new URLSearchParams(location.search).get('login');if(p==='ok')toast('✓ Logged in — you can host raids now!');else if(p==='notmember')toast('Logged in, but you need the Member role to host.');else if(p)toast('Login failed — try again.');if(p)history.replaceState({},'',location.pathname);})();
 
-// Live "Now Hosting" — poll the bot's read-only status every 5s
-async function pollNow(){
-  try{
-    const d=await(await fetch('/api/nowhosting',{cache:'no-store'})).json();
-    const w=document.getElementById('nowhosting');
-    if(d&&d.active){
-      w.classList.add('on');
-      document.getElementById('nh-name').innerHTML=(d.shiny?'<span style="color:var(--gold-lt)">✦ </span>Shiny ':'')+(d.species||'Raid');
-      document.getElementById('nh-sub').textContent='★'.repeat(d.stars||0)+(d.tera?(' · '+d.tera+' Tera'):'')+(d.meta?(' · '+d.meta):'');
-      document.getElementById('nh-joined').textContent=(d.joined??0)+'/'+(d.capacity??4);
-      const t=d.timer;document.getElementById('nh-cd').textContent=(t>=0)?(Math.floor(t/60)+':'+String(t%60).padStart(2,'0')):'live';
-      const img=document.getElementById('nh-sprite');if(d.sprite){img.src=d.sprite;img.style.display='';}else{img.style.display='none';}
-    } else { w.classList.remove('on'); }
-  }catch(e){document.getElementById('nowhosting').classList.remove('on');}
+// Now-Hosting renderer (called by both poll fallback and SSE push)
+function updateNow(d){
+  const w=document.getElementById('nowhosting');
+  if(d&&d.active){
+    w.classList.add('on');
+    document.getElementById('nh-name').innerHTML=(d.shiny?'<span style="color:var(--gold-lt)">✦ </span>Shiny ':'')+(d.species||'Raid');
+    document.getElementById('nh-sub').textContent='★'.repeat(d.stars||0)+(d.tera?(' · '+d.tera+' Tera'):'')+(d.meta?(' · '+d.meta):'');
+    document.getElementById('nh-joined').textContent=(d.joined??0)+'/'+(d.capacity??4);
+    const t=d.timer;document.getElementById('nh-cd').textContent=(t>=0)?(Math.floor(t/60)+':'+String(t%60).padStart(2,'0')):'live';
+    const img=document.getElementById('nh-sprite');if(d.sprite){img.src=d.sprite;img.style.display='';}else{img.style.display='none';}
+  } else { w.classList.remove('on'); }
 }
+let sseConnected=false;
+async function pollNow(){ if(sseConnected)return; try{ updateNow(await(await fetch('/api/nowhosting',{cache:'no-store'})).json()); }catch(e){document.getElementById('nowhosting').classList.remove('on');} }
 pollNow();setInterval(pollNow,5000);
 
-// Up Next — poll the bot's raid queue every 10s
-async function pollQueue(){
-  try{
-    const q=await(await fetch('/api/queue',{cache:'no-store'})).json();
-    const box=document.getElementById('upnext'),strip=document.getElementById('upnextstrip');
-    if(!Array.isArray(q)||!q.length){box.classList.remove('on');return;}
-    box.classList.add('on');
-    strip.innerHTML=q.map((r,i)=>{
-      const urls=spriteChain(r.species,r.shiny);
-      return `<div class="qcard ${r.shiny?'shiny':''}">${i===0?'<span class="qnow">NOW</span>':''}${r.shiny?'<span class="qbadge">✦</span>':''}<img src="${r.species>0?urls[0]:''}" data-f='${JSON.stringify(urls.slice(1))}' onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><div class="qn">${r.name}</div><div class="qs">${'★'.repeat(r.stars)}</div></div>`;
-    }).join('');
-  }catch(e){document.getElementById('upnext').classList.remove('on');}
+// Up Next renderer (called by both poll fallback and SSE push)
+function updateQueue(q){
+  const box=document.getElementById('upnext'),strip=document.getElementById('upnextstrip');
+  if(!Array.isArray(q)||!q.length){box.classList.remove('on');return;}
+  box.classList.add('on');
+  strip.innerHTML=q.map((r,i)=>{
+    const urls=spriteChain(r.species,r.shiny);
+    return `<div class="qcard ${r.shiny?'shiny':''}">${i===0?'<span class="qnow">NOW</span>':''}${r.shiny?'<span class="qbadge">✦</span>':''}<img src="${r.species>0?urls[0]:''}" data-f='${JSON.stringify(urls.slice(1))}' onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><div class="qn">${r.name}</div><div class="qs">${'★'.repeat(r.stars)}</div></div>`;
+  }).join('');
 }
+async function pollQueue(){ if(sseConnected)return; try{ updateQueue(await(await fetch('/api/queue',{cache:'no-store'})).json()); }catch(e){document.getElementById('upnext').classList.remove('on');} }
 pollQueue();setInterval(pollQueue,10000);
+
+// Live activity feed (push from SSE)
+function pushFeed(f){
+  const box=document.getElementById('livefeed');box.classList.add('on');
+  const div=document.createElement('div');div.className='ev';div.innerHTML=`<b>${f.icon||'•'}</b>${f.text||''}`;
+  box.insertBefore(div,box.firstChild);
+  while(box.children.length>6) box.removeChild(box.lastChild);
+}
+
+// SSE: real-time push of state + queue + feed events (with poll fallback)
+function bindSSE(){
+  try{
+    const ev=new EventSource('/api/stream');
+    ev.addEventListener('hello',()=>{sseConnected=true;});
+    ev.addEventListener('state',e=>{try{updateNow(JSON.parse(e.data));}catch(_){} });
+    ev.addEventListener('queue',e=>{try{updateQueue(JSON.parse(e.data));}catch(_){} });
+    ev.addEventListener('feed',e=>{try{pushFeed(JSON.parse(e.data));}catch(_){} });
+    ev.onerror=()=>{sseConnected=false;try{ev.close();}catch(_){}setTimeout(bindSSE,4000);};
+  }catch(e){sseConnected=false;setTimeout(bindSSE,4000);}
+}
+bindSSE();
+
+// --- Wishlist (localStorage, per browser) ---
+const WISH_KEY='pku_wish';
+function getWishlist(){try{return JSON.parse(localStorage.getItem(WISH_KEY)||'[]');}catch(_){return[];}}
+function setWishlistL(l){localStorage.setItem(WISH_KEY,JSON.stringify(l));}
+function isWished(seed){return getWishlist().some(x=>x.seed===seed);}
+function toggleWish(r){const list=getWishlist();const i=list.findIndex(x=>x.seed===r.seed);let on;if(i>=0){list.splice(i,1);on=false;toast('Removed from wishlist');}else{list.push({seed:r.seed,species:r.species,speciesName:r.speciesName||r.species,shiny:r.shiny,stars:r.stars,when:Date.now()});on=true;toast('⭐ Added to wishlist');}setWishlistL(list);renderMyPanel();return on;}
+
+// --- My Raids + Wishlist panel ---
+async function renderMyPanel(){
+  const panel=document.getElementById('mypanel');
+  if(!authState.loggedIn){panel.classList.remove('on');return;}
+  panel.classList.add('on');
+  // My Raids
+  let raids=[];
+  try{const r=await(await fetch('/api/myraids')).json();raids=r.raids||[];}catch(_){}
+  const ra=document.getElementById('myraidslist');
+  ra.innerHTML=raids.length?raids.slice(0,20).map(r=>{
+    const id=nameToId[(r.species||'').toLowerCase()]||0;
+    const sp=id>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${r.shiny?'shiny/':''}${id}.png`:'';
+    const ago=Math.floor((Date.now()/1000-r.when)/60);
+    return `<div class="myitem"><img src="${sp}" onerror="this.style.visibility='hidden'"/><div><div class="mn">${r.shiny?'✦ ':''}${r.species}</div><div class="mt">${'★'.repeat(r.stars)} · ${r.location||'Kitakami'} · ${ago<1?'just now':ago<60?ago+'m ago':Math.floor(ago/60)+'h ago'}</div></div></div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:12px;padding:4px">No raids hosted yet — click 🚀 Host on any card.</div>';
+  // Wishlist
+  const wl=getWishlist();
+  const wi=document.getElementById('mywishlist');
+  wi.innerHTML=wl.length?wl.map(w=>{
+    const sp=w.species>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${w.shiny?'shiny/':''}${w.species}.png`:'';
+    return `<div class="myitem"><img src="${sp}" onerror="this.style.visibility='hidden'"/><div><div class="mn">${w.shiny?'✦ ':''}${w.speciesName||w.species}</div><div class="mt">${'★'.repeat(w.stars)} · ${w.seed}</div></div><button data-rm="${w.seed}">✕</button></div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:12px;padding:4px">Click ⭐ on any result to wishlist it.</div>';
+  wi.querySelectorAll('button[data-rm]').forEach(b=>b.onclick=()=>{const l=getWishlist().filter(x=>x.seed!==b.dataset.rm);setWishlistL(l);renderMyPanel();});
+}
+// Re-render My panel whenever auth state changes
+const _origCheckAuth=checkAuth; checkAuth=async function(){await _origCheckAuth();renderMyPanel();};
+
+// --- AI natural-language search (uses Gemini via /api/ai/parse) ---
+document.getElementById('aigo').addEventListener('click',async()=>{
+  const q=document.getElementById('aiq').value.trim();if(!q){toast('Type a query first.');return;}
+  const btn=document.getElementById('aigo'),orig=btn.textContent;btn.disabled=true;btn.textContent='✨ Thinking…';
+  try{
+    const res=await(await fetch('/api/ai/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})})).json();
+    if(!res.ok){toast('AI: '+(res.error||'failed'));btn.disabled=false;btn.textContent=orig;return;}
+    const f=res.filters||{};
+    if(f.species&&nameToId[(''+f.species).toLowerCase()])document.getElementById('species').value=f.species;
+    if(f.shiny===true)document.getElementById('shiny').value='true';else if(f.shiny===false)document.getElementById('shiny').value='false';
+    if(f.stars)document.getElementById('stars').value=String(f.stars);
+    if(f.teraType){const t=TERA.indexOf(f.teraType);if(t>=0)document.getElementById('tera').value=String(t);}
+    if(f.minFlawlessIVs)document.getElementById('ivs').value=String(f.minFlawlessIVs);
+    if(f.location)document.getElementById('location').value=f.location;
+    toast('✨ Filters set by AI — searching…');
+    search();
+  }catch(e){toast('AI failed: '+e.message);}
+  btn.disabled=false;btn.textContent=orig;
+});
+document.getElementById('aiq').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('aigo').click();});
+
+// --- Service Worker (PWA install) ---
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}
 
 const cv=document.getElementById('bgstars'),ctx=cv.getContext('2d');let W,H,ds;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;ds=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.3,s:Math.random()*.25+.05}));}rs();addEventListener('resize',rs);(function lp(){ctx.clearRect(0,0,W,H);for(const d of ds){d.y-=d.s;if(d.y<0){d.y=H;d.x=Math.random()*W;}ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,7);ctx.fillStyle='rgba(212,175,55,'+(d.r*.35)+')';ctx.fill();}requestAnimationFrame(lp);})();
 </script>

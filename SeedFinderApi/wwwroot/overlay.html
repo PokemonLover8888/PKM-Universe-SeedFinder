@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Raid-SV · Stream Overlay</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif;}
+  body{background:transparent;color:#fff;padding:14px;overflow:hidden;}
+  .wrap{display:flex;gap:14px;align-items:center;background:rgba(13,13,16,.86);border:2px solid #d4af37;border-radius:16px;padding:14px 18px;backdrop-filter:blur(8px);box-shadow:0 14px 40px rgba(0,0,0,.55),inset 0 0 30px rgba(212,175,55,.08);transition:opacity .3s;}
+  .wrap.idle{opacity:.55;border-color:#444;}
+  .wrap img{width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 3px 6px #000);animation:bob 3s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+  .info{flex:1;min-width:0;}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:#3ee06a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+  .live::before{content:"●";animation:blink 1.2s infinite;font-size:13px;}
+  @keyframes blink{50%{opacity:.25;}}
+  .wrap.idle .live{color:#9a9aa6;}
+  .name{font-size:20px;font-weight:800;background:linear-gradient(90deg,#f3d979,#fff6d8,#d4af37);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shim 3s linear infinite;text-shadow:0 0 18px rgba(212,175,55,.4);}
+  @keyframes shim{to{background-position:200% center;}}
+  .meta{font-size:13px;color:#dbdee1;margin-top:2px;font-weight:600;}
+  .next{margin-top:6px;font-size:11px;color:#9a9aa6;}
+  .next b{color:#f3d979;font-weight:700;}
+  .stat{text-align:center;padding:0 8px;}
+  .stat .lbl{font-size:9px;text-transform:uppercase;color:#9a9aa6;letter-spacing:.8px;font-weight:700;}
+  .stat .val{font-size:22px;font-weight:800;color:#fff;}
+  .cta{font-size:10px;color:#f3d979;font-weight:700;margin-top:3px;}
+  /* Recommended OBS browser source: 880 × 160 (or any width, height ~160 fits this card) */
+</style>
+</head>
+<body>
+<div class="wrap idle" id="w">
+  <img id="sp" alt=""/>
+  <div class="info">
+    <div class="live">Live · pkm-universe.com</div>
+    <div class="name" id="nm">No raid hosting</div>
+    <div class="meta" id="mt">Waiting for next raid…</div>
+    <div class="next" id="nx"></div>
+  </div>
+  <div class="stat"><div class="lbl">Trainers</div><div class="val" id="jn">—</div></div>
+  <div class="stat"><div class="lbl">Timer</div><div class="val" id="cd">—</div><div class="cta">join via Discord!</div></div>
+</div>
+<script>
+function fmt(t){return t>=0?(Math.floor(t/60)+':'+String(t%60).padStart(2,'0')):'live';}
+function updNow(d){
+  const w=document.getElementById('w');
+  if(d&&d.active){
+    w.classList.remove('idle');
+    document.getElementById('nm').innerHTML=(d.shiny?'✦ Shiny ':'')+(d.species||'Raid');
+    document.getElementById('mt').textContent='★'.repeat(d.stars||0)+' · '+(d.tera||'')+' Tera'+(d.meta?(' · '+d.meta):'');
+    document.getElementById('jn').textContent=(d.joined??0)+'/'+(d.capacity??4);
+    document.getElementById('cd').textContent=fmt(d.timer);
+    if(d.sprite){document.getElementById('sp').src=d.sprite;document.getElementById('sp').style.display='';}else{document.getElementById('sp').style.display='none';}
+  } else {
+    w.classList.add('idle');
+    document.getElementById('nm').textContent='No raid hosting';
+    document.getElementById('mt').textContent='Waiting for next raid…';
+    document.getElementById('jn').textContent='—';
+    document.getElementById('cd').textContent='—';
+  }
+}
+function updQ(q){
+  const el=document.getElementById('nx');
+  if(!Array.isArray(q)||q.length<2){el.textContent='';return;}
+  const nx=q.slice(1,4).map(r=>`<b>${r.shiny?'✦ ':''}${r.name}</b>`).join(' · ');
+  el.innerHTML='⏭ Up next: '+nx;
+}
+function bind(){
+  try{
+    const ev=new EventSource('/api/stream');
+    ev.addEventListener('state',e=>{try{updNow(JSON.parse(e.data));}catch(_){}});
+    ev.addEventListener('queue',e=>{try{updQ(JSON.parse(e.data));}catch(_){}});
+    ev.onerror=()=>{try{ev.close();}catch(_){}setTimeout(bind,4000);};
+  }catch(e){setTimeout(bind,4000);}
+}
+bind();
+// initial fetch in case SSE is slow
+fetch('/api/nowhosting').then(r=>r.json()).then(updNow).catch(()=>{});
+fetch('/api/queue').then(r=>r.json()).then(updQ).catch(()=>{});
+</script>
+</body>
+</html>

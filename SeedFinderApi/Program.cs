@@ -41,6 +41,88 @@ app.MapGet("/api/queue", async () =>
     catch { return Results.Content("[]", "application/json"); }
 });
 
+// --- Server-Sent Events: real-time push of raid state + activity ticker ---
+// The finder polls the bot ~once/sec and broadcasts changes to all connected browsers.
+var sseSubs = new System.Collections.Concurrent.ConcurrentDictionary<Guid, System.Threading.Channels.Channel<string>>();
+
+app.MapGet("/api/stream", async (HttpContext ctx) =>
+{
+    ctx.Response.Headers["Content-Type"]    = "text/event-stream";
+    ctx.Response.Headers["Cache-Control"]   = "no-cache";
+    ctx.Response.Headers["X-Accel-Buffering"] = "no";
+    var ch = System.Threading.Channels.Channel.CreateUnbounded<string>();
+    var id = Guid.NewGuid();
+    sseSubs[id] = ch;
+    try
+    {
+        // immediate hello so the client knows it's connected
+        await ctx.Response.WriteAsync("event: hello\ndata: {\"ok\":true}\n\n");
+        await ctx.Response.Body.FlushAsync(ctx.RequestAborted);
+        await foreach (var msg in ch.Reader.ReadAllAsync(ctx.RequestAborted))
+        {
+            await ctx.Response.WriteAsync(msg);
+            await ctx.Response.Body.FlushAsync(ctx.RequestAborted);
+        }
+    }
+    catch { }
+    finally { sseSubs.TryRemove(id, out _); }
+});
+
+void Broadcast(string evt, string json)
+{
+    var msg = $"event: {evt}\ndata: {json}\n\n";
+    foreach (var kv in sseSubs) kv.Value.Writer.TryWrite(msg);
+}
+
+// Background poller: detects state changes and synthesizes a live activity feed.
+_ = Task.Run(async () =>
+{
+    bool prevActive = false; int prevJoined = 0; int prevCompleted = 0; string prevSpecies = "";
+    string prevQueueHash = "";
+    while (true)
+    {
+        try
+        {
+            var nowJson = await botHttp.GetStringAsync($"{botBase}/api/raid/now");
+            using var doc = System.Text.Json.JsonDocument.Parse(nowJson);
+            var st = doc.RootElement;
+            bool active = st.GetProperty("active").GetBoolean();
+            int joined = st.GetProperty("joined").GetInt32();
+            int completed = st.GetProperty("completed").GetInt32();
+            string species = st.GetProperty("species").GetString() ?? "";
+            bool shiny = st.GetProperty("shiny").GetBoolean();
+            int stars = st.GetProperty("stars").GetInt32();
+            string tera = st.GetProperty("tera").GetString() ?? "";
+
+            // feed events on transitions
+            if (active && !prevActive && species.Length > 0)
+                Broadcast("feed", System.Text.Json.JsonSerializer.Serialize(new { icon = "🎯", text = $"New raid hosting: {(shiny ? "✦ Shiny " : "")}{species} · {stars}★ · {tera} Tera" }));
+            else if (!active && prevActive)
+                Broadcast("feed", System.Text.Json.JsonSerializer.Serialize(new { icon = "⏸", text = "Raid ended — preparing next…" }));
+            if (joined > prevJoined && active)
+                Broadcast("feed", System.Text.Json.JsonSerializer.Serialize(new { icon = "✦", text = $"Trainer joined — {joined}/{st.GetProperty("capacity").GetInt32()} in lobby" }));
+            if (completed > prevCompleted)
+                Broadcast("feed", System.Text.Json.JsonSerializer.Serialize(new { icon = "🏆", text = $"Raid completed — total: {completed}" }));
+
+            // always broadcast latest state
+            Broadcast("state", nowJson);
+
+            // queue diff → push when changed
+            try
+            {
+                var qJson = await botHttp.GetStringAsync($"{botBase}/api/raid/queue");
+                var qHash = qJson.Length + ":" + qJson.GetHashCode().ToString();
+                if (qHash != prevQueueHash) { Broadcast("queue", qJson); prevQueueHash = qHash; }
+            }
+            catch { }
+
+            prevActive = active; prevJoined = joined; prevCompleted = completed; prevSpecies = species;
+        }
+        catch { }
+        await Task.Delay(1000);
+    }
+});
+
 // --- Discord OAuth gate (one-click Host, Member-role only) ---
 var dClientId = Environment.GetEnvironmentVariable("DISCORD_CLIENT_ID") ?? "";
 var dSecret   = Environment.GetEnvironmentVariable("DISCORD_CLIENT_SECRET") ?? "";
@@ -107,6 +189,9 @@ app.MapPost("/api/auth/logout", (HttpContext ctx) =>
     return Results.Ok(new { ok = true });
 });
 
+// Per-user history of website-queued raids (in-memory; resets on container restart).
+var userRaids = new System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Concurrent.ConcurrentQueue<object>>();
+
 app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
 {
     if (!ctx.Request.Cookies.TryGetValue("pku_sess", out var t) || !sessions.TryGetValue(t, out var u))
@@ -116,9 +201,70 @@ app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
     try
     {
         var url = $"{botBase}/api/raid/add?seed={Uri.EscapeDataString(req.Seed ?? "")}&stars={req.Stars}&progress={req.Progress}&location={Uri.EscapeDataString(req.Location ?? "Kitakami")}";
-        return Results.Content(await botHttp.GetStringAsync(url), "application/json");
+        var respText = await botHttp.GetStringAsync(url);
+        // Record the queued raid against the logged-in user (My Raids history)
+        try
+        {
+            using var rd = System.Text.Json.JsonDocument.Parse(respText);
+            if (rd.RootElement.TryGetProperty("ok", out var okEl) && okEl.GetBoolean())
+            {
+                var entry = new
+                {
+                    seed = req.Seed,
+                    stars = req.Stars,
+                    species = rd.RootElement.TryGetProperty("species", out var sp) ? sp.GetString() : "?",
+                    shiny = rd.RootElement.TryGetProperty("shiny", out var sh) && sh.GetBoolean(),
+                    location = req.Location ?? "Kitakami",
+                    when = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                };
+                var q = userRaids.GetOrAdd(u.Id, _ => new System.Collections.Concurrent.ConcurrentQueue<object>());
+                q.Enqueue(entry);
+                while (q.Count > 50 && q.TryDequeue(out _)) { }
+            }
+        }
+        catch { }
+        return Results.Content(respText, "application/json");
     }
     catch (Exception ex) { return Results.Json(new { ok = false, error = "bot unreachable: " + ex.Message }); }
+});
+
+app.MapGet("/api/myraids", (HttpContext ctx) =>
+{
+    if (!ctx.Request.Cookies.TryGetValue("pku_sess", out var t) || !sessions.TryGetValue(t, out var u))
+        return Results.Json(new { loggedIn = false, raids = Array.Empty<object>() });
+    var raids = userRaids.TryGetValue(u.Id, out var q) ? q.Reverse().ToArray() : Array.Empty<object>();
+    return Results.Json(new { loggedIn = true, name = u.Name, verified = u.Verified, raids });
+});
+
+// AI natural-language search → Gemini parses the query into filter fields
+var geminiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? "";
+app.MapPost("/api/ai/parse", async (AiParseRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey))
+        return Results.Json(new { ok = false, error = "AI not configured — add GEMINI_API_KEY to .env" });
+    if (string.IsNullOrWhiteSpace(req.Query))
+        return Results.Json(new { ok = false, error = "empty query" });
+    try
+    {
+        var prompt = "Parse this Tera Raid Pokémon search into a JSON object with ONLY these fields (use null when unspecified): " +
+                     "species (string, English Pokémon name|null), shiny (true/false|null), stars (1-6|null), " +
+                     "teraType (one of: Normal Fighting Flying Poison Ground Rock Bug Ghost Steel Fire Water Grass Electric Psychic Ice Dragon Dark Fairy|null), " +
+                     "minFlawlessIVs (1-6|null), location (Paldea/Kitakami/Blueberry|null). " +
+                     "Query: \"" + req.Query.Replace("\"", "\\\"") + "\". Return ONLY the JSON object, no markdown, no commentary.";
+        var body = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            contents = new[] { new { parts = new[] { new { text = prompt } } } },
+            generationConfig = new { temperature = 0.1, responseMimeType = "application/json" }
+        });
+        var resp = await dHttp.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={geminiKey}",
+            new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+        var json = await resp.Content.ReadAsStringAsync();
+        if (!resp.IsSuccessStatusCode) return Results.Json(new { ok = false, error = $"Gemini {(int)resp.StatusCode}" });
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var text = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
+        return Results.Content("{\"ok\":true,\"filters\":" + text + "}", "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
 });
 
 app.MapGet("/api/species", () =>
@@ -162,6 +308,7 @@ public sealed record SearchRequest(
 
 public sealed record LookupRequest(string? Game, string? Location, int? StoryProgress, int? Stars, string[]? Seeds);
 public sealed record HostRequest(string? Seed, int Stars, int Progress, string? Location);
+public sealed record AiParseRequest(string? Query);
 public sealed record MoveDto(string Name, string Type);
 public sealed record RewardDto(string Name, int Qty);
 public sealed record RaidResultDto(
