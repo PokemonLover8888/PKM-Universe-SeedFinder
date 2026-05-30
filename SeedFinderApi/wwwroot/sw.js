@@ -1,7 +1,8 @@
 // PKM Universe Seed Finder — Service Worker
-// Caches the app shell + species list so the page opens instantly and works offline-ish.
-const CACHE = 'pkmu-seeds-v5';
-const SHELL = ['/', '/manifest.webmanifest', '/icon.svg', '/api/species'];
+// Network-first for HTML + /api/species so updates are seen immediately. Cache-first for
+// static icons + external CDN sprites/cries (which are immutable URLs).
+const CACHE = 'pkmu-seeds-v6';
+const SHELL = ['/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -12,15 +13,27 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // Never cache the SSE stream, auth, host calls, or any non-GET
   if (e.request.method !== 'GET') return;
+  // Bypass entirely — these endpoints must always hit network
   if (url.pathname.startsWith('/api/stream') || url.pathname.startsWith('/api/auth') || url.pathname.startsWith('/api/host')
       || url.pathname.startsWith('/api/nowhosting') || url.pathname.startsWith('/api/queue')
       || url.pathname.startsWith('/api/search') || url.pathname.startsWith('/api/lookup')
       || url.pathname.startsWith('/api/myraids') || url.pathname.startsWith('/api/wishlist')
       || url.pathname.startsWith('/api/ai') || url.pathname.startsWith('/api/r/')
-      || url.pathname.startsWith('/api/leaderboard') || url.pathname.startsWith('/r/')) return;
-  // Cache-first for shell + sprites/cries (external CDNs)
+      || url.pathname.startsWith('/api/leaderboard') || url.pathname.startsWith('/r/')
+      || url.pathname.startsWith('/api/species')) return;
+  // Network-first for the HTML shell (so deploys are seen instantly), cache-first for everything else
+  if (url.pathname === '/' || url.pathname.endsWith('.html')) {
+    e.respondWith(fetch(e.request).then(resp => {
+      if (resp && resp.ok && url.origin === self.location.origin) {
+        const clone = resp.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {});
+      }
+      return resp;
+    }).catch(() => caches.match(e.request).then(hit => hit || caches.match('/'))));
+    return;
+  }
+  // Cache-first for icons + external CDN sprites/cries (immutable)
   e.respondWith(
     caches.match(e.request).then(hit => hit || fetch(e.request).then(resp => {
       if (resp && resp.ok && (url.origin === self.location.origin || url.host.includes('githubusercontent.com'))) {
