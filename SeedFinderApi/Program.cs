@@ -14,7 +14,21 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAn
 var app = builder.Build();
 app.UseCors();
 app.UseDefaultFiles();
-app.UseStaticFiles();
+// Force no-cache on the service worker + HTML shell so deploys propagate immediately past
+// Cloudflare. Sprites/JSON/etc. keep the long cache they already use.
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        var name = ctx.File.Name;
+        if (name == "sw.js" || name == "index.html" || name == "overlay.html" || name == "demo.html")
+        {
+            ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            ctx.Context.Response.Headers["Pragma"] = "no-cache";
+            ctx.Context.Response.Headers["Expires"] = "0";
+        }
+    }
+});
 
 // Warm the engine on boot so the first request isn't slow.
 app.Services.GetRequiredService<RaidEngine>().Warm();
