@@ -5,7 +5,7 @@
 **Find a seed for any shiny Tera Raid Pokémon — then host it on Raid-SV with one click.**
 
 [![Live site](https://img.shields.io/badge/live-seeds.pkm--universe.com-d4af37)](https://seeds.pkm-universe.com)
-[![PKM Universe](https://img.shields.io/badge/web-pkm--universe.com-d4af37)](https://pkm-universe.com)
+[![PKM Universe](https://img.shields.io/badge/web-creator.pkm--universe.com-d4af37)](https://creator.pkm-universe.com)
 [![Discord](https://img.shields.io/badge/discord-PKM%20Universe%20Reborn-5865f2)](https://discord.gg/pkm-universe-reborn)
 
 </div>
