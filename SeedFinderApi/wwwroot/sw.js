@@ -1,6 +1,6 @@
 // PKM Universe Seed Finder — Service Worker
 // Caches the app shell + species list so the page opens instantly and works offline-ish.
-const CACHE = 'pkmu-seeds-v2';
+const CACHE = 'pkmu-seeds-v5';
 const SHELL = ['/', '/manifest.webmanifest', '/icon.svg', '/api/species'];
 
 self.addEventListener('install', e => {
@@ -18,7 +18,8 @@ self.addEventListener('fetch', e => {
       || url.pathname.startsWith('/api/nowhosting') || url.pathname.startsWith('/api/queue')
       || url.pathname.startsWith('/api/search') || url.pathname.startsWith('/api/lookup')
       || url.pathname.startsWith('/api/myraids') || url.pathname.startsWith('/api/wishlist')
-      || url.pathname.startsWith('/api/ai')) return;
+      || url.pathname.startsWith('/api/ai') || url.pathname.startsWith('/api/r/')
+      || url.pathname.startsWith('/api/leaderboard') || url.pathname.startsWith('/r/')) return;
   // Cache-first for shell + sprites/cries (external CDNs)
   e.respondWith(
     caches.match(e.request).then(hit => hit || fetch(e.request).then(resp => {

@@ -22,6 +22,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="PKM Seeds" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <style>
   :root{ --gold:#d4af37; --gold-lt:#f3d979; --gold-dim:#9c8128; --bg:#0c0c0f; --panel:#15151b; --panel2:#1e1e27; --line:#2c2c36; --text:#e8e8ea; --muted:#9a9aa6; }
   *{box-sizing:border-box;}
@@ -146,6 +147,142 @@
   .dwrap{background:#313338;border-radius:12px;max-width:480px;width:100%;padding:16px;font-size:14px;}.dwrap .dclose{float:right;color:#b5bac1;cursor:pointer;font-size:18px;}
   .dmsg{display:flex;gap:12px;}.davatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;flex:0 0 40px;}.dauthor{color:#f2f3f5;font-weight:600;}.dapp{background:#5865f2;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:5px;}.dtime{color:#949ba4;font-size:11px;margin-left:6px;}
   .dembed{margin-top:6px;background:#2b2d31;border-left:4px solid var(--gold);border-radius:4px;padding:14px 16px;position:relative;}.dembed .deimg{position:absolute;top:14px;right:14px;width:72px;height:72px;object-fit:contain;}.detitle{color:#fff;font-weight:700;font-size:15px;margin-bottom:8px;max-width:330px;}.degrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;max-width:340px;}.deh{color:#fff;font-weight:700;font-size:12px;margin-bottom:2px;}.dev{color:#dbdee1;font-size:12px;line-height:1.5;}.defoot{color:#949ba4;font-size:11px;margin-top:10px;}.debtns{display:flex;gap:8px;margin-top:8px;}.debtn{background:#5865f2;color:#fff;border:none;border-radius:4px;padding:8px 14px;font-size:13px;font-weight:600;}.debtn.sec{background:#4e5058;}.debtn.link{background:transparent;border:1px solid #4e5058;color:#dbdee1;}
+  /* === AI bar enhancements: voice mic, vision upload, chat, typeahead === */
+  .aibar{flex-wrap:wrap;}
+  .aibar-inputwrap{flex:1;min-width:240px;position:relative;}
+  .aibar-inputwrap input{width:100%;}
+  .ai-icon{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:13px 14px;font-size:16px;cursor:pointer;transition:.15s;}
+  .ai-icon:hover{border-color:#a855f7;color:#fff;background:#2a1f4a;}
+  .ai-icon.on{background:#3d1d6b;border-color:#a855f7;color:#fff;animation:micpulse 1s ease-in-out infinite;}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(168,85,247,.6);}50%{box-shadow:0 0 0 8px rgba(168,85,247,0);}}
+  .ai-suggest{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#13131a;border:1px solid #4a3a6a;border-radius:11px;box-shadow:0 18px 40px rgba(0,0,0,.6);z-index:40;display:none;overflow:hidden;}
+  .ai-suggest.on{display:block;animation:rise .2s ease;}
+  .ai-suggest .ai-sg{padding:10px 14px;font-size:13px;color:#dbdee1;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid #1e1e27;}
+  .ai-suggest .ai-sg:hover,.ai-suggest .ai-sg.k{background:#2a1f4a;color:#fff;}
+  .ai-suggest .ai-sg:last-child{border-bottom:none;}
+  .ai-suggest .ai-sg::before{content:'✨';color:#a855f7;}
+  .ai-summary{display:none;margin:14px 0 4px;padding:14px 18px;background:linear-gradient(90deg,#2a1f4a 0%,#1a1a26 100%);border:1px solid #4a3a6a;border-radius:12px;color:#dbdee1;font-size:13.5px;line-height:1.55;}
+  .ai-summary.on{display:block;animation:rise .4s ease;}
+  .ai-summary b{color:#f3d979;}
+  .ai-vision-preview{display:none;margin:10px 0 4px;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:11px;align-items:center;gap:12px;}
+  .ai-vision-preview.on{display:flex;}
+  .ai-vision-preview img{width:64px;height:64px;object-fit:contain;border-radius:8px;background:#0c0c0f;flex:0 0 64px;}
+  .ai-vision-preview .vp-txt{flex:1;font-size:13px;color:#dbdee1;}
+  .ai-vision-preview .vp-txt b{color:#f3d979;}
+  .ai-vision-preview .vp-x{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;cursor:pointer;}
+  /* === Floating chat bubble + slide-in chat panel === */
+  .chat-fab{position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#6b21a8);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 14px 36px rgba(168,85,247,.5);z-index:65;display:grid;place-items:center;animation:fabpulse 3s ease-in-out infinite;}
+  @keyframes fabpulse{0%,100%{transform:scale(1);box-shadow:0 14px 36px rgba(168,85,247,.5);}50%{transform:scale(1.06);box-shadow:0 14px 50px rgba(168,85,247,.75);}}
+  .chat-fab:hover{transform:scale(1.12);}
+  .chat-panel{position:fixed;bottom:24px;right:24px;width:380px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100vh - 48px);background:linear-gradient(180deg,#1a1a26,#0f0f15);border:1px solid #4a3a6a;border-radius:18px;display:none;flex-direction:column;box-shadow:0 26px 80px rgba(0,0,0,.8),0 0 60px rgba(168,85,247,.15);z-index:70;overflow:hidden;}
+  .chat-panel.on{display:flex;animation:chatin .3s cubic-bezier(.3,1.4,.5,1);}
+  @keyframes chatin{from{opacity:0;transform:translateY(20px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .chat-head{padding:14px 16px;border-bottom:1px solid #2c2c36;display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#2a1f4a,#1a1a26);}
+  .chat-orb{font-size:22px;animation:bob 3s ease-in-out infinite;}
+  .chat-title b{display:block;font-size:14px;color:var(--text);}
+  .chat-sub{font-size:11px;color:var(--muted);}
+  .chat-close{margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+  .chat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+  .chat-msg{padding:10px 13px;border-radius:13px;font-size:13px;line-height:1.5;max-width:88%;animation:chatfade .25s ease;}
+  @keyframes chatfade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,#a855f7,#6b21a8);color:#fff;border-bottom-right-radius:4px;}
+  .chat-msg.ai{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-bottom-left-radius:4px;}
+  .chat-msg.ai b{color:var(--gold-lt);}
+  .chat-msg .applybtn{display:block;margin-top:8px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;}
+  .chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #2c2c36;background:#13131a;}
+  .chat-input input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 12px;font-size:13px;}
+  .chat-input button{background:linear-gradient(135deg,#a855f7,#6b21a8);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:800;cursor:pointer;}
+  @media(max-width:560px){.chat-panel{width:calc(100vw - 16px);right:8px;bottom:8px;height:78vh;}.chat-fab{bottom:18px;right:18px;}}
+  /* === Coach modal === */
+  .coach-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:120;padding:20px;}
+  .coach-modal.on{display:flex;animation:rise .25s ease;}
+  .coach-wrap{background:linear-gradient(180deg,#1a1a26,#0f0f15);border:1px solid var(--gold-dim);border-radius:18px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.7);position:relative;}
+  .coach-wrap .coach-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+  .coach-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #2c2c36;}
+  .coach-head img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 3px 6px #000);}
+  .coach-title{font-size:18px;font-weight:800;color:var(--gold-lt);}
+  .coach-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .coach-body h4{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin:14px 0 8px;}
+  .coach-counter{display:flex;align-items:center;gap:10px;background:#13131a;border:1px solid #2c2c36;border-radius:10px;padding:9px 12px;margin-bottom:6px;}
+  .coach-counter img{width:42px;height:42px;object-fit:contain;flex:0 0 42px;}
+  .coach-counter .cn{font-weight:700;font-size:13px;color:var(--gold-lt);}
+  .coach-counter .cr{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:1px;}
+  .coach-moves{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .coach-mv{background:#13131a;border:1px solid #2c2c36;border-radius:8px;padding:9px;text-align:center;font-size:12px;font-weight:700;color:var(--text);}
+  .coach-tip{background:#241f10;border:1px solid var(--gold-dim);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--gold-lt);}
+  .coach-tera{background:#1f1a2e;border:1px solid #4a3a6a;border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--text);}
+  .coach-tera b{color:#c9a3ff;}
+  /* === Coach button on card === */
+  .coachbtn{position:absolute;top:7px;right:62px;background:linear-gradient(135deg,#a855f7,#6b21a8);border:none;color:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;z-index:4;box-shadow:0 4px 12px rgba(168,85,247,.4);}
+  .coachbtn:hover{transform:scale(1.05);}
+  /* === 3D Viewer button + modal (Three.js) === */
+  .viewer3dbtn{position:absolute;top:7px;right:96px;background:linear-gradient(135deg,#4d90d5,#1e3a5f);border:none;color:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;z-index:4;box-shadow:0 4px 12px rgba(77,144,213,.4);}
+  .viewer3dbtn:hover{transform:scale(1.05);}
+  .viewer3d-modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:130;padding:20px;}
+  .viewer3d-modal.on{display:flex;animation:rise .25s ease;}
+  .viewer3d-wrap{position:relative;background:linear-gradient(180deg,#0a0a14,#000);border:1px solid var(--gold-dim);border-radius:18px;max-width:640px;width:100%;height:560px;max-height:90vh;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.8),0 0 80px rgba(212,175,55,.15);}
+  .viewer3d-canvas{width:100%;height:100%;display:block;cursor:grab;}
+  .viewer3d-canvas:active{cursor:grabbing;}
+  .viewer3d-title{position:absolute;top:14px;left:18px;font-size:17px;font-weight:800;color:var(--gold-lt);text-shadow:0 2px 10px rgba(0,0,0,.9);pointer-events:none;z-index:3;}
+  .viewer3d-sub{position:absolute;top:38px;left:18px;font-size:11px;color:#ddd;text-shadow:0 2px 6px #000;pointer-events:none;z-index:3;}
+  .viewer3d-close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.55);border:1px solid var(--line);color:var(--text);font-size:18px;cursor:pointer;border-radius:8px;width:34px;height:34px;z-index:5;}
+  .viewer3d-help{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#ccc;pointer-events:none;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:6px;z-index:3;}
+  /* === Raid Party Builder === */
+  .party-modal{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:125;padding:18px;overflow-y:auto;}
+  .party-modal.on{display:flex;animation:rise .25s ease;}
+  .party-wrap{background:linear-gradient(180deg,#1a1a26,#0f0f15);border:1px solid var(--gold-dim);border-radius:18px;max-width:760px;width:100%;max-height:92vh;overflow-y:auto;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.7);position:relative;}
+  .party-wrap .party-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+  .party-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #2c2c36;}
+  .party-head img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 3px 6px #000);}
+  .party-title{font-size:18px;font-weight:800;color:var(--gold-lt);}
+  .party-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .party-strategy{background:#1f1a2e;border:1px solid #4a3a6a;border-radius:10px;padding:11px 14px;font-size:13px;color:var(--text);line-height:1.5;margin-bottom:14px;}
+  .party-strategy b{color:#c9a3ff;}
+  .party-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:580px){.party-grid{grid-template-columns:1fr;}}
+  .party-mon{display:flex;gap:10px;background:#13131a;border:1px solid #2c2c36;border-radius:12px;padding:10px;}
+  .party-mon img{width:60px;height:60px;object-fit:contain;flex:0 0 60px;align-self:flex-start;}
+  .party-mon .pm-body{flex:1;min-width:0;font-size:12px;}
+  .party-mon .pm-name{font-weight:800;color:var(--gold-lt);font-size:13.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .party-mon .pm-role{font-size:9.5px;background:#3a2a4a;color:#d6a8ff;border:1px solid #6a4a8a;border-radius:4px;padding:1px 5px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+  .party-mon .pm-meta{color:var(--muted);font-size:11px;margin-top:2px;line-height:1.4;}
+  .party-mon .pm-tera{display:inline-block;font-size:10px;font-weight:800;padding:1px 6px;border-radius:5px;}
+  .party-mon .pm-moves{margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+  .party-mon .pm-mv{font-size:10.5px;background:#0c0c0f;border:1px solid #2c2c36;border-radius:5px;padding:3px 6px;color:var(--text);text-align:center;}
+  .party-mon .pm-reason{margin-top:6px;font-size:10.5px;color:var(--muted);line-height:1.45;font-style:italic;}
+  .party-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+  .party-actions button{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .party-actions button:hover{border-color:var(--gold);color:var(--gold);}
+  .party-actions button.primary{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;border-color:transparent;}
+  /* === Leaderboard panel === */
+  .lbpanel{background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:14px;padding:0 18px 18px;margin-top:16px;}
+  .lbpanel summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;display:flex;align-items:center;gap:8px;}
+  .lbpanel summary::-webkit-details-marker{display:none;}.lbpanel summary::before{content:"▸ ";}.lbpanel[open] summary::before{content:"▾ ";}
+  .lb-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .lb-tab{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;}
+  .lb-tab.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);}
+  .lb-podium{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;margin-bottom:12px;align-items:end;}
+  .lb-pod{background:linear-gradient(180deg,#1a1a26,#0c0c0f);border:1px solid var(--line);border-radius:12px;padding:14px 8px;text-align:center;}
+  .lb-pod.first{border-color:var(--gold);box-shadow:0 0 30px rgba(212,175,55,.25);padding-top:18px;}
+  .lb-pod.second{border-color:#aaa;}
+  .lb-pod.third{border-color:#cd7f32;}
+  .lb-pod .lb-medal{font-size:24px;}
+  .lb-pod .lb-name{font-weight:800;font-size:13px;color:var(--text);margin-top:5px;}
+  .lb-pod .lb-total{font-size:24px;font-weight:900;color:var(--gold-lt);margin-top:3px;line-height:1;}
+  .lb-pod .lb-sub{font-size:10.5px;color:var(--muted);margin-top:2px;}
+  .lb-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12.5px;margin-bottom:5px;}
+  .lb-row .lb-rank{width:24px;text-align:center;color:var(--muted);font-weight:800;}
+  .lb-row .lb-nm{flex:1;font-weight:700;}
+  .lb-row .lb-stat{color:var(--muted);font-size:11px;margin-right:8px;}
+  .lb-row .lb-shiny{color:var(--gold-lt);font-weight:700;font-size:11.5px;}
+  .lb-empty{color:var(--muted);text-align:center;padding:24px 12px;font-size:13px;}
+  /* === Share button on card === */
+  .sharebtn{position:absolute;top:7px;right:128px;background:linear-gradient(135deg,#5865f2,#3946b8);border:none;color:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;z-index:4;box-shadow:0 4px 12px rgba(88,101,242,.4);}
+  .sharebtn:hover{transform:scale(1.05);}
+  /* === Permalink hero banner === */
+  .permabanner{display:none;background:linear-gradient(90deg,#241f10,#1a1a26);border:1px solid var(--gold-dim);border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--gold-lt);}
+  .permabanner.on{display:flex;align-items:center;gap:10px;animation:rise .35s ease;}
+  .permabanner b{color:#fff;}
   footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}footer a{color:var(--gold);text-decoration:none;}
 </style>
 </head>
@@ -169,9 +306,18 @@
   <div class="upnext" id="upnext"><h3>⏭ Up Next in the Rotation</h3><div class="strip" id="upnextstrip"></div></div>
 
   <div class="aibar">
-    <input id="aiq" placeholder="✨ Ask AI: e.g. 'shiny dragon-tera 6IV Adamant Dragapult'" />
+    <div class="aibar-inputwrap">
+      <input id="aiq" placeholder="✨ Ask AI · type, talk 🎤, or paste a screenshot 📷…" autocomplete="off"/>
+      <div class="ai-suggest" id="aiSuggest"></div>
+    </div>
+    <button class="ai-icon" id="aimic" title="🎤 Voice search">🎤</button>
+    <button class="ai-icon" id="aiimg" title="📷 Identify from screenshot (drag/paste/click)">📷</button>
+    <button class="ai-icon" id="aichat" title="💬 Open chat assistant">💬</button>
     <button id="aigo">Ask AI</button>
+    <input type="file" id="aifile" accept="image/*" style="display:none"/>
   </div>
+  <div class="ai-vision-preview" id="aiVisionPreview"></div>
+  <div class="ai-summary" id="aiSummary"></div>
 
   <div class="card">
     <div class="presets" id="presets"></div>
@@ -203,10 +349,44 @@
     </div>
   </details>
 
+  <details class="lbpanel" id="lbpanel">
+    <summary>🏆 Community Leaderboard — top PKM Universe raid hosts</summary>
+    <div class="lb-tabs">
+      <button class="lb-tab on" data-period="week">This Week</button>
+      <button class="lb-tab" data-period="month">This Month</button>
+      <button class="lb-tab" data-period="alltime">All Time</button>
+    </div>
+    <div id="lb-content"><div class="lb-empty"><span class="spinner"></span> Loading…</div></div>
+  </details>
+
+  <div class="permabanner" id="permabanner"></div>
   <div class="results" id="results"></div>
   <div class="empty" id="empty">Set your filters and hit <b>Find Seeds</b> — or tap a <b>preset</b>.</div>
   <footer>PKM Universe Reborn · seeds work in <b>!ra &lt;seed&gt; &lt;stars&gt; &lt;progress&gt;</b> · <a href="https://creator.pkm-universe.com">creator.pkm-universe.com</a></footer>
 </div>
+<button class="chat-fab" id="chatFab" title="Chat with PKM Universe AI">💬</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head"><span class="chat-orb">🤖</span><div class="chat-title"><b>PKM Universe AI</b><div class="chat-sub">Hunt seeds · get coached · ask anything</div></div><button class="chat-close" id="chatClose">✕</button></div>
+  <div class="chat-body" id="chatBody"><div class="chat-msg ai">Hi! I'm your PKM Universe raid partner.<br><br>Try: <b>"shiny 6IV Dragapult"</b> · <b>"how do I counter dragon-tera Charizard?"</b> · <b>"surprise me with a good kitakami raid"</b></div></div>
+  <div class="chat-input"><input id="chatIn" placeholder="Type a message…" autocomplete="off"/><button id="chatSend">➤</button></div>
+</div>
+<div class="coach-modal" id="coachModal"><div class="coach-wrap"><button class="coach-close">✕</button>
+  <div class="coach-head"><img id="coachSprite" alt=""/><div><div class="coach-title" id="coachTitle">—</div><div class="coach-sub" id="coachSub">—</div></div></div>
+  <div class="coach-body" id="coachBody"></div>
+</div></div>
+<div class="viewer3d-modal" id="viewer3dModal"><div class="viewer3d-wrap">
+  <div class="viewer3d-title" id="v3dTitle">—</div>
+  <div class="viewer3d-sub" id="v3dSub">—</div>
+  <button class="viewer3d-close" id="v3dClose">✕</button>
+  <canvas class="viewer3d-canvas" id="v3dCanvas"></canvas>
+  <div class="viewer3d-help">drag to rotate · scroll to zoom · cry on click</div>
+</div></div>
+<div class="party-modal" id="partyModal"><div class="party-wrap"><button class="party-close">✕</button>
+  <div class="party-head"><img id="partySprite" alt=""/><div><div class="party-title" id="partyTitle">—</div><div class="party-sub" id="partySub">—</div></div></div>
+  <div class="party-strategy" id="partyStrategy"></div>
+  <div class="party-grid" id="partyGrid"></div>
+  <div class="party-actions" id="partyActions"></div>
+</div></div>
 <div id="toast"></div>
 <div id="playlist"><span class="cnt" id="pl-count">0 selected</span><button class="pl-host" id="pl-host">📋 Copy all !ra commands</button><button class="pl-clear" id="pl-clear">Clear</button></div>
 <div id="modal"><div class="dwrap" id="dwrap"></div></div>
@@ -224,8 +404,29 @@ let nameToId={};
 (async()=>{
   const tera=document.getElementById('tera');TERA.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t;tera.appendChild(o);});
   const presetsBox=document.getElementById('presets');PRESETS.forEach(([lbl,v])=>{const b=document.createElement('button');b.className='preset';b.textContent=lbl;b.onclick=()=>{if(v.stars!==undefined)document.getElementById('stars').value=v.stars;if(v.ivs!==undefined)document.getElementById('ivs').value=v.ivs;if(v.shiny!==undefined)document.getElementById('shiny').value=v.shiny;toast('Preset applied: '+lbl);};presetsBox.appendChild(b);});
-  try{const sp=await(await fetch('/api/species')).json();const dl=document.getElementById('specieslist');sp.forEach(s=>{nameToId[s.name.toLowerCase()]=s.id;const o=document.createElement('option');o.value=s.name;dl.appendChild(o);});}catch(e){}
+  await loadSpecies();
+  // Re-load species dropdown whenever map/stars/progress changes — keeps the list to ACTUAL raid bosses for that pool
+  ['location','stars','progress'].forEach(id=>document.getElementById(id).addEventListener('change',()=>loadSpecies(true)));
 })();
+
+async function loadSpecies(announce){
+  const map=document.getElementById('location').value||'Kitakami';
+  const stars=document.getElementById('stars').value||'';
+  const progress=document.getElementById('progress').value||'6';
+  const url=`/api/species?map=${encodeURIComponent(map)}&progress=${progress}${stars?`&stars=${stars}`:''}`;
+  try{
+    const sp=await(await fetch(url)).json();
+    const dl=document.getElementById('specieslist');dl.innerHTML='';
+    nameToId={};
+    sp.forEach(s=>{nameToId[s.name.toLowerCase()]=s.id;const o=document.createElement('option');o.value=s.name;dl.appendChild(o);});
+    // Clear the species field if its current value isn't in the new (filtered) list
+    const cur=document.getElementById('species');
+    if(cur.value && !nameToId[cur.value.toLowerCase()])cur.value='';
+    // Show the count near the field
+    const lbl=cur.previousElementSibling;if(lbl&&lbl.tagName==='LABEL'){const base='Species';lbl.textContent=`${base} · ${sp.length} in this pool`;}
+    if(announce)toast(`✓ ${sp.length} raid species available in ${map}${stars?` at ${stars}★`:''}`);
+  }catch(e){console.error('species load failed',e);}
+}
 
 function val(id){const v=document.getElementById(id).value;return v===""?null:v;}
 function scaleLabel(s){if(s==null)return"?";if(s===0)return"XXXS";if(s===255)return"XXXL";if(s<=50)return"XS";if(s<=110)return"S";if(s<=170)return"M";return"L";}
@@ -261,6 +462,9 @@ function card(r,idx){
     <div class="face front">
       <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div><div class="accent" style="background:linear-gradient(90deg,transparent,${color},transparent)"></div>${teraGem(color)}<div class="foil"></div>${rarity}
       <button class="wishstar ${typeof isWished==='function'&&isWished(r.seed)?'on':''}" title="Save to wishlist">${typeof isWished==='function'&&isWished(r.seed)?'★':'☆'}</button>
+      <button class="coachbtn" title="🧠 AI Raid Coach — counters, moves, advice">🧠</button>
+      <button class="viewer3dbtn" title="🎮 3D Pokémon Viewer">🎮</button>
+      <button class="sharebtn" title="🔗 Copy shareable link">🔗</button>
       <div class="chk" title="Select for bulk copy">✓</div>
       <div class="head"><div class="spritewrap" title="Click for cry + sparkle"><div class="aura" style="background:${color}"></div><img class="sprite" src="${urls[0]}" data-f='${JSON.stringify(urls.slice(1))}' alt="${r.speciesName}" onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><span class="spk">🔊</span></div>
         <div class="ttl"><div class="name">${r.shiny?'<span class="sh">✦</span>':''}${r.speciesName}</div><div class="stars">${'★'.repeat(r.stars)}</div></div>
@@ -272,7 +476,7 @@ function card(r,idx){
       <div class="label">Rewards</div><div class="rewards">${rewards}</div>
       <div class="seed">${r.seed}</div>
       <button class="host">🚀 Host on Raid-SV</button>
-      <div class="btns"><button data-c="${r.seed}">Copy Seed</button><button class="prev">👁 Embed</button><button class="flipbtn doflip">🃏 Flip</button></div>
+      <div class="btns"><button data-c="${r.seed}">Copy</button><button class="partybtn">🪧 Party</button><button class="prev">👁 Embed</button><button class="flipbtn doflip">🃏 Flip</button></div>
     </div>
     <div class="face back">
       <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div>
@@ -284,6 +488,10 @@ function card(r,idx){
   const sw=el.querySelector('.spritewrap');sw.addEventListener('click',()=>{playCry(r.species);sparkleBurst(sw);});
   const chk=el.querySelector('.chk');chk.addEventListener('click',ev=>{ev.stopPropagation();chk.classList.toggle('on');if(chk.classList.contains('on'))selected.set(r.seed,r);else selected.delete(r.seed);updatePlaylist();});
   const ws=el.querySelector('.wishstar');if(ws)ws.addEventListener('click',ev=>{ev.stopPropagation();const on=toggleWish({seed:r.seed,species:r.species,speciesName:r.speciesName,shiny:r.shiny,stars:r.stars});ws.textContent=on?'★':'☆';ws.classList.toggle('on',on);});
+  const cb=el.querySelector('.coachbtn');if(cb)cb.addEventListener('click',ev=>{ev.stopPropagation();if(typeof showCoach==='function')showCoach(r);});
+  const v3=el.querySelector('.viewer3dbtn');if(v3)v3.addEventListener('click',ev=>{ev.stopPropagation();if(typeof showViewer3D==='function')showViewer3D(r);});
+  const shb=el.querySelector('.sharebtn');if(shb)shb.addEventListener('click',ev=>{ev.stopPropagation();if(typeof shareSeed==='function')shareSeed(r);});
+  const pyb=el.querySelector('.partybtn');if(pyb)pyb.addEventListener('click',ev=>{ev.stopPropagation();if(typeof showPartyBuilder==='function')showPartyBuilder(r);});
   const hb=el.querySelector('.host');hb.addEventListener('click',async()=>{
     if(hb.classList.contains('done'))return;
     if(!authState.loggedIn){toast('Log in with Discord to host →');location.href='/api/auth/login';return;}
@@ -292,7 +500,7 @@ function card(r,idx){
     try{
       const loc=document.getElementById('location').value;const prog=parseInt(document.getElementById('progress').value||'6');
       const resp=await(await fetch('/api/host',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:r.seed,stars:r.stars,progress:prog,location:loc})})).json();
-      if(resp.ok){const b=hb.getBoundingClientRect();confetti(b.left+b.width/2,b.top);hb.classList.add('done');hb.textContent='✓ Queued on Raid-SV!';toast(`🚀 ${r.speciesName} queued — hosting next on Raid-SV!`);setTimeout(()=>{hb.classList.remove('done');hb.innerHTML=orig;},2800);}
+      if(resp.ok){const b=hb.getBoundingClientRect();confetti(b.left+b.width/2,b.top);hb.classList.add('done');hb.textContent='✓ Queued on Raid-SV!';toast(`🚀 ${r.speciesName} queued — hosting next on Raid-SV!`);if(typeof aiAnnounce==='function')aiAnnounce(r);setTimeout(()=>{hb.classList.remove('done');hb.innerHTML=orig;},2800);}
       else{toast('Couldn\'t host: '+(resp.error||'error'));hb.innerHTML=orig;}
     }catch(e){toast('Host failed: '+e.message);hb.innerHTML=orig;}
   });
@@ -314,11 +522,22 @@ async function search(){
     if(!res.results.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='No matches — widen your filters (Any tera, fewer IVs, or a species that appears at this star level).';}
     res.results.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
     status.innerHTML=`<b style="color:var(--gold)">${res.results.length}</b>&nbsp;found · scanned ${res.scanned.toLocaleString()} seeds · ${res.elapsedMs} ms${res.hitLimit?' · try widening filters':''}`;
+    if(typeof aiSummarizeResults==='function')aiSummarizeResults(window._lastQ||describeFilters(body),res.results);
   }catch(e){status.innerHTML="Error: "+e.message;}
   go.disabled=false;
 }
-document.getElementById('go').addEventListener('click',search);
-document.getElementById('surprise').addEventListener('click',e=>{document.getElementById('species').value='';document.getElementById('shiny').value='true';document.getElementById('ivs').value='';confetti(e.clientX,e.clientY);toast('🎲 Rolling random shinies…');search();});
+function describeFilters(b){const bits=[];if(b.shiny===true)bits.push('shiny');if(b.minFlawlessIVs)bits.push(b.minFlawlessIVs+'IV+');if(b.stars)bits.push(b.stars+'★');if(b.teraType!=null)bits.push(TERA[b.teraType]+' tera');if(b.species)bits.push((Object.entries(nameToId).find(([n,i])=>i===b.species)||['?'])[0]);if(b.location)bits.push('@ '+b.location);return bits.join(' ')||'all raids';}
+document.getElementById('go').addEventListener('click',()=>{window._lastQ=null;search();});
+document.getElementById('surprise').addEventListener('click',async e=>{
+  confetti(e.clientX,e.clientY);
+  const btn=e.currentTarget,orig=btn.textContent;btn.textContent='🎲 AI rolling…';btn.disabled=true;
+  try{
+    const r=await(await fetch('/api/ai/surprise',{method:'POST'})).json();
+    if(r.ok&&r.surprise){const s=r.surprise;toast('🎲 '+(s.theme||'Surprise!'));window._lastQ=s.theme||null;applyAiFilters(s.filters||{});search();}
+    else{document.getElementById('species').value='';document.getElementById('shiny').value='true';document.getElementById('ivs').value='';toast('🎲 Rolling random shinies…');search();}
+  }catch(_){document.getElementById('species').value='';document.getElementById('shiny').value='true';document.getElementById('ivs').value='';search();}
+  btn.textContent=orig;btn.disabled=false;
+});
 document.getElementById('lookupbtn').addEventListener('click',async()=>{
   const lines=document.getElementById('lookupinput').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const st=document.getElementById('lookupstatus');
@@ -434,26 +653,377 @@ async function renderMyPanel(){
 // Re-render My panel whenever auth state changes
 const _origCheckAuth=checkAuth; checkAuth=async function(){await _origCheckAuth();renderMyPanel();};
 
-// --- AI natural-language search (uses Gemini via /api/ai/parse) ---
+// ============================================================
+// AI SUITE — parse, typeahead, voice, vision, chat, coach, summary, announce
+// ============================================================
+
+// Shared: apply AI-parsed filter object to the form
+function applyAiFilters(f){
+  if(!f)return;
+  if(f.species&&nameToId[(''+f.species).toLowerCase()])document.getElementById('species').value=f.species;
+  if(f.shiny===true)document.getElementById('shiny').value='true';else if(f.shiny===false)document.getElementById('shiny').value='false';
+  if(f.stars)document.getElementById('stars').value=String(f.stars);
+  if(f.teraType){const t=TERA.indexOf(f.teraType);if(t>=0)document.getElementById('tera').value=String(t);}
+  if(f.minFlawlessIVs)document.getElementById('ivs').value=String(f.minFlawlessIVs);
+  if(f.location)document.getElementById('location').value=f.location;
+}
+
+// 1) Ask-AI button (natural-language parse → fill form → search)
 document.getElementById('aigo').addEventListener('click',async()=>{
   const q=document.getElementById('aiq').value.trim();if(!q){toast('Type a query first.');return;}
   const btn=document.getElementById('aigo'),orig=btn.textContent;btn.disabled=true;btn.textContent='✨ Thinking…';
+  window._lastQ=q;
   try{
     const res=await(await fetch('/api/ai/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})})).json();
     if(!res.ok){toast('AI: '+(res.error||'failed'));btn.disabled=false;btn.textContent=orig;return;}
-    const f=res.filters||{};
-    if(f.species&&nameToId[(''+f.species).toLowerCase()])document.getElementById('species').value=f.species;
-    if(f.shiny===true)document.getElementById('shiny').value='true';else if(f.shiny===false)document.getElementById('shiny').value='false';
-    if(f.stars)document.getElementById('stars').value=String(f.stars);
-    if(f.teraType){const t=TERA.indexOf(f.teraType);if(t>=0)document.getElementById('tera').value=String(t);}
-    if(f.minFlawlessIVs)document.getElementById('ivs').value=String(f.minFlawlessIVs);
-    if(f.location)document.getElementById('location').value=f.location;
+    applyAiFilters(res.filters||{});
     toast('✨ Filters set by AI — searching…');
     search();
   }catch(e){toast('AI failed: '+e.message);}
   btn.disabled=false;btn.textContent=orig;
 });
-document.getElementById('aiq').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('aigo').click();});
+document.getElementById('aiq').addEventListener('keydown',e=>{
+  const sg=document.getElementById('aiSuggest');const items=sg.querySelectorAll('.ai-sg');
+  if(sg.classList.contains('on')&&items.length){
+    if(e.key==='ArrowDown'){e.preventDefault();window._sgI=Math.min(items.length-1,(window._sgI??-1)+1);items.forEach((el,i)=>el.classList.toggle('k',i===window._sgI));return;}
+    if(e.key==='ArrowUp'){e.preventDefault();window._sgI=Math.max(-1,(window._sgI??-1)-1);items.forEach((el,i)=>el.classList.toggle('k',i===window._sgI));return;}
+    if(e.key==='Enter'&&(window._sgI??-1)>=0){e.preventDefault();items[window._sgI].click();return;}
+    if(e.key==='Escape'){sg.classList.remove('on');return;}
+  }
+  if(e.key==='Enter')document.getElementById('aigo').click();
+});
+
+// 2) Typeahead (debounced 280ms)
+let _aiSgTimer;
+document.getElementById('aiq').addEventListener('input',e=>{
+  clearTimeout(_aiSgTimer);
+  const q=e.target.value.trim();const sg=document.getElementById('aiSuggest');
+  if(q.length<2){sg.classList.remove('on');return;}
+  _aiSgTimer=setTimeout(async()=>{
+    try{
+      const r=await(await fetch('/api/ai/suggest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({partial:q})})).json();
+      if(!r.ok||!Array.isArray(r.suggestions)||!r.suggestions.length){sg.classList.remove('on');return;}
+      sg.innerHTML=r.suggestions.slice(0,4).map(s=>`<div class="ai-sg">${String(s).replace(/</g,'&lt;')}</div>`).join('');
+      sg.classList.add('on');window._sgI=-1;
+      sg.querySelectorAll('.ai-sg').forEach(el=>el.onclick=()=>{document.getElementById('aiq').value=el.textContent;sg.classList.remove('on');document.getElementById('aigo').click();});
+    }catch(_){}
+  },280);
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.aibar'))document.getElementById('aiSuggest').classList.remove('on');});
+
+// 3) Voice input (Web Speech API)
+const _SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+document.getElementById('aimic').addEventListener('click',()=>{
+  if(!_SR){toast('Voice not supported here — try Chrome/Edge.');return;}
+  const r=new _SR();r.lang='en-US';r.interimResults=false;
+  const btn=document.getElementById('aimic');btn.classList.add('on');btn.textContent='🔴';
+  r.onresult=ev=>{const t=ev.results[0][0].transcript;document.getElementById('aiq').value=t;toast('🎤 Heard: '+t);document.getElementById('aigo').click();};
+  r.onerror=()=>toast('Voice failed — try again.');
+  r.onend=()=>{btn.classList.remove('on');btn.textContent='🎤';};
+  try{r.start();}catch(_){btn.classList.remove('on');btn.textContent='🎤';}
+});
+
+// 4) Vision (Gemini Vision) — click 📷, paste, or drag-drop an image
+async function visionFromFile(file){
+  if(!file||!file.type||!file.type.startsWith('image/'))return;
+  const fr=new FileReader();
+  fr.onload=async()=>{
+    const b64=String(fr.result).split(',')[1];
+    const preview=document.getElementById('aiVisionPreview');
+    preview.innerHTML=`<img src="${fr.result}"/><div class="vp-txt"><b>📷 Looking at your image…</b><br><span style="color:var(--muted)">Gemini Vision is identifying it.</span></div><button class="vp-x">✕</button>`;
+    preview.classList.add('on');
+    preview.querySelector('.vp-x').onclick=()=>preview.classList.remove('on');
+    try{
+      const r=await(await fetch('/api/ai/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:b64,mimeType:file.type})})).json();
+      if(!r.ok){preview.querySelector('.vp-txt').innerHTML='<b>Vision failed:</b> '+(r.error||'?');return;}
+      const f=r.filters||{};
+      preview.querySelector('.vp-txt').innerHTML=`<b>📷 Identified:</b> ${(f.shiny?'✦ Shiny ':'')+(f.species||'Unknown')}${f.stars?' · '+f.stars+'★':''}${f.teraType?' · '+f.teraType+' Tera':''}<br><span style="color:var(--muted)">Filters set — searching now.</span>`;
+      window._lastQ='screenshot of '+(f.species||'a Pokémon');
+      applyAiFilters(f);search();
+    }catch(e){preview.querySelector('.vp-txt').innerHTML='<b>Vision failed:</b> '+e.message;}
+  };
+  fr.readAsDataURL(file);
+}
+document.getElementById('aiimg').addEventListener('click',()=>document.getElementById('aifile').click());
+document.getElementById('aifile').addEventListener('change',e=>{if(e.target.files[0])visionFromFile(e.target.files[0]);e.target.value='';});
+document.addEventListener('paste',e=>{const items=(e.clipboardData||{}).items||[];for(const it of items)if(it.type&&it.type.startsWith('image/')){visionFromFile(it.getAsFile());break;}});
+['dragover','drop'].forEach(ev=>document.querySelector('.aibar').addEventListener(ev,e=>{e.preventDefault();if(ev==='drop'&&e.dataTransfer.files.length)visionFromFile(e.dataTransfer.files[0]);}));
+
+// 5) Result summary banner (Gemini one-liner above results)
+async function aiSummarizeResults(query,results){
+  const banner=document.getElementById('aiSummary');
+  if(!results||!results.length){banner.classList.remove('on');return;}
+  try{
+    const rows=results.slice(0,5).map(r=>({speciesName:r.speciesName,shiny:r.shiny,stars:r.stars,teraType:r.teraName,flawlessIVs:r.flawlessIVs,nature:r.nature||'?'}));
+    const r=await(await fetch('/api/ai/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query||'a search',results:rows})})).json();
+    if(r.ok&&r.text){banner.innerHTML='<b>🧠 AI says:</b> '+r.text;banner.classList.add('on');}
+    else banner.classList.remove('on');
+  }catch(_){banner.classList.remove('on');}
+}
+
+// 6) AI Raid Coach — opens modal with counters, moves, tera advice, tip
+async function showCoach(r){
+  const m=document.getElementById('coachModal');
+  document.getElementById('coachTitle').textContent=(r.shiny?'✦ ':'')+r.speciesName+' · '+'★'.repeat(r.stars);
+  document.getElementById('coachSub').textContent=r.teraName+' Tera · '+(r.ability||'?')+(r.hidden?' (HA)':'')+' · '+(r.nature||'?');
+  document.getElementById('coachSprite').src=spriteChain(r.species,r.shiny)[0];
+  document.getElementById('coachBody').innerHTML='<div style="text-align:center;padding:36px 10px;color:var(--muted)"><span class="spinner"></span><br><br>🧠 Coach is studying the matchup…</div>';
+  m.classList.add('on');
+  try{
+    const movesArr=(r.moves||[]).map(x=>x.name);
+    const c=await(await fetch('/api/ai/coach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({speciesName:r.speciesName,shiny:!!r.shiny,stars:r.stars,teraType:r.teraName,ability:r.ability,moves:movesArr})})).json();
+    if(!c.ok){document.getElementById('coachBody').innerHTML='<div style="color:#f07a7a">Coach failed: '+(c.error||'?')+'</div>';return;}
+    const k=c.coach||{};
+    const counters=(k.counters||[]).map(x=>{
+      const id=nameToId[(x.name||'').toLowerCase()]||0;
+      const sp=id?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
+      return `<div class="coach-counter">${sp?`<img src="${sp}" onerror="this.style.visibility='hidden'"/>`:'<div style="width:42px;flex:0 0 42px"></div>'}<div><div class="cn">${x.name||'?'}</div><div class="cr">${x.reason||''}</div></div></div>`;
+    }).join('');
+    const moves=(k.moves||[]).map(mv=>`<div class="coach-mv">${mv}</div>`).join('');
+    document.getElementById('coachBody').innerHTML=`
+      <h4>🛡 Best counters available in S/V</h4>${counters||'<div style="color:var(--muted)">—</div>'}
+      <h4>⚔ Top attack moves to bring</h4><div class="coach-moves">${moves||'<div style="color:var(--muted)">—</div>'}</div>
+      <h4>✨ Tera advice for your attacker</h4><div class="coach-tera">${k.teraAdvice||'—'}</div>
+      <h4>💡 Pre-raid tip</h4><div class="coach-tip">${k.tip||'—'}</div>`;
+  }catch(e){document.getElementById('coachBody').innerHTML='<div style="color:#f07a7a">Coach failed: '+e.message+'</div>';}
+}
+document.getElementById('coachModal').addEventListener('click',e=>{if(e.target.id==='coachModal'||e.target.classList.contains('coach-close'))document.getElementById('coachModal').classList.remove('on');});
+
+// 7) AI Announcer — auto-generate hype announcement when hosting
+async function aiAnnounce(r){
+  try{
+    const ar=await(await fetch('/api/ai/announce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({speciesName:r.speciesName,shiny:!!r.shiny,stars:r.stars,teraType:r.teraName,hosterName:(authState&&authState.name)||'a trainer'})})).json();
+    if(ar.ok&&ar.text){navigator.clipboard.writeText(ar.text).catch(()=>{});setTimeout(()=>toast('✨ AI announcement copied! Paste in #raid-kitakami.'),1400);}
+  }catch(_){}
+}
+
+// 8) Conversational chat panel
+let chatSessionId=null;
+function chatPush(role,html,filters){
+  const body=document.getElementById('chatBody');
+  const d=document.createElement('div');d.className='chat-msg '+role;d.innerHTML=html;
+  if(filters){
+    const btn=document.createElement('button');btn.className='applybtn';btn.textContent='✨ Apply filters & search';
+    btn.onclick=()=>{applyAiFilters(filters);window._lastQ='chat';search();toast('Filters applied — searching!');document.getElementById('chatPanel').classList.remove('on');};
+    d.appendChild(btn);
+  }
+  body.appendChild(d);body.scrollTop=body.scrollHeight;
+}
+async function chatSend(){
+  const inp=document.getElementById('chatIn');const t=inp.value.trim();if(!t)return;
+  chatPush('user',t.replace(/</g,'&lt;'));
+  inp.value='';inp.disabled=true;
+  const thinking=document.createElement('div');thinking.className='chat-msg ai';thinking.innerHTML='<span class="spinner"></span> Thinking…';
+  document.getElementById('chatBody').appendChild(thinking);document.getElementById('chatBody').scrollTop=999999;
+  try{
+    const r=await(await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:chatSessionId,message:t})})).json();
+    thinking.remove();
+    if(!r.ok)chatPush('ai','⚠ '+(r.error||'failed'));
+    else{chatSessionId=r.sessionId;chatPush('ai',(r.reply||'…').replace(/\n/g,'<br>'),r.filters);}
+  }catch(e){thinking.remove();chatPush('ai','⚠ '+e.message);}
+  inp.disabled=false;inp.focus();
+}
+document.getElementById('chatSend').addEventListener('click',chatSend);
+document.getElementById('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter')chatSend();});
+document.getElementById('chatFab').addEventListener('click',()=>{document.getElementById('chatPanel').classList.toggle('on');setTimeout(()=>document.getElementById('chatIn').focus(),200);});
+document.getElementById('chatClose').addEventListener('click',()=>document.getElementById('chatPanel').classList.remove('on'));
+document.getElementById('aichat').addEventListener('click',()=>{document.getElementById('chatPanel').classList.add('on');setTimeout(()=>document.getElementById('chatIn').focus(),200);});
+
+// ============================================================
+// 🔗 SHARE: copy permalink for a seed
+// ============================================================
+function shareSeed(r){
+  const loc=document.getElementById('location').value||'Kitakami';
+  const story=parseInt(document.getElementById('progress').value||'6');
+  const url=`${location.origin}/r/${r.seed}?stars=${r.stars}&story=${story}&loc=${encodeURIComponent(loc)}`;
+  navigator.clipboard.writeText(url).then(()=>toast(`🔗 Link copied — share ${r.shiny?'✦ ':''}${r.speciesName}!`)).catch(()=>{
+    prompt('Copy this link:', url);
+  });
+}
+
+// ============================================================
+// 📌 PERMALINK: hydrate /r/<seed> URL on page load
+// ============================================================
+async function hydratePermalink(){
+  const m=location.pathname.match(/^\/r\/([0-9A-Fa-f]{8})/);
+  if(!m)return false;
+  const seed=m[1].toUpperCase();
+  const qs=new URLSearchParams(location.search);
+  const loc=qs.get('loc')||'Kitakami';
+  const stars=qs.get('stars')||'6';
+  const story=qs.get('story')||'6';
+  try{document.getElementById('location').value=loc;document.getElementById('progress').value=story;document.getElementById('stars').value=stars;}catch(_){}
+  const banner=document.getElementById('permabanner');
+  banner.innerHTML=`📌 <b>Shared with you</b> — loading seed <code style="font-family:Consolas;color:var(--gold-lt)">${seed}</code>…`;
+  banner.classList.add('on');
+  try{
+    const url=`/api/r/${seed}?stars=${stars}&story=${story}&loc=${encodeURIComponent(loc)}`;
+    const r=await(await fetch(url)).json();
+    if(r&&r.seed){
+      const box=document.getElementById('results');box.innerHTML='';
+      box.appendChild(card(r,0));bindTilt();
+      document.getElementById('empty').style.display='none';
+      banner.innerHTML=`📌 <b>Shared with you:</b> ${r.shiny?'✦ Shiny ':''}${r.speciesName} · ${'★'.repeat(r.stars)} · ${r.teraName} Tera`;
+      return true;
+    }else{banner.innerHTML=`📌 Seed <code>${seed}</code> couldn't be loaded — try the form below.`;}
+  }catch(e){banner.innerHTML=`📌 Seed <code>${seed}</code> couldn't be loaded — ${e.message}`;}
+  return false;
+}
+
+// ============================================================
+// 🏆 LEADERBOARD: weekly / monthly / all-time top hosts
+// ============================================================
+async function loadLeaderboard(period){
+  const box=document.getElementById('lb-content');
+  box.innerHTML='<div class="lb-empty"><span class="spinner"></span> Loading…</div>';
+  try{
+    const r=await(await fetch(`/api/leaderboard?period=${period}`)).json();
+    const rows=r.topHosts||[];
+    if(!rows.length){box.innerHTML=`<div class="lb-empty">No raids hosted ${period==='week'?'this week':period==='month'?'this month':'yet'}. Be the first — host any seed above!</div>`;return;}
+    let html='';
+    const podium=rows.slice(0,3);
+    if(podium.length>=3){
+      const[a,b,c]=podium;
+      html+=`<div class="lb-podium">
+        <div class="lb-pod second"><div class="lb-medal">🥈</div><div class="lb-name">${b.name}</div><div class="lb-total">${b.total}</div><div class="lb-sub">raids · ✦ ${b.shinies}</div></div>
+        <div class="lb-pod first"><div class="lb-medal">👑</div><div class="lb-name">${a.name}</div><div class="lb-total">${a.total}</div><div class="lb-sub">raids · ✦ ${a.shinies}</div></div>
+        <div class="lb-pod third"><div class="lb-medal">🥉</div><div class="lb-name">${c.name}</div><div class="lb-total">${c.total}</div><div class="lb-sub">raids · ✦ ${c.shinies}</div></div>
+      </div>`;
+    }else{
+      html+=podium.map((row,i)=>`<div class="lb-pod ${i===0?'first':''}"><div class="lb-medal">${['👑','🥈','🥉'][i]}</div><div class="lb-name">${row.name}</div><div class="lb-total">${row.total}</div><div class="lb-sub">raids · ✦ ${row.shinies}</div></div>`).join('');
+    }
+    rows.slice(3).forEach((row,i)=>{html+=`<div class="lb-row"><div class="lb-rank">#${i+4}</div><div class="lb-nm">${row.name}</div><div class="lb-stat">fav: ${row.topSpecies}</div><div class="lb-shiny">${row.total} · ✦ ${row.shinies}</div></div>`;});
+    box.innerHTML=html;
+  }catch(e){box.innerHTML='<div class="lb-empty">Couldn\'t load leaderboard.</div>';}
+}
+document.querySelectorAll('#lbpanel .lb-tab').forEach(tab=>tab.addEventListener('click',()=>{
+  document.querySelectorAll('#lbpanel .lb-tab').forEach(t=>t.classList.toggle('on',t===tab));
+  loadLeaderboard(tab.dataset.period);
+}));
+document.getElementById('lbpanel').addEventListener('toggle',e=>{if(e.target.open&&!e.target._loaded){loadLeaderboard('week');e.target._loaded=true;}});
+
+// ============================================================
+// 🪧 RAID PARTY BUILDER: AI-generated 6-Pokémon counter team
+// ============================================================
+async function showPartyBuilder(r){
+  const m=document.getElementById('partyModal');
+  document.getElementById('partyTitle').textContent=`Counter party for ${r.shiny?'✦ ':''}${r.speciesName}`;
+  document.getElementById('partySub').textContent=`${'★'.repeat(r.stars)} · ${r.teraName} Tera · ${r.ability||'?'}`;
+  document.getElementById('partySprite').src=spriteChain(r.species,r.shiny)[0];
+  document.getElementById('partyStrategy').innerHTML='<span class="spinner"></span> AI is building your 6-Pokémon counter team…';
+  document.getElementById('partyGrid').innerHTML='';
+  document.getElementById('partyActions').innerHTML='';
+  m.classList.add('on');
+  try{
+    const resp=await(await fetch('/api/ai/party',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({speciesName:r.speciesName,shiny:!!r.shiny,stars:r.stars,teraType:r.teraName,ability:r.ability})})).json();
+    if(!resp.ok){document.getElementById('partyStrategy').textContent='Party builder failed: '+(resp.error||'?');return;}
+    const p=resp.party||{};
+    document.getElementById('partyStrategy').innerHTML=`<b>Strategy:</b> ${p.strategy||'—'}`;
+    document.getElementById('partyGrid').innerHTML=(p.team||[]).map(mon=>{
+      const id=nameToId[(mon.name||'').toLowerCase()]||0;
+      const sp=id?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
+      const tColor=TC[mon.tera]||'#888';
+      const moves=(mon.moves||[]).map(mv=>`<div class="pm-mv">${mv}</div>`).join('');
+      return `<div class="party-mon">
+        ${sp?`<img src="${sp}" onerror="this.style.visibility='hidden'"/>`:'<div style="width:60px;flex:0 0 60px"></div>'}
+        <div class="pm-body">
+          <div class="pm-name">${mon.name||'?'} <span class="pm-role">${mon.role||''}</span> <span class="pm-tera" style="background:${tColor}22;color:${tColor};border:1px solid ${tColor}66">${mon.tera||'?'} Tera</span></div>
+          <div class="pm-meta">${mon.ability||'?'} · ${mon.nature||'?'} · @ ${mon.item||'?'}</div>
+          <div class="pm-moves">${moves}</div>
+          <div class="pm-reason">${mon.reason||''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    const showdown=(p.team||[]).map(mon=>{
+      const lines=[];
+      lines.push(`${mon.name||'?'}${mon.item?' @ '+mon.item:''}`);
+      if(mon.ability)lines.push(`Ability: ${mon.ability}`);
+      if(mon.tera)lines.push(`Tera Type: ${mon.tera}`);
+      if(mon.nature)lines.push(`${mon.nature} Nature`);
+      (mon.moves||[]).forEach(mv=>lines.push(`- ${mv}`));
+      return lines.join('\n');
+    }).join('\n\n');
+    const actions=document.getElementById('partyActions');actions.innerHTML='';
+    const copy=document.createElement('button');copy.className='primary';copy.textContent='📋 Copy as Showdown Paste';
+    copy.onclick=()=>navigator.clipboard.writeText(showdown).then(()=>toast('📋 Showdown paste copied!')).catch(()=>toast('Copy failed'));
+    const reroll=document.createElement('button');reroll.textContent='🔄 Reroll team';reroll.onclick=()=>showPartyBuilder(r);
+    actions.append(copy,reroll);
+  }catch(e){document.getElementById('partyStrategy').textContent='Party builder failed: '+e.message;}
+}
+document.getElementById('partyModal').addEventListener('click',e=>{if(e.target.id==='partyModal'||e.target.classList.contains('party-close'))document.getElementById('partyModal').classList.remove('on');});
+
+// ============================================================
+// 🎮 3D POKÉMON VIEWER (Three.js scene)
+// ============================================================
+let _v3d=null;
+function showViewer3D(r){
+  const m=document.getElementById('viewer3dModal');
+  document.getElementById('v3dTitle').textContent=(r.shiny?'✦ ':'')+r.speciesName;
+  document.getElementById('v3dSub').textContent=`${'★'.repeat(r.stars)} · ${r.teraName} Tera`;
+  m.classList.add('on');
+  if(typeof THREE==='undefined'){toast('3D viewer needs Three.js — check your network.');return;}
+  if(_v3d){try{_v3d.cleanup();}catch(_){}_v3d=null;}
+  const canvas=document.getElementById('v3dCanvas');
+  // Defer one frame so canvas has its size after .on
+  requestAnimationFrame(()=>{
+    const w=canvas.clientWidth||600,h=canvas.clientHeight||540;
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(window.devicePixelRatio);renderer.setSize(w,h,false);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(45,w/h,0.1,100);
+    camera.position.set(0,0.2,4.5);
+    const teraHex=(TC[r.teraName]||'#d4af37').replace('#','0x');
+    const teraColor=parseInt(teraHex,16);
+    scene.add(new THREE.AmbientLight(0x303040,1.2));
+    const lt=new THREE.PointLight(teraColor,35,30,1);lt.position.set(0,1.5,3);scene.add(lt);
+    const lt2=new THREE.PointLight(0xffffff,8,30,2);lt2.position.set(-3,2,3);scene.add(lt2);
+    const urls=spriteChain(r.species,r.shiny);
+    const tex=new THREE.TextureLoader().load(urls[0]);
+    if(THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;
+    const planeMat=new THREE.MeshStandardMaterial({map:tex,transparent:true,alphaTest:0.02,side:THREE.DoubleSide,emissive:teraColor,emissiveIntensity:0.10,emissiveMap:tex});
+    const plane=new THREE.Mesh(new THREE.PlaneGeometry(3,3),planeMat);scene.add(plane);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(1.4,1.7,64),new THREE.MeshBasicMaterial({color:teraColor,transparent:true,opacity:0.5,side:THREE.DoubleSide}));
+    ring.rotation.x=-Math.PI/2;ring.position.y=-1.4;scene.add(ring);
+    const ring2=new THREE.Mesh(new THREE.RingGeometry(1.0,1.15,64),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.22,side:THREE.DoubleSide}));
+    ring2.rotation.x=-Math.PI/2;ring2.position.y=-1.39;scene.add(ring2);
+    const pGeo=new THREE.BufferGeometry();const pCount=180;const pos=new Float32Array(pCount*3);
+    for(let i=0;i<pCount;i++){pos[i*3]=(Math.random()-0.5)*8;pos[i*3+1]=(Math.random()-0.5)*5;pos[i*3+2]=(Math.random()-0.5)*5-1;}
+    pGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const pMat=new THREE.PointsMaterial({color:teraColor,size:0.045,transparent:true,opacity:0.75,blending:THREE.AdditiveBlending});
+    const particles=new THREE.Points(pGeo,pMat);scene.add(particles);
+    let rotY=0,rotX=0,isDragging=false,lastX=0,lastY=0,autoSpin=true,cameraDist=4.5;
+    function onDown(e){isDragging=true;autoSpin=false;const t=e.touches?.[0];lastX=t?t.clientX:e.clientX;lastY=t?t.clientY:e.clientY;}
+    function onMove(e){if(!isDragging)return;const t=e.touches?.[0];const cx=t?t.clientX:e.clientX;const cy=t?t.clientY:e.clientY;rotY+=(cx-lastX)*0.01;rotX+=(cy-lastY)*0.01;rotX=Math.max(-0.7,Math.min(0.7,rotX));lastX=cx;lastY=cy;}
+    function onUp(){isDragging=false;}
+    function onWheel(e){e.preventDefault();cameraDist=Math.max(2.5,Math.min(8,cameraDist+e.deltaY*0.003));}
+    function onClick(){if(!isDragging){try{const a=new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${r.species}.ogg`);a.volume=.4;a.play().catch(()=>{});}catch(_){}}}
+    canvas.addEventListener('mousedown',onDown);window.addEventListener('mousemove',onMove);window.addEventListener('mouseup',onUp);
+    canvas.addEventListener('touchstart',onDown,{passive:true});window.addEventListener('touchmove',onMove,{passive:true});window.addEventListener('touchend',onUp);
+    canvas.addEventListener('wheel',onWheel,{passive:false});canvas.addEventListener('click',onClick);
+    let frame=0,running=true;
+    (function loop(){
+      if(!running)return;
+      if(autoSpin)rotY+=0.005;
+      plane.rotation.y=rotY;plane.rotation.x=rotX*0.5;
+      plane.position.y=Math.sin(frame*0.02)*0.06;
+      camera.position.set(0,0.2,cameraDist);camera.lookAt(0,0,0);
+      ring.rotation.z+=0.004;particles.rotation.y+=0.0008;
+      renderer.render(scene,camera);frame++;requestAnimationFrame(loop);
+    })();
+    _v3d={cleanup(){running=false;
+      canvas.removeEventListener('mousedown',onDown);window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',onUp);
+      canvas.removeEventListener('touchstart',onDown);window.removeEventListener('touchmove',onMove);window.removeEventListener('touchend',onUp);
+      canvas.removeEventListener('wheel',onWheel);canvas.removeEventListener('click',onClick);
+      try{renderer.dispose();planeMat.dispose();tex.dispose();pGeo.dispose();pMat.dispose();}catch(_){}
+    }};
+  });
+}
+function closeViewer3D(){document.getElementById('viewer3dModal').classList.remove('on');if(_v3d){try{_v3d.cleanup();}catch(_){}_v3d=null;}}
+document.getElementById('v3dClose').addEventListener('click',closeViewer3D);
+document.getElementById('viewer3dModal').addEventListener('click',e=>{if(e.target.id==='viewer3dModal')closeViewer3D();});
+
+// Hydrate permalink (waits until card() exists; this script runs after card is defined)
+window.addEventListener('load',()=>{setTimeout(hydratePermalink,40);});
 
 // --- Service Worker (PWA install) ---
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}

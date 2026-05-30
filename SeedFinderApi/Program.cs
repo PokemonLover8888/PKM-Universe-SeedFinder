@@ -190,7 +190,7 @@ app.MapPost("/api/auth/logout", (HttpContext ctx) =>
 });
 
 // Per-user history of website-queued raids (in-memory; resets on container restart).
-var userRaids = new System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Concurrent.ConcurrentQueue<object>>();
+var userRaids = new System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Concurrent.ConcurrentQueue<UserRaidEntry>>();
 
 app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
 {
@@ -208,16 +208,15 @@ app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
             using var rd = System.Text.Json.JsonDocument.Parse(respText);
             if (rd.RootElement.TryGetProperty("ok", out var okEl) && okEl.GetBoolean())
             {
-                var entry = new
-                {
-                    seed = req.Seed,
-                    stars = req.Stars,
-                    species = rd.RootElement.TryGetProperty("species", out var sp) ? sp.GetString() : "?",
-                    shiny = rd.RootElement.TryGetProperty("shiny", out var sh) && sh.GetBoolean(),
-                    location = req.Location ?? "Kitakami",
-                    when = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                };
-                var q = userRaids.GetOrAdd(u.Id, _ => new System.Collections.Concurrent.ConcurrentQueue<object>());
+                var entry = new UserRaidEntry(
+                    Seed: req.Seed ?? "",
+                    Stars: req.Stars,
+                    Species: rd.RootElement.TryGetProperty("species", out var sp) ? sp.GetString() ?? "?" : "?",
+                    Shiny: rd.RootElement.TryGetProperty("shiny", out var sh) && sh.GetBoolean(),
+                    Location: req.Location ?? "Kitakami",
+                    When: DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                );
+                var q = userRaids.GetOrAdd(u.Id, _ => new System.Collections.Concurrent.ConcurrentQueue<UserRaidEntry>());
                 q.Enqueue(entry);
                 while (q.Count > 50 && q.TryDequeue(out _)) { }
             }
@@ -232,12 +231,57 @@ app.MapGet("/api/myraids", (HttpContext ctx) =>
 {
     if (!ctx.Request.Cookies.TryGetValue("pku_sess", out var t) || !sessions.TryGetValue(t, out var u))
         return Results.Json(new { loggedIn = false, raids = Array.Empty<object>() });
-    var raids = userRaids.TryGetValue(u.Id, out var q) ? q.Reverse().ToArray() : Array.Empty<object>();
+    var raids = userRaids.TryGetValue(u.Id, out var q) ? q.Reverse().ToArray() : Array.Empty<UserRaidEntry>();
     return Results.Json(new { loggedIn = true, name = u.Name, verified = u.Verified, raids });
 });
 
 // AI natural-language search → Gemini parses the query into filter fields
 var geminiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? "";
+var filtersSchema = "species (English Pokémon name|null), shiny (true|false|null), stars (1-6|null), " +
+    "teraType (Normal|Fighting|Flying|Poison|Ground|Rock|Bug|Ghost|Steel|Fire|Water|Grass|Electric|Psychic|Ice|Dragon|Dark|Fairy|null), " +
+    "minFlawlessIVs (1-6|null), location (Paldea|Kitakami|Blueberry|null)";
+
+// Dedicated client for AI calls (Gemini Coach/Vision responses can take >8s)
+var aiHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(45) };
+
+// Single Gemini-Flash call helper with 1 automatic retry on 429 (free-tier rate limit)
+async Task<string> GeminiCallAsync(object requestBody)
+{
+    if (string.IsNullOrEmpty(geminiKey)) throw new Exception("AI not configured — add GEMINI_API_KEY to .env");
+    var bodyJson = System.Text.Json.JsonSerializer.Serialize(requestBody);
+    for (int attempt = 0; attempt < 2; attempt++)
+    {
+        var resp = await aiHttp.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={geminiKey}",
+            new StringContent(bodyJson, System.Text.Encoding.UTF8, "application/json"));
+        var json = await resp.Content.ReadAsStringAsync();
+        if (resp.IsSuccessStatusCode)
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            return doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString() ?? "";
+        }
+        if ((int)resp.StatusCode == 429 && attempt == 0)
+        {
+            // Extract suggested retry delay (e.g. "11.7s"); cap at 15s
+            int waitSec = 12;
+            try
+            {
+                using var ed = System.Text.Json.JsonDocument.Parse(json);
+                foreach (var d in ed.RootElement.GetProperty("error").GetProperty("details").EnumerateArray())
+                    if (d.TryGetProperty("retryDelay", out var rd))
+                    {
+                        var s = rd.GetString() ?? "10s";
+                        if (double.TryParse(s.TrimEnd('s'), out var sec)) waitSec = Math.Min(15, (int)Math.Ceiling(sec) + 1);
+                    }
+            }
+            catch { }
+            await Task.Delay(waitSec * 1000);
+            continue;
+        }
+        throw new Exception($"Gemini {(int)resp.StatusCode}: {json}");
+    }
+    throw new Exception("Gemini: exhausted retries");
+}
+
 app.MapPost("/api/ai/parse", async (AiParseRequest req) =>
 {
     if (string.IsNullOrEmpty(geminiKey))
@@ -247,33 +291,204 @@ app.MapPost("/api/ai/parse", async (AiParseRequest req) =>
     try
     {
         var prompt = "Parse this Tera Raid Pokémon search into a JSON object with ONLY these fields (use null when unspecified): " +
-                     "species (string, English Pokémon name|null), shiny (true/false|null), stars (1-6|null), " +
-                     "teraType (one of: Normal Fighting Flying Poison Ground Rock Bug Ghost Steel Fire Water Grass Electric Psychic Ice Dragon Dark Fairy|null), " +
-                     "minFlawlessIVs (1-6|null), location (Paldea/Kitakami/Blueberry|null). " +
-                     "Query: \"" + req.Query.Replace("\"", "\\\"") + "\". Return ONLY the JSON object, no markdown, no commentary.";
-        var body = System.Text.Json.JsonSerializer.Serialize(new
+                     filtersSchema + ". Query: \"" + req.Query.Replace("\"", "\\\"") + "\". Return ONLY the JSON object, no markdown, no commentary.";
+        var text = await GeminiCallAsync(new
         {
             contents = new[] { new { parts = new[] { new { text = prompt } } } },
             generationConfig = new { temperature = 0.1, responseMimeType = "application/json" }
         });
-        var resp = await dHttp.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={geminiKey}",
-            new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
-        var json = await resp.Content.ReadAsStringAsync();
-        if (!resp.IsSuccessStatusCode) return Results.Json(new { ok = false, error = $"Gemini {(int)resp.StatusCode}" });
-        using var doc = System.Text.Json.JsonDocument.Parse(json);
-        var text = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
         return Results.Content("{\"ok\":true,\"filters\":" + text + "}", "application/json");
     }
     catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
 });
 
-app.MapGet("/api/species", () =>
+// --- AI Chat: multi-turn conversational mode with session memory + optional filter actions ---
+var chatSessions = new System.Collections.Concurrent.ConcurrentDictionary<string, List<object>>();
+app.MapPost("/api/ai/chat", async (AiChatRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false, error = "AI not configured" });
+    if (string.IsNullOrWhiteSpace(req.Message)) return Results.Json(new { ok = false, error = "empty message" });
+    var sid = string.IsNullOrWhiteSpace(req.SessionId) ? Guid.NewGuid().ToString("N") : req.SessionId!;
+    var history = chatSessions.GetOrAdd(sid, _ => new List<object>());
+    var sys = "You are the PKM Universe Reborn Tera Raid assistant. Help users find shiny/perfect Scarlet/Violet raid seeds, give raid coaching advice (best counter Pokémon, optimal moves, tera advice), and answer Pokémon questions. Be friendly, concise, use sparing emojis. " +
+        "When the user wants to SEARCH for raids, ALWAYS end your reply with a fenced JSON block tagged ```filters with these fields (use null when unspecified): " + filtersSchema +
+        ". Keep prose under 2 sentences when filters are included — the JSON does the heavy lifting. " +
+        "When the user just asks a Pokémon question (no search), answer in prose only, no JSON block.";
+
+    var contents = new List<object>
+    {
+        new { role = "user", parts = new[] { new { text = sys } } },
+        new { role = "model", parts = new[] { new { text = "Got it — your PKM Universe raid partner. What are we hunting?" } } }
+    };
+    foreach (var t in history) contents.Add(t);
+    contents.Add(new { role = "user", parts = new[] { new { text = req.Message } } });
+
+    try
+    {
+        var reply = await GeminiCallAsync(new { contents = contents.ToArray(), generationConfig = new { temperature = 0.7 } });
+        history.Add(new { role = "user", parts = new[] { new { text = req.Message } } });
+        history.Add(new { role = "model", parts = new[] { new { text = reply } } });
+        while (history.Count > 16) history.RemoveAt(0);
+
+        string? filtersJson = null;
+        var m = System.Text.RegularExpressions.Regex.Match(reply, @"```(?:filters|json)?\s*(\{[\s\S]*?\})\s*```");
+        var clean = reply;
+        if (m.Success)
+        {
+            filtersJson = m.Groups[1].Value.Trim();
+            clean = System.Text.RegularExpressions.Regex.Replace(reply, @"```(?:filters|json)?[\s\S]*?```", "").Trim();
+        }
+        var payload = "{\"ok\":true,\"sessionId\":\"" + sid + "\",\"reply\":" + System.Text.Json.JsonSerializer.Serialize(clean) +
+                      (filtersJson != null ? ",\"filters\":" + filtersJson : "") + "}";
+        return Results.Content(payload, "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- AI Vision: paste a screenshot, Gemini Vision identifies the Pokémon ---
+app.MapPost("/api/ai/vision", async (AiVisionRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false, error = "AI not configured" });
+    if (string.IsNullOrWhiteSpace(req.ImageBase64)) return Results.Json(new { ok = false, error = "no image" });
+    try
+    {
+        var mt = string.IsNullOrEmpty(req.MimeType) ? "image/png" : req.MimeType!;
+        var b64 = req.ImageBase64!.Contains(",") ? req.ImageBase64.Substring(req.ImageBase64.IndexOf(',') + 1) : req.ImageBase64;
+        var prompt = "Look at this Pokémon image (screenshot, sprite, or photo). Identify what's shown and return ONLY a JSON object with these fields (null when unsure): " +
+                     filtersSchema + ". Pay attention to body color (is it the shiny coloration?), tera crystal glow if visible (its type), and star count if visible. No commentary.";
+        var contents = new[] { new { parts = new object[] {
+            new { text = prompt },
+            new { inline_data = new { mime_type = mt, data = b64 } }
+        }}};
+        var text = await GeminiCallAsync(new { contents, generationConfig = new { temperature = 0.1, responseMimeType = "application/json" } });
+        return Results.Content("{\"ok\":true,\"filters\":" + text + "}", "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- AI Raid Coach: counter team + moves + tera advice for a specific raid result ---
+app.MapPost("/api/ai/coach", async (AiCoachRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false, error = "AI not configured" });
+    try
+    {
+        var moves = req.Moves == null || req.Moves.Length == 0 ? "(unknown)" : string.Join(", ", req.Moves);
+        var prompt = $"You're a Tera Raid coach. Brief the player on beating this 7-min timer Scarlet/Violet raid: {(req.Shiny ? "Shiny " : "")}{req.SpeciesName}, {req.Stars}-star, Tera type: {req.TeraType}, ability: {req.Ability ?? "?"}, raid moves: {moves}. " +
+                     "Return ONLY this JSON (no markdown, no commentary): " +
+                     "{ \"counters\": [{\"name\":\"<Pokémon>\",\"reason\":\"<one short sentence>\"} , ...3 best counters available in S/V], " +
+                     "\"moves\":[\"<top 3 attack moves to bring>\"], " +
+                     "\"teraAdvice\":\"<best tera type for your attacker, one sentence>\", " +
+                     "\"tip\":\"<one short pre-raid tip>\" }. " +
+                     "Counters must be Pokémon actually catchable in Scarlet/Violet/DLC. Be specific, not generic.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.4, responseMimeType = "application/json" } });
+        return Results.Content("{\"ok\":true,\"coach\":" + text + "}", "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- AI Announcer: hype Discord-ready announcement when hosting ---
+app.MapPost("/api/ai/announce", async (AiAnnounceRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false, error = "AI not configured" });
+    try
+    {
+        var prompt = $"Write a SHORT (1-2 sentences) hype Discord announcement for a Tera Raid host in the PKM Universe Reborn server. Details: hoster={req.HosterName ?? "a trainer"}, species={(req.Shiny ? "✦ Shiny " : "")}{req.SpeciesName}, stars={req.Stars}★, tera={req.TeraType}. " +
+                     "Tone: excited but classy. Use 1-2 emojis max. End with urgency like '— code drops soon!' or 'get in fast!'. No hashtags. Plain text only — do NOT wrap in quotes.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.85 } });
+        return Results.Json(new { ok = true, text = text.Trim().Trim('"', '\'') });
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- AI Typeahead: live query completions while user types ---
+app.MapPost("/api/ai/suggest", async (AiSuggestRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = true, suggestions = Array.Empty<string>() });
+    if (string.IsNullOrWhiteSpace(req.Partial) || req.Partial!.Length < 2) return Results.Json(new { ok = true, suggestions = Array.Empty<string>() });
+    try
+    {
+        var prompt = $"A user is typing a Tera Raid search query. Their partial input so far: \"{req.Partial.Replace("\"", "\\\"")}\". " +
+                     "Return ONLY a JSON array of 4 short, complete, sensible search queries they probably intend (each a single line). " +
+                     "Examples: \"shiny 6IV Dragapult\", \"shiny Ghost-tera 6-star\". No prose, just the JSON array.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.5, responseMimeType = "application/json" } });
+        return Results.Content("{\"ok\":true,\"suggestions\":" + text + "}", "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- AI Summary: 1-2 sentence explainer above a search result list ---
+app.MapPost("/api/ai/summary", async (AiSummaryRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false });
+    try
+    {
+        var top = (req.Results ?? Array.Empty<AiSummaryRow>()).Take(5).ToArray();
+        if (top.Length == 0) return Results.Json(new { ok = false });
+        var rows = string.Join("; ", top.Select(r => $"{(r.Shiny ? "✦ " : "")}{r.SpeciesName} {r.Stars}★ {r.TeraType}-tera {r.FlawlessIVs}IV {r.Nature}"));
+        var prompt = $"Summarize this Tera Raid search in 1-2 punchy sentences for the host's page. Original query: \"{req.Query}\". Top results: {rows}. Call out what's special (flawless? shiny? rare tera? best nature?). No markdown.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.7 } });
+        return Results.Json(new { ok = true, text = text.Trim().Trim('"') });
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- AI Surprise Me: AI rolls a themed search based on your history ---
+app.MapPost("/api/ai/surprise", async (HttpContext ctx) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false, error = "AI not configured" });
+    string hist = "no prior history";
+    if (ctx.Request.Cookies.TryGetValue("pku_sess", out var t) && sessions.TryGetValue(t, out var u))
+        if (userRaids.TryGetValue(u.Id, out var q))
+            hist = string.Join(", ", q.Take(10).Select(o => System.Text.Json.JsonSerializer.Serialize(o)));
+    try
+    {
+        var prompt = "You're rolling a fun, themed Tera Raid pick for a player. Their recent raid history: " + hist + ". " +
+                     "Return ONLY this JSON: { \"theme\":\"<short fun headline like 'Storm Riders' or 'Tiny Terrors'>\", \"filters\":{ " + filtersSchema + " } }. " +
+                     "Bias toward shiny+high IVs+interesting tera. Pick something fresh (different from history when possible). Make the theme delightful.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.95, responseMimeType = "application/json" } });
+        return Results.Content("{\"ok\":true,\"surprise\":" + text + "}", "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// /api/species — returns ONLY species that actually appear as Tera Raid bosses for the chosen
+// map/progress/stars. Pass all=true to bypass and get the full National Dex list (legacy).
+app.MapGet("/api/species", (string? map, int? stars, int? progress, bool? all, RaidEngine engine) =>
 {
     var list = GameInfo.GetStrings(2).specieslist;
-    var arr = new List<object>(list.Length);
-    for (int i = 1; i < list.Length; i++)
-        if (!string.IsNullOrWhiteSpace(list[i])) arr.Add(new { id = i, name = list[i] });
-    return Results.Ok(arr);
+    if (all == true)
+    {
+        var arr = new List<object>(list.Length);
+        for (int i = 1; i < list.Length; i++)
+            if (!string.IsNullOrWhiteSpace(list[i])) arr.Add(new { id = i, name = list[i] });
+        return Results.Ok(arr);
+    }
+    var mapVal = (map ?? "Kitakami").ToLowerInvariant() switch
+    {
+        "paldea" => TeraRaidMapParent.Paldea,
+        "blueberry" => TeraRaidMapParent.Blueberry,
+        _ => TeraRaidMapParent.Kitakami,
+    };
+    int progressVal = progress is >= 3 and <= 6 ? progress.Value : 6;
+    int starsVal = stars is >= 1 and <= 6 ? stars.Value : 0;
+    int contentType = starsVal == 6 ? 1 : 0;
+
+    var byStars = engine.GetSpeciesByStars(mapVal, progressVal, contentType);
+    HashSet<int> ids;
+    if (starsVal == 0)
+    {
+        ids = new HashSet<int>();
+        foreach (var s in byStars.Values) foreach (var id in s) ids.Add(id);
+    }
+    else
+    {
+        ids = byStars.TryGetValue(starsVal, out var set) ? set : new HashSet<int>();
+    }
+    var outList = new List<object>();
+    foreach (var id in ids.OrderBy(x => x))
+        if (id > 0 && id < list.Length && !string.IsNullOrWhiteSpace(list[id]))
+            outList.Add(new { id, name = list[id] });
+    return Results.Ok(outList);
 });
 
 app.MapPost("/api/search", (SearchRequest req, RaidEngine engine) =>
@@ -289,6 +504,63 @@ app.MapPost("/api/lookup", (LookupRequest req, RaidEngine engine) =>
     try { return Results.Ok(engine.Lookup(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
+
+// --- Permalink: GET single-seed by URL like /api/r/02AEAC78?stars=6&story=6&loc=Kitakami ---
+app.MapGet("/api/r/{seed}", (string seed, string? loc, int? stars, int? story, RaidEngine engine) =>
+{
+    try
+    {
+        var req = new LookupRequest("Scarlet", loc ?? "Kitakami", story ?? 6, stars ?? 6, new[] { seed });
+        var res = engine.Lookup(req);
+        return res.Length > 0 ? Results.Json(res[0]) : Results.NotFound();
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// --- Leaderboard: aggregate the My-Raids data across all logged-in users ---
+app.MapGet("/api/leaderboard", (string? period) =>
+{
+    long cutoff = period switch
+    {
+        "week"  => DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeSeconds(),
+        "month" => DateTimeOffset.UtcNow.AddDays(-30).ToUnixTimeSeconds(),
+        _ => 0L
+    };
+    var rows = new List<LeaderboardRow>();
+    foreach (var kv in userRaids)
+    {
+        var arr = kv.Value.ToArray();
+        var filtered = arr.Where(e => e.When >= cutoff).ToArray();
+        if (filtered.Length == 0) continue;
+        var name = sessions.Values.Where(s => s.Id == kv.Key).Select(s => s.Name).FirstOrDefault() ?? "Trainer";
+        int shinies = filtered.Count(e => e.Shiny);
+        var topSpecies = filtered.GroupBy(e => e.Species).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault() ?? "?";
+        var lastWhen = filtered.Max(e => e.When);
+        rows.Add(new LeaderboardRow(kv.Key, name, filtered.Length, shinies, topSpecies, lastWhen));
+    }
+    var top = rows.OrderByDescending(r => r.Total).ThenByDescending(r => r.Shinies).Take(20).ToArray();
+    return Results.Json(new { period = period ?? "alltime", topHosts = top, generatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), totalUsers = rows.Count });
+});
+
+// --- AI Raid Party Builder: 6-Pokémon counter team with moves/items/teras ---
+app.MapPost("/api/ai/party", async (AiPartyRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false, error = "AI not configured" });
+    try
+    {
+        var prompt = $"Build the optimal 6-Pokémon counter team for this Scarlet/Violet Tera Raid boss: {(req.Shiny ? "Shiny " : "")}{req.SpeciesName}, {req.Stars}-star, Tera type: {req.TeraType}, ability: {req.Ability ?? "?"}. " +
+                     "Return ONLY this JSON (no markdown, no commentary): " +
+                     "{ \"strategy\":\"<one-sentence overall game plan>\", " +
+                     "  \"team\": [ {\"name\":\"<species available in S/V or DLC>\", \"role\":\"lead|sweeper|support|tank|healer|screener\", \"item\":\"<held item>\", \"ability\":\"<ability>\", \"nature\":\"<nature>\", \"tera\":\"<best tera type for this mon>\", \"moves\":[\"<m1>\",\"<m2>\",\"<m3>\",\"<m4>\"], \"reason\":\"<one short sentence>\"} ×6 ] }. " +
+                     "Include at least 1 support (Intimidate / screens / healing / cheers). All Pokémon must be obtainable in Scarlet/Violet/DLC. Use real S/V learnable movesets.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.45, responseMimeType = "application/json" } });
+        return Results.Content("{\"ok\":true,\"party\":" + text + "}", "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// Permalink SPA fallback — /r/<seed> serves index.html so the client-side router can hydrate
+app.MapFallbackToFile("/r/{seed}", "index.html");
 
 app.Run();
 
@@ -309,6 +581,16 @@ public sealed record SearchRequest(
 public sealed record LookupRequest(string? Game, string? Location, int? StoryProgress, int? Stars, string[]? Seeds);
 public sealed record HostRequest(string? Seed, int Stars, int Progress, string? Location);
 public sealed record AiParseRequest(string? Query);
+public sealed record AiChatRequest(string? SessionId, string Message);
+public sealed record AiVisionRequest(string ImageBase64, string? MimeType);
+public sealed record AiCoachRequest(string SpeciesName, bool Shiny, int Stars, string TeraType, string? Ability, string[]? Moves);
+public sealed record AiAnnounceRequest(string SpeciesName, bool Shiny, int Stars, string TeraType, string? HosterName);
+public sealed record AiSuggestRequest(string? Partial);
+public sealed record AiSummaryRow(string SpeciesName, bool Shiny, int Stars, string TeraType, int FlawlessIVs, string? Nature);
+public sealed record AiSummaryRequest(string Query, AiSummaryRow[]? Results);
+public sealed record UserRaidEntry(string Seed, int Stars, string Species, bool Shiny, string Location, long When);
+public sealed record LeaderboardRow(string Id, string Name, int Total, int Shinies, string TopSpecies, long LastWhen);
+public sealed record AiPartyRequest(string SpeciesName, bool Shiny, int Stars, string TeraType, string? Ability);
 public sealed record MoveDto(string Name, string Type);
 public sealed record RewardDto(string Name, int Qty);
 public sealed record RaidResultDto(
@@ -323,6 +605,9 @@ public sealed record SearchResponse(
 public sealed class RaidEngine
 {
     private readonly ConcurrentDictionary<string, RaidContainer> _containers = new();
+    // Cache: which species (and at which star count) actually appear in raids for a given map/progress/contentType.
+    // Built lazily by scanning a sample of seeds; first call per key takes ~1-2s, subsequent calls are O(1).
+    private readonly ConcurrentDictionary<(TeraRaidMapParent map, int progress, int contentType), Dictionary<int, HashSet<int>>> _speciesByMap = new();
 
     public void Warm() { _ = Get("Scarlet"); }
 
@@ -356,6 +641,51 @@ public sealed class RaidEngine
         "blueberry" => TeraRaidMapParent.Blueberry,
         _ => TeraRaidMapParent.Paldea,
     };
+
+    // Enumerate ONLY the species that actually show up in raids for this map / progress / contentType,
+    // grouped by star count. Built once per key from a ~600k-seed sample (parallel, ~1.5s on first call).
+    // Subsequent calls return the cached dictionary instantly.
+    public Dictionary<int, HashSet<int>> GetSpeciesByStars(TeraRaidMapParent map, int storyProgress, int contentType)
+    {
+        return _speciesByMap.GetOrAdd((map, storyProgress, contentType), k =>
+        {
+            int progress = RemapProgress(k.progress); // engine expects 3-6 → 1-4 here
+            const long Sample = 600_000;
+            var dict = new Dictionary<int, HashSet<int>>();
+            var locker = new object();
+            var po = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            Parallel.For(0L, Sample, po,
+                () => (Container: Fresh("Scarlet"), Local: new Dictionary<int, HashSet<int>>()),
+                (i, _, t) =>
+                {
+                    try
+                    {
+                        var raid = new Raid(RaidBytes((uint)i, k.contentType), k.map);
+                        var enc = raid.GetTeraEncounter(t.Container, raid.IsEvent ? 3 : progress, k.contentType == 3 ? 1 : 0);
+                        if (enc != null)
+                        {
+                            int stars = raid.IsEvent ? enc.Stars : raid.GetStarCount(raid.Difficulty, progress, raid.IsBlack);
+                            if (!t.Local.TryGetValue(stars, out var set)) { set = new HashSet<int>(); t.Local[stars] = set; }
+                            set.Add(enc.Species);
+                        }
+                    }
+                    catch { }
+                    return t;
+                },
+                t =>
+                {
+                    lock (locker)
+                    {
+                        foreach (var kv in t.Local)
+                        {
+                            if (!dict.TryGetValue(kv.Key, out var set)) { set = new HashSet<int>(); dict[kv.Key] = set; }
+                            foreach (var s in kv.Value) set.Add(s);
+                        }
+                    }
+                });
+            return dict;
+        });
+    }
 
     public SearchResponse Search(SearchRequest req)
     {
