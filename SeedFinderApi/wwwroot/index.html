@@ -283,6 +283,43 @@
   .permabanner{display:none;background:linear-gradient(90deg,#241f10,#1a1a26);border:1px solid var(--gold-dim);border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--gold-lt);}
   .permabanner.on{display:flex;align-items:center;gap:10px;animation:rise .35s ease;}
   .permabanner b{color:#fff;}
+  /* === ✨ Picked for you (AI recommendations carousel) === */
+  .recopanel{display:none;margin-top:18px;background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid #4a3a6a;border-radius:14px;padding:16px 18px;}
+  .recopanel.on{display:block;animation:rise .4s ease;}
+  .recopanel h4{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#c9a3ff;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .recogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  .recocard{background:linear-gradient(180deg,#1a1426,#0f0d18);border:1px solid #2c2c36;border-radius:11px;padding:13px;cursor:pointer;transition:.18s;position:relative;overflow:hidden;}
+  .recocard:hover{border-color:#a855f7;transform:translateY(-2px);box-shadow:0 12px 30px rgba(168,85,247,.25);}
+  .recocard::before{content:'';position:absolute;inset:0;background:radial-gradient(120px 120px at 80% 0%,rgba(168,85,247,.18),transparent);pointer-events:none;}
+  .recocard .rh{font-size:14px;font-weight:800;color:var(--gold-lt);position:relative;}
+  .recocard .rr{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45;position:relative;}
+  .recocard .rf{font-size:11px;color:#c9a3ff;font-weight:700;margin-top:8px;position:relative;}
+  .recocard .rgo{font-size:11px;font-weight:800;color:#a855f7;margin-top:8px;position:relative;}
+  /* === 🔔 Wishlist alert banner === */
+  .wishalert{display:none;background:linear-gradient(90deg,#241f10 0%,#1a1a26 100%);border:2px solid var(--gold);border-radius:13px;padding:14px 18px;margin-bottom:14px;font-size:14px;color:var(--gold-lt);align-items:center;gap:14px;box-shadow:0 0 30px rgba(212,175,55,.4);animation:wishpulse 2.5s ease-in-out infinite;}
+  .wishalert.on{display:flex;}
+  @keyframes wishpulse{0%,100%{box-shadow:0 0 30px rgba(212,175,55,.4);}50%{box-shadow:0 0 50px rgba(212,175,55,.8);}}
+  .wishalert img{width:54px;height:54px;object-fit:contain;flex:0 0 54px;}
+  .wishalert .wa-body{flex:1;}
+  .wishalert .wa-body b{color:#fff;font-size:16px;font-weight:800;}
+  .wishalert .wa-x{background:transparent;border:1px solid var(--gold-dim);color:var(--gold-lt);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;}
+  /* === 🌐 Globe (live host world map) === */
+  .globe-fab{position:fixed;bottom:24px;right:96px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#4d90d5,#1e3a5f);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 12px 32px rgba(77,144,213,.5);z-index:65;display:grid;place-items:center;}
+  .globe-fab:hover{transform:scale(1.1);}
+  @media(max-width:560px){.globe-fab{bottom:84px;right:18px;}}
+  .globe-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:130;padding:20px;}
+  .globe-modal.on{display:flex;animation:rise .25s ease;}
+  .globe-wrap{position:relative;background:linear-gradient(180deg,#02060e,#000);border:1px solid #4d90d5;border-radius:18px;max-width:720px;width:100%;height:620px;max-height:92vh;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.85),0 0 80px rgba(77,144,213,.2);}
+  .globe-canvas{width:100%;height:100%;display:block;cursor:grab;}
+  .globe-canvas:active{cursor:grabbing;}
+  .globe-title{position:absolute;top:14px;left:18px;font-size:17px;font-weight:800;color:#a8d4ff;text-shadow:0 2px 10px rgba(0,0,0,.9);pointer-events:none;z-index:3;}
+  .globe-sub{position:absolute;top:38px;left:18px;font-size:11px;color:#ddd;text-shadow:0 2px 6px #000;pointer-events:none;z-index:3;}
+  .globe-close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.55);border:1px solid var(--line);color:var(--text);font-size:18px;cursor:pointer;border-radius:8px;width:34px;height:34px;z-index:5;}
+  .globe-tip{position:absolute;background:rgba(10,14,28,.95);border:1px solid #4d90d5;border-radius:9px;padding:10px 14px;font-size:12px;color:var(--text);pointer-events:none;display:none;z-index:4;box-shadow:0 8px 24px rgba(0,0,0,.8);max-width:240px;}
+  .globe-tip.on{display:block;}
+  .globe-tip b{color:#a8d4ff;font-size:13px;}
+  .globe-tip .gt-now{color:#3ee06a;font-weight:800;margin-top:5px;display:block;}
+  .globe-help{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#ccc;pointer-events:none;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:6px;z-index:3;}
   footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}footer a{color:var(--gold);text-decoration:none;}
 </style>
 </head>
@@ -360,11 +397,22 @@
   </details>
 
   <div class="permabanner" id="permabanner"></div>
+  <div class="wishalert" id="wishAlert"></div>
+  <details class="recopanel" id="recoPanel" open><h4>✨ Picked for you — AI looked at your raid history & wishlist</h4><div class="recogrid" id="recoGrid"></div></details>
   <div class="results" id="results"></div>
   <div class="empty" id="empty">Set your filters and hit <b>Find Seeds</b> — or tap a <b>preset</b>.</div>
   <footer>PKM Universe Reborn · seeds work in <b>!ra &lt;seed&gt; &lt;stars&gt; &lt;progress&gt;</b> · <a href="https://creator.pkm-universe.com">creator.pkm-universe.com</a></footer>
 </div>
 <button class="chat-fab" id="chatFab" title="Chat with PKM Universe AI">💬</button>
+<button class="globe-fab" id="globeFab" title="🌐 Live world map of PKM Universe raid hosts">🌐</button>
+<div class="globe-modal" id="globeModal"><div class="globe-wrap">
+  <div class="globe-title">🌐 PKM Universe — Live Host Map</div>
+  <div class="globe-sub" id="globeSub">Loading…</div>
+  <button class="globe-close" id="globeClose">✕</button>
+  <canvas class="globe-canvas" id="globeCanvas"></canvas>
+  <div class="globe-tip" id="globeTip"></div>
+  <div class="globe-help">drag to rotate · scroll to zoom · click a glow to inspect</div>
+</div></div>
 <div class="chat-panel" id="chatPanel">
   <div class="chat-head"><span class="chat-orb">🤖</span><div class="chat-title"><b>PKM Universe AI</b><div class="chat-sub">Hunt seeds · get coached · ask anything</div></div><button class="chat-close" id="chatClose">✕</button></div>
   <div class="chat-body" id="chatBody"><div class="chat-msg ai">Hi! I'm your PKM Universe raid partner.<br><br>Try: <b>"shiny 6IV Dragapult"</b> · <b>"how do I counter dragon-tera Charizard?"</b> · <b>"surprise me with a good kitakami raid"</b></div></div>
@@ -1021,6 +1069,164 @@ function showViewer3D(r){
 function closeViewer3D(){document.getElementById('viewer3dModal').classList.remove('on');if(_v3d){try{_v3d.cleanup();}catch(_){}_v3d=null;}}
 document.getElementById('v3dClose').addEventListener('click',closeViewer3D);
 document.getElementById('viewer3dModal').addEventListener('click',e=>{if(e.target.id==='viewer3dModal')closeViewer3D();});
+
+// ============================================================
+// ✨ AI PREDICTIVE RECOMMENDATIONS — "Picked for you" carousel
+// ============================================================
+async function loadRecommendations(){
+  // Need at least some history OR a wishlist for AI to learn from
+  let myRaids=[];try{const r=await(await fetch('/api/myraids')).json();myRaids=r.raids||[];}catch(_){}
+  const wish=(typeof getWishlist==='function')?getWishlist():[];
+  if(myRaids.length===0 && wish.length===0)return; // nothing to learn from yet
+  const history=myRaids.slice(0,15).map(r=>({species:r.species||'?',stars:r.stars||0,shiny:!!r.shiny,tera:''}));
+  const wishlist=wish.slice(0,15).map(w=>({species:w.speciesName||String(w.species||'?'),stars:w.stars||0,shiny:!!w.shiny,tera:''}));
+  try{
+    const r=await(await fetch('/api/ai/recommend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history,wishlist})})).json();
+    if(!r.ok||!r.reco||!Array.isArray(r.reco.picks))return;
+    const grid=document.getElementById('recoGrid');grid.innerHTML='';
+    r.reco.picks.forEach(p=>{
+      const c=document.createElement('div');c.className='recocard';
+      const f=p.filters||{};
+      const fbits=[];
+      if(f.shiny)fbits.push('✦ shiny');
+      if(f.stars)fbits.push(f.stars+'★');
+      if(f.teraType)fbits.push(f.teraType+' tera');
+      if(f.minFlawlessIVs)fbits.push(f.minFlawlessIVs+'IV+');
+      if(f.species)fbits.push(f.species);
+      if(f.location)fbits.push('@ '+f.location);
+      c.innerHTML=`<div class="rh">${p.theme||'Mystery pick'}</div><div class="rr">${p.reason||''}</div><div class="rf">${fbits.join(' · ')||'any'}</div><div class="rgo">▶ Try it</div>`;
+      c.onclick=()=>{if(typeof applyAiFilters==='function')applyAiFilters(f);window._lastQ=p.theme;toast('✨ '+(p.theme||'Searching'));search();};
+      grid.appendChild(c);
+    });
+    document.getElementById('recoPanel').classList.add('on');
+  }catch(_){}
+}
+
+// ============================================================
+// 🔔 WISHLIST ALERTS — hooks the existing SSE state stream
+// ============================================================
+let _lastWishHit='';
+function checkWishlistAlert(state){
+  if(!state||!state.active||!state.species)return;
+  const wish=(typeof getWishlist==='function')?getWishlist():[];
+  if(!wish.length)return;
+  const key=state.species+'/'+state.stars+'/'+state.shiny;
+  if(key===_lastWishHit)return; // avoid re-firing
+  const match=wish.find(w=>{
+    const ws=(w.speciesName||'').toLowerCase();
+    const ns=(state.species||'').toLowerCase();
+    return ws===ns && (!w.stars||w.stars===state.stars) && (w.shiny===undefined||w.shiny===state.shiny);
+  });
+  if(!match)return;
+  _lastWishHit=key;
+  const banner=document.getElementById('wishAlert');
+  const sprite=state.sprite||(typeof spriteChain==='function'?spriteChain(match.species,state.shiny)[0]:'');
+  banner.innerHTML=`<img src="${sprite}" onerror="this.style.visibility='hidden'"/><div class="wa-body">⭐ <b>WISHLIST MATCH HOSTING NOW!</b><br>${state.shiny?'✦ Shiny ':''}${state.species} · ${'★'.repeat(state.stars||0)} · ${state.tera||''} Tera — get the code on Discord!</div><button class="wa-x">Dismiss</button>`;
+  banner.classList.add('on');
+  banner.querySelector('.wa-x').onclick=()=>banner.classList.remove('on');
+  // also a celebratory toast and browser notification if permission granted
+  if(typeof toast==='function')toast(`⭐ Wishlist hit: ${state.species}!`);
+  try{if('Notification' in window && Notification.permission==='granted'){new Notification('⭐ PKM Universe — Wishlist Match!',{body:`${state.shiny?'✦ Shiny ':''}${state.species} ${state.stars}★ is hosting NOW`,icon:'/icon.svg'});}}catch(_){}
+}
+// Re-check the wishlist whenever an SSE state event arrives. The existing bindSSE() handler
+// already calls updateNow(); we patch it to ALSO call checkWishlistAlert(state).
+const _origUpdateNow=updateNow;updateNow=function(d){_origUpdateNow(d);try{checkWishlistAlert(d);}catch(_){}};
+// Ask for notification permission once when the user adds something to the wishlist
+const _origToggleWish=(typeof toggleWish==='function')?toggleWish:null;
+if(_origToggleWish){window.toggleWish=function(r){const result=_origToggleWish(r);if(result&&'Notification' in window && Notification.permission==='default'){Notification.requestPermission().catch(()=>{});}return result;};}
+
+// ============================================================
+// 🌐 WEBGL GLOBE — live world map of hosts
+// ============================================================
+let _globe=null;
+async function openGlobe(){
+  const m=document.getElementById('globeModal');m.classList.add('on');
+  if(typeof THREE==='undefined'){toast('Globe needs Three.js — check your network.');return;}
+  if(_globe){try{_globe.cleanup();}catch(_){}_globe=null;}
+  // Fetch host list
+  let hosts=[];
+  try{const r=await(await fetch('/api/network/hosts')).json();hosts=r.hosts||[];}catch(_){}
+  document.getElementById('globeSub').textContent=`${hosts.length} host${hosts.length===1?'':'s'} · ${hosts.filter(h=>h.active).length} currently hosting`;
+  requestAnimationFrame(()=>{
+    const canvas=document.getElementById('globeCanvas');
+    const w=canvas.clientWidth||680,h=canvas.clientHeight||580;
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(window.devicePixelRatio);renderer.setSize(w,h,false);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(45,w/h,0.1,100);camera.position.set(0,0,4);
+    scene.add(new THREE.AmbientLight(0x303048,1.3));
+    const dir=new THREE.DirectionalLight(0xa8d4ff,1.2);dir.position.set(3,2,4);scene.add(dir);
+    // Wireframe globe (no texture for snappy load)
+    const sphereGeo=new THREE.SphereGeometry(1.4,48,32);
+    const sphereMat=new THREE.MeshPhongMaterial({color:0x0f3a6e,shininess:30,transparent:true,opacity:0.85,wireframe:false});
+    const sphere=new THREE.Mesh(sphereGeo,sphereMat);scene.add(sphere);
+    // Wireframe overlay (continents-feel without a texture)
+    const wireGeo=new THREE.SphereGeometry(1.405,32,20);
+    const wireMat=new THREE.MeshBasicMaterial({color:0x4d90d5,wireframe:true,transparent:true,opacity:0.35});
+    const wire=new THREE.Mesh(wireGeo,wireMat);scene.add(wire);
+    // Atmosphere glow
+    const atmosGeo=new THREE.SphereGeometry(1.55,48,32);
+    const atmosMat=new THREE.MeshBasicMaterial({color:0x4d90d5,transparent:true,opacity:0.10,side:THREE.BackSide});
+    scene.add(new THREE.Mesh(atmosGeo,atmosMat));
+    // Convert lat/lng to xyz on sphere
+    function ll2xyz(lat,lng,r){const phi=(90-lat)*Math.PI/180,theta=(lng+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));}
+    // Place a glowing dot per host
+    const dotMeshes=[];
+    hosts.forEach(host=>{
+      const pos=ll2xyz(host.lat,host.lng,1.42);
+      const color=host.primary?0xffd700:(host.active?0x3ee06a:0x4d90d5);
+      const size=host.primary?0.06:(host.active?0.045:0.035);
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(size,16,12),new THREE.MeshBasicMaterial({color}));
+      dot.position.copy(pos);dot.userData=host;scene.add(dot);
+      // Pulse ring
+      const ring=new THREE.Mesh(new THREE.RingGeometry(size*1.5,size*2.2,24),new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.6,side:THREE.DoubleSide}));
+      ring.position.copy(pos);ring.lookAt(0,0,0);ring.userData={isRing:true,host};scene.add(ring);
+      dotMeshes.push({dot,ring,color,size,host});
+    });
+    // Drag rotation + zoom
+    let rotY=0,rotX=0,isDragging=false,lastX=0,lastY=0,autoSpin=true,camDist=4;
+    function onDown(e){isDragging=true;autoSpin=false;const t=e.touches?.[0];lastX=t?t.clientX:e.clientX;lastY=t?t.clientY:e.clientY;}
+    function onMove(e){if(!isDragging)return;const t=e.touches?.[0];const cx=t?t.clientX:e.clientX;const cy=t?t.clientY:e.clientY;rotY+=(cx-lastX)*0.008;rotX+=(cy-lastY)*0.008;rotX=Math.max(-1.2,Math.min(1.2,rotX));lastX=cx;lastY=cy;}
+    function onUp(){isDragging=false;}
+    function onWheel(e){e.preventDefault();camDist=Math.max(2.5,Math.min(7,camDist+e.deltaY*0.003));}
+    // Click → tooltip
+    const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();const tip=document.getElementById('globeTip');
+    function onClick(e){
+      const rect=canvas.getBoundingClientRect();
+      mouse.x=((e.clientX-rect.left)/rect.width)*2-1;mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+      raycaster.setFromCamera(mouse,camera);
+      const hits=raycaster.intersectObjects(dotMeshes.map(d=>d.dot));
+      if(hits.length){
+        const host=hits[0].object.userData;
+        tip.innerHTML=`<b>${host.name}</b><br>${host.country||''}${host.primary?' · MAIN':''}${host.demo?' · (demo node)':''}${host.active?`<span class="gt-now">▶ Hosting: ${host.shiny?'✦ Shiny ':''}${host.species||'?'} ${'★'.repeat(host.stars||0)}</span>`:''}`;
+        tip.style.left=(e.clientX-rect.left+12)+'px';tip.style.top=(e.clientY-rect.top+12)+'px';
+        tip.classList.add('on');setTimeout(()=>tip.classList.remove('on'),5000);
+      }else{tip.classList.remove('on');}
+    }
+    canvas.addEventListener('mousedown',onDown);window.addEventListener('mousemove',onMove);window.addEventListener('mouseup',onUp);
+    canvas.addEventListener('touchstart',onDown,{passive:true});window.addEventListener('touchmove',onMove,{passive:true});window.addEventListener('touchend',onUp);
+    canvas.addEventListener('wheel',onWheel,{passive:false});canvas.addEventListener('click',onClick);
+    let running=true,frame=0;
+    (function loop(){
+      if(!running)return;
+      if(autoSpin)rotY+=0.0025;
+      sphere.rotation.y=rotY;sphere.rotation.x=rotX;
+      wire.rotation.y=rotY;wire.rotation.x=rotX;
+      dotMeshes.forEach(d=>{d.dot.position.copy(ll2xyz(d.host.lat,d.host.lng,1.42).applyEuler(new THREE.Euler(rotX,rotY,0)));d.ring.position.copy(d.dot.position);d.ring.lookAt(camera.position);
+        const pulse=1+Math.sin(frame*0.06+d.host.lng*0.05)*0.25;d.ring.scale.set(pulse,pulse,pulse);});
+      camera.position.set(0,0,camDist);camera.lookAt(0,0,0);
+      renderer.render(scene,camera);frame++;requestAnimationFrame(loop);
+    })();
+    _globe={cleanup(){running=false;canvas.removeEventListener('mousedown',onDown);window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',onUp);canvas.removeEventListener('touchstart',onDown);window.removeEventListener('touchmove',onMove);window.removeEventListener('touchend',onUp);canvas.removeEventListener('wheel',onWheel);canvas.removeEventListener('click',onClick);try{renderer.dispose();sphereGeo.dispose();sphereMat.dispose();wireGeo.dispose();wireMat.dispose();}catch(_){}}};
+  });
+}
+function closeGlobe(){document.getElementById('globeModal').classList.remove('on');if(_globe){try{_globe.cleanup();}catch(_){}_globe=null;}}
+document.getElementById('globeFab').addEventListener('click',openGlobe);
+document.getElementById('globeClose').addEventListener('click',closeGlobe);
+document.getElementById('globeModal').addEventListener('click',e=>{if(e.target.id==='globeModal')closeGlobe();});
+
+// Load recommendations once the page settles (after auth + species + wishlist init)
+window.addEventListener('load',()=>{setTimeout(loadRecommendations,1500);});
 
 // Hydrate permalink (waits until card() exists; this script runs after card is defined)
 window.addEventListener('load',()=>{setTimeout(hydratePermalink,40);});

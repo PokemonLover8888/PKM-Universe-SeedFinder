@@ -573,6 +573,85 @@ app.MapPost("/api/ai/party", async (AiPartyRequest req) =>
     catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
 });
 
+// --- AI Recommendations: "Picked for you" — Gemini learns from user's My Raids + Wishlist + search ---
+app.MapPost("/api/ai/recommend", async (AiRecommendRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false, error = "AI not configured" });
+    try
+    {
+        var history = req.History == null || req.History.Length == 0 ? "(no prior history)"
+            : string.Join(", ", req.History.Take(15).Select(h => $"{(h.Shiny ? "✦ " : "")}{h.Species} {h.Stars}★ {(string.IsNullOrEmpty(h.Tera) ? "" : h.Tera + "-tera")}"));
+        var wish = req.Wishlist == null || req.Wishlist.Length == 0 ? "(empty)"
+            : string.Join(", ", req.Wishlist.Take(15).Select(w => $"{(w.Shiny ? "✦ " : "")}{w.Species} {w.Stars}★"));
+        var prompt = "You're recommending Tera Raid seeds for a Pokémon player. " +
+                     $"Their hosted-raid history: {history}. Their wishlist: {wish}. " +
+                     "Analyze the patterns (favorite types, star levels, tera preferences, shiny obsession, etc.) and produce 3 distinct themed picks they'd love. " +
+                     "Return ONLY this JSON (no markdown): { \"picks\": [ { " +
+                     "\"theme\":\"<short fun headline>\", \"reason\":\"<one-sentence why this matches them>\", \"filters\": { " + filtersSchema +
+                     " } } x3 ] }. Make each pick FRESH and different from history. Bias toward shiny + interesting tera + high star raids.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.85, responseMimeType = "application/json" } });
+        return Results.Content("{\"ok\":true,\"reco\":" + text + "}", "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- Server-side wishlist for per-user push-alert matching ---
+var userWish = new System.Collections.Concurrent.ConcurrentDictionary<string, WishlistEntry[]>();
+app.MapGet("/api/wishlist", (HttpContext ctx) =>
+{
+    if (!ctx.Request.Cookies.TryGetValue("pku_sess", out var t) || !sessions.TryGetValue(t, out var u))
+        return Results.Json(new { loggedIn = false });
+    return Results.Json(new { loggedIn = true, items = userWish.GetValueOrDefault(u.Id, Array.Empty<WishlistEntry>()) });
+});
+app.MapPost("/api/wishlist", (HttpContext ctx, WishlistEntry[] items) =>
+{
+    if (!ctx.Request.Cookies.TryGetValue("pku_sess", out var t) || !sessions.TryGetValue(t, out var u))
+        return Results.Json(new { ok = false, error = "login" }, statusCode: 401);
+    userWish[u.Id] = items ?? Array.Empty<WishlistEntry>();
+    return Results.Json(new { ok = true, count = userWish[u.Id].Length });
+});
+
+// --- Network: live host list for the world map (real bot + sample federated nodes) ---
+app.MapGet("/api/network/hosts", async () =>
+{
+    var hosts = new List<object>();
+    // The real PKM Universe host
+    try
+    {
+        var nowJson = await botHttp.GetStringAsync($"{botBase}/api/raid/now");
+        using var doc = System.Text.Json.JsonDocument.Parse(nowJson);
+        var st = doc.RootElement;
+        hosts.Add(new
+        {
+            id = "pkm-universe-main",
+            name = "PKM Universe Reborn",
+            lat = 39.83, lng = -98.58, // continental US center as approx
+            country = "US",
+            active = st.GetProperty("active").GetBoolean(),
+            species = st.TryGetProperty("species", out var sp) ? sp.GetString() ?? "" : "",
+            stars = st.TryGetProperty("stars", out var stt) ? stt.GetInt32() : 0,
+            shiny = st.TryGetProperty("shiny", out var sh) && sh.GetBoolean(),
+            sprite = st.TryGetProperty("sprite", out var spr) ? spr.GetString() ?? "" : "",
+            primary = true
+        });
+    }
+    catch { }
+    // Demo federated nodes (placeholder; replaces with real peers when federation lands)
+    var demo = new (string id, string name, double lat, double lng, string country)[]
+    {
+        ("eu-london",  "EU · London",   51.50,   -0.13, "GB"),
+        ("au-sydney",  "AU · Sydney",  -33.87,  151.20, "AU"),
+        ("jp-tokyo",   "JP · Tokyo",    35.68,  139.76, "JP"),
+        ("br-saopaulo","BR · São Paulo",-23.55, -46.63, "BR"),
+        ("de-frankfurt","DE · Frankfurt",50.11,  8.68,  "DE"),
+        ("ca-toronto", "CA · Toronto",  43.65,  -79.38, "CA"),
+        ("kr-seoul",   "KR · Seoul",    37.57,  126.98, "KR"),
+    };
+    foreach (var d in demo)
+        hosts.Add(new { id = d.id, name = d.name, lat = d.lat, lng = d.lng, country = d.country, active = false, species = "", stars = 0, shiny = false, sprite = "", primary = false, demo = true });
+    return Results.Json(new { hosts });
+});
+
 // Permalink SPA fallback — /r/<seed> serves index.html so the client-side router can hydrate
 app.MapFallbackToFile("/r/{seed}", "index.html");
 
@@ -605,6 +684,9 @@ public sealed record AiSummaryRequest(string Query, AiSummaryRow[]? Results);
 public sealed record UserRaidEntry(string Seed, int Stars, string Species, bool Shiny, string Location, long When);
 public sealed record LeaderboardRow(string Id, string Name, int Total, int Shinies, string TopSpecies, long LastWhen);
 public sealed record AiPartyRequest(string SpeciesName, bool Shiny, int Stars, string TeraType, string? Ability);
+public sealed record HistoryRow(string Species, int Stars, bool Shiny, string? Tera);
+public sealed record AiRecommendRequest(HistoryRow[]? History, HistoryRow[]? Wishlist);
+public sealed record WishlistEntry(string Seed, int Species, string SpeciesName, bool Shiny, int Stars);
 public sealed record MoveDto(string Name, string Type);
 public sealed record RewardDto(string Name, int Qty);
 public sealed record RaidResultDto(
