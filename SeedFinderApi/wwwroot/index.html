@@ -353,6 +353,15 @@
   #achtoast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-160px);background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;padding:14px 22px;border-radius:14px;font-size:14px;font-weight:800;box-shadow:0 16px 48px rgba(212,175,55,.5),0 0 30px rgba(212,175,55,.3);transition:transform .45s cubic-bezier(.2,1.4,.3,1);z-index:75;display:flex;align-items:center;gap:10px;}
   #achtoast.show{transform:translateX(-50%) translateY(0);}
   #achtoast .ai{font-size:26px;}
+  /* === Advanced filters section + live toggle === */
+  .advfilters{margin-top:16px;border-top:1px solid var(--line);padding-top:6px;}
+  .advfilters summary{cursor:pointer;padding:10px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;}
+  .advfilters summary::-webkit-details-marker{display:none;}
+  .advfilters summary::before{content:"▸ ";}
+  .advfilters[open] summary::before{content:"▾ ";}
+  .rtoggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;font-weight:700;user-select:none;}
+  .rtoggle input{width:auto;cursor:pointer;accent-color:var(--gold);}
+  .rewardchips .rchip{cursor:pointer;}
   /* === Lookup: file drop + filters + AI summary === */
   .lookup-drop{display:flex;align-items:center;gap:10px;background:var(--panel2);border:2px dashed var(--line);border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:.18s;}
   .lookup-drop:hover,.lookup-drop.over{border-color:var(--gold);color:var(--gold);background:#1a160a;}
@@ -422,7 +431,19 @@
       <div><label>Min Perfect IVs</label><select id="ivs"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
       <div><label>Max Results</label><select id="max"><option>10</option><option selected>25</option><option>50</option></select></div>
     </div>
-    <div class="actions"><button class="go" id="go">Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><span class="status" id="status"></span></div>
+    <details class="advfilters" id="advFilters">
+      <summary>🔬 More filters — nature · gender · ability · scale · 🎁 rewards</summary>
+      <div class="grid" style="margin-top:12px">
+        <div><label>Nature</label><select id="nature"><option value="">Any</option></select></div>
+        <div><label>Gender</label><select id="gender"><option value="">Any</option><option>Male</option><option>Female</option><option>Genderless</option></select></div>
+        <div><label>Hidden Ability</label><select id="hidden"><option value="">Any</option><option value="true">HA only</option></select></div>
+        <div><label>Scale</label><select id="scale"><option value="">Any</option><option>XXXS</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XXXL</option></select></div>
+        <div><label>🎁 Reward Item</label><input id="rewarditem" list="rewardlist" placeholder="e.g. Bottle Cap" autocomplete="off"/><datalist id="rewardlist"></datalist></div>
+        <div><label>Min Reward Qty</label><select id="rewardqty"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>8</option><option>10</option></select></div>
+      </div>
+      <div class="rewardchips" id="rewardChips"></div>
+    </details>
+    <div class="actions"><button class="go" id="go">Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><label class="rtoggle" title="Search automatically as you change filters"><input type="checkbox" id="realtime"/> ⚡ Live</label><span class="status" id="status"></span></div>
   </div>
 
   <details class="lookup">
@@ -516,13 +537,30 @@ const PRESETS=[["💎 Perfect Shiny 6★",{stars:"6",ivs:"6",shiny:"true"}],["�
 const BSTAT_LABELS=["HP","Atk","Def","SpA","SpD","Spe"];
 let nameToId={};
 
+const REWARD_QUICK=["Bottle Cap","Ability Patch","Ability Capsule","Sweet Herba Mystica","Salty Herba Mystica","Bitter Herba Mystica","Exp. Candy XL","PP Max","Rare Candy","Nugget"];
 (async()=>{
   const tera=document.getElementById('tera');TERA.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t;tera.appendChild(o);});
-  const presetsBox=document.getElementById('presets');PRESETS.forEach(([lbl,v])=>{const b=document.createElement('button');b.className='preset';b.textContent=lbl;b.onclick=()=>{if(v.stars!==undefined)document.getElementById('stars').value=v.stars;if(v.ivs!==undefined)document.getElementById('ivs').value=v.ivs;if(v.shiny!==undefined)document.getElementById('shiny').value=v.shiny;toast('Preset applied: '+lbl);};presetsBox.appendChild(b);});
+  const presetsBox=document.getElementById('presets');PRESETS.forEach(([lbl,v])=>{const b=document.createElement('button');b.className='preset';b.textContent=lbl;b.onclick=()=>{if(v.stars!==undefined)document.getElementById('stars').value=v.stars;if(v.ivs!==undefined)document.getElementById('ivs').value=v.ivs;if(v.shiny!==undefined)document.getElementById('shiny').value=v.shiny;toast('Preset applied: '+lbl);maybeRealtime();};presetsBox.appendChild(b);});
+  // Nature dropdown
+  const nat=document.getElementById('nature');Object.keys(NAT).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;nat.appendChild(o);});
+  // Reward datalist + quick chips
+  const rdl=document.getElementById('rewardlist');[...REWARD_QUICK,...RARE].filter((v,i,a)=>a.indexOf(v)===i).forEach(it=>{const o=document.createElement('option');o.value=it;rdl.appendChild(o);});
+  const rc=document.getElementById('rewardChips');REWARD_QUICK.forEach(it=>{const b=document.createElement('span');b.className='rchip';b.textContent=it;b.onclick=()=>{const inp=document.getElementById('rewarditem');const on=inp.value===it;inp.value=on?'':it;rc.querySelectorAll('.rchip').forEach(c=>c.classList.toggle('on',c.textContent===inp.value));maybeRealtime();};rc.appendChild(b);});
   await loadSpecies();
   // Re-load species dropdown whenever map/stars/progress changes — keeps the list to ACTUAL raid bosses for that pool
   ['location','stars','progress'].forEach(id=>document.getElementById(id).addEventListener('change',()=>loadSpecies(true)));
+  // Realtime: any filter change triggers a debounced search when ⚡ Live is on
+  ['game','location','progress','stars','species','shiny','tera','ivs','max','nature','gender','hidden','scale','rewarditem','rewardqty'].forEach(id=>{
+    const el=document.getElementById(id);if(el){el.addEventListener('change',maybeRealtime);if(el.tagName==='INPUT')el.addEventListener('input',maybeRealtime);}
+  });
 })();
+
+let _rtTimer;
+function maybeRealtime(){
+  if(!document.getElementById('realtime').checked)return;
+  clearTimeout(_rtTimer);
+  _rtTimer=setTimeout(()=>{window._lastQ=null;search();},450);
+}
 
 async function loadSpecies(announce){
   const map=document.getElementById('location').value||'Kitakami';
@@ -631,7 +669,7 @@ async function search(){
   const go=document.getElementById('go'),status=document.getElementById('status');
   const speciesRaw=document.getElementById('species').value.trim();let species=null;
   if(speciesRaw){species=/^\d+$/.test(speciesRaw)?parseInt(speciesRaw):(nameToId[speciesRaw.toLowerCase()]||null);if(!species){status.innerHTML="Unknown species — pick from the list.";return;}}
-  const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')),stars:val('stars')?parseInt(val('stars')):null,species,shiny:val('shiny')===null?null:val('shiny')==='true',teraType:val('tera')?parseInt(val('tera')):null,minFlawlessIVs:val('ivs')?parseInt(val('ivs')):null,maxResults:parseInt(val('max'))};
+  const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')),stars:val('stars')?parseInt(val('stars')):null,species,shiny:val('shiny')===null?null:val('shiny')==='true',teraType:val('tera')?parseInt(val('tera')):null,minFlawlessIVs:val('ivs')?parseInt(val('ivs')):null,maxResults:parseInt(val('max')),nature:val('nature'),gender:val('gender'),hiddenAbility:val('hidden')==='true'?true:null,scale:val('scale'),rewardItem:(document.getElementById('rewarditem').value.trim()||null),rewardMinQty:val('rewardqty')?parseInt(val('rewardqty')):null};
   go.disabled=true;status.innerHTML='<span class="spinner"></span> Searching the seed space…';document.getElementById('empty').style.display='none';box.innerHTML='';
   try{const res=await(await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!res.results.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='No matches — widen your filters (Any tera, fewer IVs, or a species that appears at this star level).';}

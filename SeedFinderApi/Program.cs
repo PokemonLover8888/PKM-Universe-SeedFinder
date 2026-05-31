@@ -829,7 +829,13 @@ public sealed record SearchRequest(
     int? TeraType,           // MoveType id; null = any
     int? MinFlawlessIVs,     // null = any
     int? MaxResults,         // default 25, capped 100
-    long? MaxScan);          // seeds to scan; default 60M, capped 300M
+    long? MaxScan,           // seeds to scan; default 60M, capped 300M
+    string? Nature,          // nature name; null = any
+    string? Gender,          // "Male"|"Female"|"Genderless"; null = any
+    bool? HiddenAbility,     // true = require HA; null/false = any
+    string? Scale,           // "XXXS"|"XS"|"S"|"M"|"L"|"XL"|"XXXL"; null = any
+    string? RewardItem,      // reward item name substring; null = any
+    int? RewardMinQty);      // min total quantity of RewardItem; null = 1
 
 public sealed record LookupRequest(string? Game, string? Location, int? StoryProgress, int? Stars, string[]? Seeds);
 public sealed record HostRequest(string? Seed, int Stars, int Progress, string? Location);
@@ -1001,7 +1007,7 @@ public sealed class RaidEngine
         int defProgress = req.StoryProgress is >= 3 and <= 6 ? req.StoryProgress.Value : 6;
         int defStars = req.Stars is >= 1 and <= 6 ? req.Stars.Value : 6;
         var container = Get(game);
-        var blank = new SearchRequest(null, null, null, null, null, null, null, null, null, null);
+        var blank = new SearchRequest(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         var outList = new List<RaidResultDto>();
         foreach (var raw in (req.Seeds ?? Array.Empty<string>()).Take(50))
         {
@@ -1048,7 +1054,12 @@ public sealed class RaidEngine
         int storyOut = req.StoryProgress is >= 3 and <= 6 ? req.StoryProgress.Value : 6;
         string ra = $"!ra {seedHex} {stars} {storyOut}";
 
-        if (!fullDetails)
+        // Advanced filters (nature / gender / hidden-ability / scale / reward) require generating the
+        // PK9 + rewards, so the cheap scan pass must also generate when any of them is requested.
+        bool hasAdvanced = !string.IsNullOrEmpty(req.Nature) || !string.IsNullOrEmpty(req.Gender)
+            || (req.HiddenAbility ?? false) || !string.IsNullOrEmpty(req.Scale) || !string.IsNullOrEmpty(req.RewardItem);
+
+        if (!fullDetails && !hasAdvanced)
             return new RaidResultDto(seedHex, enc.Species, SpeciesName(enc.Species), enc.Form, shiny,
                 stars, tera, ((MoveType)tera).ToString(), enc.FlawlessIVCount, null, null, null, null, ra,
                 null, false, null, null, null);
@@ -1093,6 +1104,19 @@ public sealed class RaidEngine
             .GroupBy(r => r.Name).Select(g => new RewardDto(g.Key, g.Sum(x => x.Qty)))
             .Take(8).ToArray();
 
+        // --- Advanced filters (applied post-generation) ---
+        if (!string.IsNullOrEmpty(req.Nature) && !string.Equals(pk.Nature.ToString(), req.Nature, StringComparison.OrdinalIgnoreCase)) return null;
+        if (!string.IsNullOrEmpty(req.Gender) && !string.Equals(genderStr, req.Gender, StringComparison.OrdinalIgnoreCase)) return null;
+        if ((req.HiddenAbility ?? false) && !hidden) return null;
+        if (!string.IsNullOrEmpty(req.Scale) && !string.Equals(ScaleLabel(pk.Scale), req.Scale, StringComparison.OrdinalIgnoreCase)) return null;
+        if (!string.IsNullOrEmpty(req.RewardItem))
+        {
+            int want = req.RewardMinQty is > 0 ? req.RewardMinQty.Value : 1;
+            // match against the FULL reward list (not the truncated Top-8) so nothing is missed
+            int have = rewardsList.Where(r => r.Name.Contains(req.RewardItem, StringComparison.OrdinalIgnoreCase)).Sum(r => r.Qty);
+            if (have < want) return null;
+        }
+
         int[]? baseStats = null;
         try { var pi = PersonalTable.SV.GetFormEntry(enc.Species, enc.Form); baseStats = new[] { pi.HP, pi.ATK, pi.DEF, pi.SPA, pi.SPD, pi.SPE }; }
         catch { }
@@ -1104,6 +1128,17 @@ public sealed class RaidEngine
     }
 
     private static string SafeIdx(IReadOnlyList<string> arr, int i) => (arr != null && i >= 0 && i < arr.Count) ? arr[i] : "?";
+
+    // Mirrors the frontend's scaleLabel() so the Scale filter matches what users see on the card.
+    private static string ScaleLabel(int s) => s switch
+    {
+        0 => "XXXS",
+        255 => "XXXL",
+        <= 50 => "XS",
+        <= 110 => "S",
+        <= 170 => "M",
+        _ => "L",
+    };
 
     private static string SpeciesName(int species)
     {
