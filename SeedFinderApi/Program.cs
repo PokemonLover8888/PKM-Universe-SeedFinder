@@ -812,8 +812,32 @@ int MapCounterFor(string defId, Dictionary<string,int> c, string uid)
     };
 }
 
-// Permalink SPA fallback — /r/<seed> serves index.html so the client-side router can hydrate
+// --- Named saved lists: store a batch of seeds under a short shareable id ---
+var savedLists = new System.Collections.Concurrent.ConcurrentDictionary<string, SavedList>();
+app.MapPost("/api/lists", (HttpContext ctx, SaveListRequest req) =>
+{
+    if (req.Seeds == null || req.Seeds.Length == 0) return Results.Json(new { ok = false, error = "no seeds" });
+    string owner = CurrentUserId(ctx) ?? "anon";
+    // 6-char id derived deterministically-ish from content + count (no Random/Date available at module scope here)
+    var basis = (req.Name ?? "list") + "|" + string.Join(",", req.Seeds) + "|" + owner + "|" + savedLists.Count;
+    var id = Math.Abs(basis.GetHashCode()).ToString("x").PadLeft(6, '0')[..6];
+    while (savedLists.ContainsKey(id)) id = Math.Abs((id + "x").GetHashCode()).ToString("x").PadLeft(6, '0')[..6];
+    savedLists[id] = new SavedList(id, (req.Name ?? "Untitled list").Trim(), req.Seeds.Take(100).ToArray(),
+        req.Game, req.Location, req.StoryProgress, req.Stars, owner, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+    return Results.Json(new { ok = true, id, url = $"{publicBase}/list/{id}" });
+});
+app.MapGet("/api/lists/{id}", (string id) =>
+    savedLists.TryGetValue(id, out var l) ? Results.Json(new { ok = true, list = l }) : Results.NotFound());
+app.MapGet("/api/lists", (HttpContext ctx) =>
+{
+    string owner = CurrentUserId(ctx) ?? "anon";
+    var mine = savedLists.Values.Where(l => l.Owner == owner).OrderByDescending(l => l.Created).Take(50).ToArray();
+    return Results.Json(new { ok = true, lists = mine });
+});
+
+// Permalink SPA fallback — /r/<seed> serves index.html; /list/<id> too
 app.MapFallbackToFile("/r/{seed}", "index.html");
+app.MapFallbackToFile("/list/{id}", "index.html");
 
 app.Run();
 
@@ -835,7 +859,10 @@ public sealed record SearchRequest(
     bool? HiddenAbility,     // true = require HA; null/false = any
     string? Scale,           // "XXXS"|"XS"|"S"|"M"|"L"|"XL"|"XXXL"; null = any
     string? RewardItem,      // reward item name substring; null = any
-    int? RewardMinQty);      // min total quantity of RewardItem; null = 1
+    int? RewardMinQty,       // min total quantity of RewardItem; null = 1
+    int[]? SpeciesList,      // multi-species OR-match (national dex numbers); null/empty = ignore
+    bool? BestOf,            // true = rank by IV count desc instead of first-N
+    long? StartSeed);        // begin scanning from this seed offset; null = 0
 
 public sealed record LookupRequest(string? Game, string? Location, int? StoryProgress, int? Stars, string[]? Seeds);
 public sealed record HostRequest(string? Seed, int Stars, int Progress, string? Location);
@@ -857,6 +884,8 @@ public sealed record AchievementDef(string Id, string Icon, string Name, string 
 public sealed record AchievementEvent(string EventType, string? Detail);
 public sealed record AiLookupSummaryRequest(AiSummaryRow[]? Results);
 public sealed record RaidReorderRequest(int[]? Order);
+public sealed record SaveListRequest(string? Name, string[]? Seeds, string? Game, string? Location, int? StoryProgress, int? Stars);
+public sealed record SavedList(string Id, string Name, string[] Seeds, string? Game, string? Location, int? StoryProgress, int? Stars, string Owner, long Created);
 public sealed record MoveDto(string Name, string Type);
 public sealed record RewardDto(string Name, int Qty);
 public sealed record RaidResultDto(
@@ -963,25 +992,29 @@ public sealed class RaidEngine
         int contentType = starsWanted == 6 ? 1 : 0;   // black crystal raids use content type 1
         int maxResults = Math.Clamp(req.MaxResults ?? 25, 1, 100);
         long maxScan = Math.Clamp(req.MaxScan ?? 60_000_000L, 1, 300_000_000L);
+        long startSeed = req.StartSeed is > 0 ? Math.Min(req.StartSeed.Value, 0xFFFFFFFFL) : 0;
+        bool bestOf = req.BestOf ?? false;
+        // In best-of mode, collect a larger candidate pool then keep the top-N by IV count.
+        int collectCap = bestOf ? Math.Min(maxResults * 25, 2000) : maxResults;
 
         var found = new ConcurrentQueue<RaidResultDto>();
         int foundCount = 0;
         long scanned = 0;
         var sw = Stopwatch.StartNew();
-        var timeBudget = TimeSpan.FromSeconds(20);
+        var timeBudget = TimeSpan.FromSeconds(bestOf ? 25 : 20);
 
         var po = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
-        Parallel.For(0L, maxScan, po,
+        Parallel.For(startSeed, Math.Min(startSeed + maxScan, 0x100000000L), po,
             () => Fresh(game),
             (i, state, container) =>
             {
-                if (Volatile.Read(ref foundCount) >= maxResults || sw.Elapsed > timeBudget) { state.Stop(); return container; }
+                if (Volatile.Read(ref foundCount) >= collectCap || sw.Elapsed > timeBudget) { state.Stop(); return container; }
                 Interlocked.Increment(ref scanned);
 
                 var dto = Evaluate((uint)i, container, map, progress, contentType, starsWanted, req, fullDetails: false);
                 if (dto is not null)
                 {
-                    if (Interlocked.Increment(ref foundCount) <= maxResults) found.Enqueue(dto);
+                    if (Interlocked.Increment(ref foundCount) <= collectCap) found.Enqueue(dto);
                     else state.Stop();
                 }
                 return container;
@@ -990,10 +1023,15 @@ public sealed class RaidEngine
 
         sw.Stop();
 
+        // Best-of: rank the whole candidate pool by flawless IV count (then shiny) before taking N.
+        var picked = bestOf
+            ? found.OrderByDescending(r => r.FlawlessIVs).ThenByDescending(r => r.Shiny).Take(maxResults)
+            : found.Take(maxResults);
+
         // Enrich the matched results with full PK9 details (IVs/nature/gender/scale) — cheap for <=100.
-        var detailed = found.Take(maxResults)
+        var detailed = picked
             .Select(r => Evaluate(Convert.ToUInt32(r.Seed, 16), Get(game), map, progress, contentType, starsWanted, req, fullDetails: true)!)
-            .OrderBy(r => r.Species).ThenBy(r => r.Seed)
+            .OrderByDescending(r => bestOf ? r.FlawlessIVs : 0).ThenBy(r => r.Species).ThenBy(r => r.Seed)
             .ToArray();
 
         bool hitLimit = foundCount < maxResults && (scanned >= maxScan || sw.Elapsed >= timeBudget);
@@ -1007,7 +1045,7 @@ public sealed class RaidEngine
         int defProgress = req.StoryProgress is >= 3 and <= 6 ? req.StoryProgress.Value : 6;
         int defStars = req.Stars is >= 1 and <= 6 ? req.Stars.Value : 6;
         var container = Get(game);
-        var blank = new SearchRequest(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        var blank = new SearchRequest(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         var outList = new List<RaidResultDto>();
         foreach (var raw in (req.Seeds ?? Array.Empty<string>()).Take(50))
         {
@@ -1046,6 +1084,7 @@ public sealed class RaidEngine
 
         if (starsWanted != 0 && stars != starsWanted) return null;
         if (req.Species is > 0 && enc.Species != req.Species) return null;
+        if (req.SpeciesList is { Length: > 0 } && !req.SpeciesList.Contains(enc.Species)) return null;
         if (req.Shiny.HasValue && shiny != req.Shiny.Value) return null;
         if (req.TeraType.HasValue && tera != req.TeraType.Value) return null;
         if (req.MinFlawlessIVs.HasValue && enc.FlawlessIVCount < req.MinFlawlessIVs.Value) return null;

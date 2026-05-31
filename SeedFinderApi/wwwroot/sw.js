@@ -1,7 +1,7 @@
 // PKM Universe Seed Finder — Service Worker
 // Network-first for HTML + /api/species so updates are seen immediately. Cache-first for
 // static icons + external CDN sprites/cries (which are immutable URLs).
-const CACHE = 'pkmu-seeds-v11';
+const CACHE = 'pkmu-seeds-v12';
 const SHELL = ['/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', e => {
@@ -22,7 +22,8 @@ self.addEventListener('fetch', e => {
       || url.pathname.startsWith('/api/ai') || url.pathname.startsWith('/api/r/')
       || url.pathname.startsWith('/api/leaderboard') || url.pathname.startsWith('/r/')
       || url.pathname.startsWith('/api/species') || url.pathname.startsWith('/api/network')
-      || url.pathname.startsWith('/api/achievements')) return;
+      || url.pathname.startsWith('/api/achievements') || url.pathname.startsWith('/api/lists')
+      || url.pathname.startsWith('/api/raid/reorder') || url.pathname.startsWith('/list/')) return;
   // Network-first for the HTML shell (so deploys are seen instantly), cache-first for everything else
   if (url.pathname === '/' || url.pathname.endsWith('.html')) {
     e.respondWith(fetch(e.request).then(resp => {

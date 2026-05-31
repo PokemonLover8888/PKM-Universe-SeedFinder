@@ -376,6 +376,13 @@
   .lookup-filter{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:18px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;}
   .lookup-filter:hover{border-color:var(--gold);color:var(--gold);}
   .lookup-filter.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);}
+  .lookup-toolbar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px;}
+  .lookup-toolbar.on{display:flex;}
+  .lookup-toolbar select,.lookup-toolbar button{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;}
+  .lookup-toolbar button:hover{border-color:var(--gold);color:var(--gold);}
+  .lookup-toolbar button.primary{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;border-color:transparent;}
+  .lookup-toolbar .lt-sep{flex:1;}
+  .lookup-toolbar .lt-sel{font-size:11px;color:var(--muted);}
   /* === Up Next: drag-to-reorder === */
   .qcard{cursor:grab;transition:transform .15s,box-shadow .15s,opacity .15s;}
   .qcard:active{cursor:grabbing;}
@@ -441,8 +448,14 @@
         <div><label>Scale</label><select id="scale"><option value="">Any</option><option>XXXS</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XXXL</option></select></div>
         <div><label>🎁 Reward Item</label><input id="rewarditem" list="rewardlist" placeholder="e.g. Bottle Cap" autocomplete="off"/><datalist id="rewardlist"></datalist></div>
         <div><label>Min Reward Qty</label><select id="rewardqty"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>8</option><option>10</option></select></div>
+        <div><label>Multi-species (comma list)</label><input id="multispecies" placeholder="e.g. Dragapult, Garchomp" autocomplete="off"/></div>
+        <div><label>Start seed (hex)</label><input id="startseed" placeholder="e.g. AB000000" autocomplete="off"/></div>
       </div>
       <div class="rewardchips" id="rewardChips"></div>
+      <div class="actions" style="margin-top:12px">
+        <label class="rtoggle" title="Scan deeper and return the highest-IV seeds, ranked"><input type="checkbox" id="bestof"/> 🏅 Best-of mode (rank by IVs)</label>
+        <button class="surprise" id="savePreset" type="button" style="padding:8px 14px;font-size:13px">⭐ Save these filters as a preset</button>
+      </div>
     </details>
     <div class="actions"><button class="go" id="go">Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><label class="rtoggle" title="Search automatically as you change filters"><input type="checkbox" id="realtime"/> ⚡ Live</label><span class="status" id="status"></span></div>
   </div>
@@ -458,6 +471,23 @@
       <button class="lookup-filter" data-f="shiny">✦ Shiny only</button>
       <button class="lookup-filter" data-f="flawless">💎 Flawless 6IV</button>
       <button class="lookup-filter" data-f="6star">⭐ 6★ only</button>
+    </div>
+    <div class="lookup-toolbar" id="lookupToolbar">
+      <label class="lt-sel" style="font-weight:700">Sort
+        <select id="lookupSort">
+          <option value="paste">Paste order</option>
+          <option value="iv">Most IVs</option>
+          <option value="star">Stars (high→low)</option>
+          <option value="species">Species A→Z</option>
+          <option value="shiny">Shiny first</option>
+        </select>
+      </label>
+      <button id="lookupSelectAll">☑ Select all</button>
+      <span class="lt-sel" id="lookupSelCount">0 selected</span>
+      <span class="lt-sep"></span>
+      <button id="lookupHostAll" class="primary">🚀 Host selected</button>
+      <button id="lookupExport">📋 Export ▾</button>
+      <button id="lookupSaveList">💾 Save as list</button>
     </div>
   </details>
 
@@ -670,7 +700,12 @@ async function search(){
   const go=document.getElementById('go'),status=document.getElementById('status');
   const speciesRaw=document.getElementById('species').value.trim();let species=null;
   if(speciesRaw){species=/^\d+$/.test(speciesRaw)?parseInt(speciesRaw):(nameToId[speciesRaw.toLowerCase()]||null);if(!species){status.innerHTML="Unknown species — pick from the list.";return;}}
-  const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')),stars:val('stars')?parseInt(val('stars')):null,species,shiny:val('shiny')===null?null:val('shiny')==='true',teraType:val('tera')?parseInt(val('tera')):null,minFlawlessIVs:val('ivs')?parseInt(val('ivs')):null,maxResults:parseInt(val('max')),nature:val('nature'),gender:val('gender'),hiddenAbility:val('hidden')==='true'?true:null,scale:val('scale'),rewardItem:(document.getElementById('rewarditem').value.trim()||null),rewardMinQty:val('rewardqty')?parseInt(val('rewardqty')):null};
+  // Multi-species comma list → resolve each name to a dex id
+  let speciesList=null;const msRaw=(document.getElementById('multispecies')?.value||'').trim();
+  if(msRaw){speciesList=msRaw.split(',').map(s=>s.trim().toLowerCase()).map(n=>nameToId[n]).filter(Boolean);if(!speciesList.length)speciesList=null;}
+  let startSeed=null;const ssRaw=(document.getElementById('startseed')?.value||'').trim().replace(/^0x/i,'');
+  if(ssRaw&&/^[0-9a-fA-F]{1,8}$/.test(ssRaw))startSeed=parseInt(ssRaw,16);
+  const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')),stars:val('stars')?parseInt(val('stars')):null,species,shiny:val('shiny')===null?null:val('shiny')==='true',teraType:val('tera')?parseInt(val('tera')):null,minFlawlessIVs:val('ivs')?parseInt(val('ivs')):null,maxResults:parseInt(val('max')),nature:val('nature'),gender:val('gender'),hiddenAbility:val('hidden')==='true'?true:null,scale:val('scale'),rewardItem:(document.getElementById('rewarditem').value.trim()||null),rewardMinQty:val('rewardqty')?parseInt(val('rewardqty')):null,speciesList,bestOf:document.getElementById('bestof')?.checked||null,startSeed};
   go.disabled=true;status.innerHTML='<span class="spinner"></span> Searching the seed space…';document.getElementById('empty').style.display='none';box.innerHTML='';
   try{const res=await(await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!res.results.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='No matches — widen your filters (Any tera, fewer IVs, or a species that appears at this star level).';}
@@ -695,13 +730,17 @@ document.getElementById('surprise').addEventListener('click',async e=>{
 // ============================================================
 // 📥 LOOKUP: file drop + filter chips + AI summary
 // ============================================================
-let _lookupResults=[], _lookupFilter='all';
+let _lookupResults=[], _lookupFilter='all', _lookupSort='paste';
 function renderLookupResults(){
   box.innerHTML='';
-  let list=_lookupResults;
+  let list=_lookupResults.slice();
   if(_lookupFilter==='shiny')list=list.filter(r=>r.shiny);
   else if(_lookupFilter==='flawless')list=list.filter(r=>(r.iVs||[]).every(v=>v===31));
   else if(_lookupFilter==='6star')list=list.filter(r=>r.stars===6);
+  if(_lookupSort==='iv')list.sort((a,b)=>(b.flawlessIVs||0)-(a.flawlessIVs||0));
+  else if(_lookupSort==='star')list.sort((a,b)=>(b.stars||0)-(a.stars||0));
+  else if(_lookupSort==='species')list.sort((a,b)=>(a.speciesName||'').localeCompare(b.speciesName||''));
+  else if(_lookupSort==='shiny')list.sort((a,b)=>(b.shiny?1:0)-(a.shiny?1:0));
   list.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
 }
 async function loadLookupSummary(results){
@@ -733,8 +772,51 @@ function pasteFileIntoLookup(file){
 })();
 document.querySelectorAll('#lookupFilters .lookup-filter').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('#lookupFilters .lookup-filter').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');_lookupFilter=btn.dataset.f;renderLookupResults();
+  btn.classList.add('on');_lookupFilter=btn.dataset.f;renderLookupResults();updateLookupSelCount();
 }));
+document.getElementById('lookupSort').addEventListener('change',e=>{_lookupSort=e.target.value;renderLookupResults();updateLookupSelCount();});
+function updateLookupSelCount(){const n=selected.size;const el=document.getElementById('lookupSelCount');if(el)el.textContent=`${n} selected`;}
+// keep the count fresh as the user ticks card checkboxes
+document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('chk'))setTimeout(updateLookupSelCount,0);});
+document.getElementById('lookupSelectAll').addEventListener('click',()=>{
+  const cards=box.querySelectorAll('.r');const allOn=selected.size>=cards.length&&cards.length>0;
+  cards.forEach(el=>{const chk=el.querySelector('.chk');const seed=el.querySelector('.seed')?.textContent?.trim();if(!chk||!seed)return;
+    if(allOn){chk.classList.remove('on');selected.delete(seed);}else{chk.classList.add('on');const r=_lookupResults.find(x=>x.seed===seed);if(r)selected.set(seed,r);}});
+  updatePlaylist();updateLookupSelCount();
+});
+function lookupChosen(){return selected.size?[...selected.values()]:_lookupResults;}
+document.getElementById('lookupHostAll').addEventListener('click',async()=>{
+  if(!authState.loggedIn){toast('Log in with Discord to host →');location.href='/api/auth/login';return;}
+  if(!authState.verified){toast('You need the Member role to host.');return;}
+  const chosen=lookupChosen();if(!chosen.length){toast('Nothing to host.');return;}
+  const loc=document.getElementById('location').value;const prog=parseInt(document.getElementById('progress').value||'6');
+  let ok=0;toast(`🚀 Queuing ${chosen.length} raid(s)…`);
+  for(const r of chosen){try{const resp=await(await fetch('/api/host',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:r.seed,stars:r.stars,progress:prog,location:loc})})).json();if(resp.ok)ok++;}catch(_){}}
+  toast(`✓ Queued ${ok}/${chosen.length} on Raid-SV!`);
+});
+document.getElementById('lookupExport').addEventListener('click',()=>{
+  const chosen=lookupChosen();if(!chosen.length){toast('Nothing to export.');return;}
+  const fmt=prompt('Export format: type "ra", "csv", or "showdown"','ra');if(!fmt)return;
+  let text='';
+  if(fmt.toLowerCase().startsWith('c')){
+    text='Seed,Species,Shiny,Stars,Tera,IVs,Nature,Ability\n'+chosen.map(r=>`${r.seed},${r.speciesName},${r.shiny?'yes':'no'},${r.stars},${r.teraName},${(r.iVs||[]).join('/')},${r.nature||''},${r.ability||''}`).join('\n');
+  }else if(fmt.toLowerCase().startsWith('s')){
+    text=chosen.map(r=>`${r.speciesName}\nTera Type: ${r.teraName}\n${r.nature||'Hardy'} Nature\nIVs: ${(r.iVs||[]).map((v,i)=>v+' '+['HP','Atk','Def','SpA','SpD','Spe'][i]).join(' / ')}`).join('\n\n');
+  }else{
+    text=chosen.map(r=>r.raCommand||`!ra ${r.seed} ${r.stars} 6`).join('\n');
+  }
+  navigator.clipboard.writeText(text).then(()=>toast(`📋 Exported ${chosen.length} as ${fmt}`)).catch(()=>prompt('Copy:',text));
+});
+document.getElementById('lookupSaveList').addEventListener('click',async()=>{
+  const chosen=lookupChosen();if(!chosen.length){toast('Nothing to save.');return;}
+  const name=prompt('Name this list:','Tonight\'s Queue');if(!name)return;
+  try{
+    const body={name,seeds:chosen.map(r=>r.seed),game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')||'6'),stars:val('stars')?parseInt(val('stars')):6};
+    const r=await(await fetch('/api/lists',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(r.ok){navigator.clipboard.writeText(r.url).catch(()=>{});toast(`💾 Saved "${name}" — link copied!`);}
+    else toast('Save failed: '+(r.error||'?'));
+  }catch(e){toast('Save failed: '+e.message);}
+});
 
 document.getElementById('lookupbtn').addEventListener('click',async()=>{
   const lines=document.getElementById('lookupinput').value.split('\n').map(s=>s.trim()).filter(Boolean);
@@ -745,11 +827,13 @@ document.getElementById('lookupbtn').addEventListener('click',async()=>{
   try{
     const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')||'6'),stars:val('stars')?parseInt(val('stars')):6,seeds:lines};
     const res=await(await fetch('/api/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-    _lookupResults=res||[];_lookupFilter='all';
+    _lookupResults=res||[];_lookupFilter='all';_lookupSort='paste';
     document.querySelectorAll('#lookupFilters .lookup-filter').forEach(b=>b.classList.toggle('on',b.dataset.f==='all'));
+    document.getElementById('lookupSort').value='paste';
     renderLookupResults();
     st.innerHTML=`Resolved <b style="color:var(--gold)">${res.length}</b> / ${lines.length} seed(s)`;
-    if(res.length>=2){document.getElementById('lookupFilters').classList.add('on');loadLookupSummary(res);}
+    if(res.length>=1){document.getElementById('lookupFilters').classList.add('on');document.getElementById('lookupToolbar').classList.add('on');updateLookupSelCount();}
+    if(res.length>=2)loadLookupSummary(res);
     if(!res.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='None resolved — check they are valid 8-character hex seeds.';}
   }catch(e){st.textContent='Error: '+e.message;}
 });
@@ -1499,6 +1583,55 @@ document.getElementById('achModal').addEventListener('click',e=>{if(e.target.id=
 // Initial achievements load + a poll on focus to catch updates
 window.addEventListener('load',()=>{setTimeout(loadAchievements,1800);});
 window.addEventListener('focus',()=>{if(_achDefs)loadAchievements();});
+
+// ============================================================
+// ⭐ CUSTOM PRESETS (localStorage) — save the current filter set
+// ============================================================
+const CPRESET_KEY='pku_presets';
+function getCustomPresets(){try{return JSON.parse(localStorage.getItem(CPRESET_KEY)||'[]');}catch(_){return[];}}
+function renderCustomPresets(){
+  const box=document.getElementById('presets');
+  // remove old custom chips, keep built-ins
+  box.querySelectorAll('.preset.custom').forEach(b=>b.remove());
+  getCustomPresets().forEach((p,idx)=>{
+    const b=document.createElement('button');b.className='preset custom';b.innerHTML=`⭐ ${p.name} <span style="opacity:.5;margin-left:4px">✕</span>`;
+    b.onclick=e=>{
+      if(e.offsetX>b.clientWidth-22){const l=getCustomPresets();l.splice(idx,1);localStorage.setItem(CPRESET_KEY,JSON.stringify(l));renderCustomPresets();toast('Preset removed');return;}
+      Object.entries(p.f).forEach(([k,v])=>{const el=document.getElementById(k);if(el&&v!=null&&v!=='')el.value=v;});
+      toast('⭐ '+p.name+' applied');maybeRealtime();
+    };
+    box.appendChild(b);
+  });
+}
+document.getElementById('savePreset').addEventListener('click',()=>{
+  const name=prompt('Name this preset:','My filter');if(!name)return;
+  const f={};['game','location','progress','stars','species','shiny','tera','ivs','max','nature','gender','hidden','scale','rewarditem','rewardqty','multispecies','startseed'].forEach(id=>{const el=document.getElementById(id);if(el&&el.value)f[id]=el.value;});
+  const l=getCustomPresets();l.push({name,f});localStorage.setItem(CPRESET_KEY,JSON.stringify(l));renderCustomPresets();toast('⭐ Saved preset: '+name);
+});
+window.addEventListener('load',()=>setTimeout(renderCustomPresets,300));
+
+// ============================================================
+// 📂 Hydrate a saved /list/<id> on load
+// ============================================================
+async function hydrateList(){
+  const m=location.pathname.match(/^\/list\/([0-9a-fA-F]{4,8})/);
+  if(!m)return;
+  const banner=document.getElementById('permabanner');
+  banner.innerHTML=`📂 <b>Loading saved list…</b>`;banner.classList.add('on');
+  try{
+    const r=await(await fetch('/api/lists/'+m[1])).json();
+    if(!r.ok||!r.list){banner.innerHTML='📂 List not found.';return;}
+    const L=r.list;
+    if(L.location)document.getElementById('location').value=L.location;
+    if(L.storyProgress)document.getElementById('progress').value=String(L.storyProgress);
+    // open the lookup panel + run the saved seeds through it
+    document.querySelector('.lookup').open=true;
+    document.getElementById('lookupinput').value=(L.seeds||[]).join('\n');
+    banner.innerHTML=`📂 <b>${L.name}</b> — ${(L.seeds||[]).length} seeds loaded into the lookup tool below.`;
+    document.getElementById('lookupbtn').click();
+  }catch(e){banner.innerHTML='📂 Couldn\'t load list — '+e.message;}
+}
+window.addEventListener('load',()=>setTimeout(hydrateList,60));
 
 // Hydrate permalink (waits until card() exists; this script runs after card is defined)
 window.addEventListener('load',()=>{setTimeout(hydratePermalink,40);});
