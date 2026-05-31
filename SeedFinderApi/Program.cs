@@ -205,6 +205,11 @@ app.MapPost("/api/auth/logout", (HttpContext ctx) =>
 
 // Per-user history of website-queued raids (in-memory; resets on container restart).
 var userRaids = new System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Concurrent.ConcurrentQueue<UserRaidEntry>>();
+// Achievement state (mirrors what's declared below /api/achievements — declared here so /api/host can mutate)
+var userAch = new System.Collections.Concurrent.ConcurrentDictionary<string, Dictionary<string, int>>();
+var userTeraSet = new System.Collections.Concurrent.ConcurrentDictionary<string, HashSet<string>>();
+var userMapSet  = new System.Collections.Concurrent.ConcurrentDictionary<string, HashSet<string>>();
+var userWish = new System.Collections.Concurrent.ConcurrentDictionary<string, WishlistEntry[]>();
 
 app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
 {
@@ -233,6 +238,20 @@ app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
                 var q = userRaids.GetOrAdd(u.Id, _ => new System.Collections.Concurrent.ConcurrentQueue<UserRaidEntry>());
                 q.Enqueue(entry);
                 while (q.Count > 50 && q.TryDequeue(out _)) { }
+                // Achievement counters
+                var ac = userAch.GetOrAdd(u.Id, _ => new Dictionary<string,int>());
+                lock (ac)
+                {
+                    ac["hosts"] = ac.TryGetValue("hosts", out var hv) ? hv + 1 : 1;
+                    if (entry.Shiny) ac["shinies"] = ac.TryGetValue("shinies", out var sv) ? sv + 1 : 1;
+                    if (entry.Stars >= 6) ac["six_stars"] = ac.TryGetValue("six_stars", out var sx) ? sx + 1 : 1;
+                }
+                userMapSet.GetOrAdd(u.Id, _ => new HashSet<string>()).Add(entry.Location.ToLowerInvariant());
+                // wishlist match → wish_granted
+                if (userWish.TryGetValue(u.Id, out var wl) && wl.Any(w => string.Equals(w.SpeciesName, entry.Species, StringComparison.OrdinalIgnoreCase)))
+                {
+                    lock (ac) { ac["wish_granted"] = ac.TryGetValue("wish_granted", out var wg) ? wg + 1 : 1; }
+                }
             }
         }
         catch { }
@@ -595,8 +614,7 @@ app.MapPost("/api/ai/recommend", async (AiRecommendRequest req) =>
     catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
 });
 
-// --- Server-side wishlist for per-user push-alert matching ---
-var userWish = new System.Collections.Concurrent.ConcurrentDictionary<string, WishlistEntry[]>();
+// --- Server-side wishlist for per-user push-alert matching (userWish declared above) ---
 app.MapGet("/api/wishlist", (HttpContext ctx) =>
 {
     if (!ctx.Request.Cookies.TryGetValue("pku_sess", out var t) || !sessions.TryGetValue(t, out var u))
@@ -652,6 +670,113 @@ app.MapGet("/api/network/hosts", async () =>
     return Results.Json(new { hosts });
 });
 
+// --- Achievements: 21 badges across hosting / shiny / quality / AI / discovery / collection ---
+// State dictionaries (userAch / userTeraSet / userMapSet) are declared earlier so /api/host can mutate them.
+var ACHIEVEMENT_DEFS = new[]
+{
+    new AchievementDef("first_host",     "🚀", "First Host",      "Host your first raid",                      1,  "Hosting"),
+    new AchievementDef("ten_up",         "🔟", "Ten Up",          "Host 10 raids",                             10, "Hosting"),
+    new AchievementDef("centurion",      "💯", "Centurion",       "Host 100 raids",                            100,"Hosting"),
+    new AchievementDef("first_shiny",    "✨", "First Shiny",     "Host your first shiny",                     1,  "Shiny"),
+    new AchievementDef("shiny_hunter",   "🌟", "Shiny Hunter",    "Host 10 shinies",                           10, "Shiny"),
+    new AchievementDef("shiny_master",   "💫", "Shiny Master",    "Host 50 shinies",                           50, "Shiny"),
+    new AchievementDef("flawless_find",  "💎", "Flawless Find",   "Host a 6-perfect-IV Pokémon",               1,  "Quality"),
+    new AchievementDef("diamond_hand",   "💍", "Diamond Hand",    "Host 5 flawless Pokémon",                   5,  "Quality"),
+    new AchievementDef("star_climber",   "⭐", "Star Climber",    "Host a 6★ raid",                            1,  "Difficulty"),
+    new AchievementDef("six_star_vet",   "🌠", "6★ Veteran",      "Host 10 6★ raids",                          10, "Difficulty"),
+    new AchievementDef("globetrotter",   "🗺️", "Globetrotter",   "Host in all 3 maps",                        3,  "Exploration"),
+    new AchievementDef("type_collector", "🌈", "Type Collector",  "Host raids covering all 18 Tera types",     18, "Collection"),
+    new AchievementDef("wish_granter",   "⭐", "Wish Granter",    "Host one of your wishlisted seeds",         1,  "Personal"),
+    new AchievementDef("strategist",     "🪧", "Strategist",      "Use the AI Party Builder 10 times",         10, "AI Tools"),
+    new AchievementDef("coach_pupil",    "🧠", "Coach's Pupil",   "View the AI Raid Coach 10 times",           10, "AI Tools"),
+    new AchievementDef("3d_enthusiast",  "🎮", "3D Enthusiast",   "Open the 3D viewer 5 times",                5,  "Discovery"),
+    new AchievementDef("world_traveler", "🌐", "World Traveler",  "Open the live host globe",                  1,  "Discovery"),
+    new AchievementDef("voice_user",     "🎙️", "Voice User",     "Use voice search at least once",            1,  "AI Tools"),
+    new AchievementDef("vision_user",    "📷", "Vision User",     "Identify a Pokémon by screenshot",          1,  "AI Tools"),
+    new AchievementDef("chatty",         "💬", "Chatty",          "Send 10 chat messages",                     10, "AI Tools"),
+    new AchievementDef("sharer",         "🔗", "Sharer",          "Copy 5 permalink share URLs",               5,  "Social"),
+};
+
+string? CurrentUserId(HttpContext ctx) =>
+    ctx.Request.Cookies.TryGetValue("pku_sess", out var t) && sessions.TryGetValue(t, out var u) ? u.Id : null;
+
+Dictionary<string,int> GetAchCounters(string uid) =>
+    userAch.GetOrAdd(uid, _ => new Dictionary<string, int>());
+
+void IncAch(string uid, string key, int by = 1)
+{
+    var d = GetAchCounters(uid);
+    lock (d) { d[key] = (d.TryGetValue(key, out var v) ? v : 0) + by; }
+}
+
+// GET — returns definitions + this user's progress + unlocked list
+app.MapGet("/api/achievements", (HttpContext ctx) =>
+{
+    var uid = CurrentUserId(ctx);
+    if (uid == null) return Results.Json(new { loggedIn = false, definitions = ACHIEVEMENT_DEFS });
+    var counters = GetAchCounters(uid);
+    var prog = new Dictionary<string, int>();
+    var unlocked = new List<string>();
+    foreach (var def in ACHIEVEMENT_DEFS)
+    {
+        var have = MapCounterFor(def.Id, counters, uid);
+        prog[def.Id] = Math.Min(have, def.Target);
+        if (have >= def.Target) unlocked.Add(def.Id);
+    }
+    return Results.Json(new { loggedIn = true, definitions = ACHIEVEMENT_DEFS, progress = prog, unlocked });
+});
+
+// POST — increment a UI-side counter (3d-viewer opens, coach views, etc.)
+app.MapPost("/api/achievements/event", (HttpContext ctx, AchievementEvent ev) =>
+{
+    var uid = CurrentUserId(ctx);
+    if (uid == null) return Results.Json(new { ok = false, error = "login" }, statusCode: 401);
+    var allowed = new[] { "party_builder", "coach_view", "viewer3d_open", "globe_open", "voice_used", "vision_used", "chat_msg", "share_copied", "tera_caught", "map_hosted" };
+    if (!allowed.Contains(ev.EventType)) return Results.Json(new { ok = false, error = "unknown event" });
+    // For tera/map "collected" events the detail represents the unique key
+    if (ev.EventType == "tera_caught" && !string.IsNullOrWhiteSpace(ev.Detail))
+        userTeraSet.GetOrAdd(uid, _ => new HashSet<string>()).Add(ev.Detail!.Trim().ToLowerInvariant());
+    else if (ev.EventType == "map_hosted" && !string.IsNullOrWhiteSpace(ev.Detail))
+        userMapSet.GetOrAdd(uid, _ => new HashSet<string>()).Add(ev.Detail!.Trim().ToLowerInvariant());
+    else
+        IncAch(uid, ev.EventType, 1);
+    return Results.Json(new { ok = true });
+});
+
+// Map a definition id → current value, blending server-side host counters with UI events
+int MapCounterFor(string defId, Dictionary<string,int> c, string uid)
+{
+    int hosts    = c.TryGetValue("hosts", out var h) ? h : 0;
+    int shinies  = c.TryGetValue("shinies", out var s) ? s : 0;
+    int flawless = c.TryGetValue("flawless", out var f) ? f : 0;
+    int sixstars = c.TryGetValue("six_stars", out var ss) ? ss : 0;
+    return defId switch
+    {
+        "first_host"     => hosts,
+        "ten_up"         => hosts,
+        "centurion"      => hosts,
+        "first_shiny"    => shinies,
+        "shiny_hunter"   => shinies,
+        "shiny_master"   => shinies,
+        "flawless_find"  => flawless,
+        "diamond_hand"   => flawless,
+        "star_climber"   => sixstars,
+        "six_star_vet"   => sixstars,
+        "globetrotter"   => userMapSet.TryGetValue(uid, out var ms) ? ms.Count : 0,
+        "type_collector" => userTeraSet.TryGetValue(uid, out var ts) ? ts.Count : 0,
+        "wish_granter"   => c.TryGetValue("wish_granted", out var wg) ? wg : 0,
+        "strategist"     => c.TryGetValue("party_builder", out var pb) ? pb : 0,
+        "coach_pupil"    => c.TryGetValue("coach_view", out var cv) ? cv : 0,
+        "3d_enthusiast"  => c.TryGetValue("viewer3d_open", out var vo) ? vo : 0,
+        "world_traveler" => c.TryGetValue("globe_open", out var go) ? go : 0,
+        "voice_user"     => c.TryGetValue("voice_used", out var vu) ? vu : 0,
+        "vision_user"    => c.TryGetValue("vision_used", out var viu) ? viu : 0,
+        "chatty"         => c.TryGetValue("chat_msg", out var cm) ? cm : 0,
+        "sharer"         => c.TryGetValue("share_copied", out var sc) ? sc : 0,
+        _ => 0,
+    };
+}
+
 // Permalink SPA fallback — /r/<seed> serves index.html so the client-side router can hydrate
 app.MapFallbackToFile("/r/{seed}", "index.html");
 
@@ -687,6 +812,8 @@ public sealed record AiPartyRequest(string SpeciesName, bool Shiny, int Stars, s
 public sealed record HistoryRow(string Species, int Stars, bool Shiny, string? Tera);
 public sealed record AiRecommendRequest(HistoryRow[]? History, HistoryRow[]? Wishlist);
 public sealed record WishlistEntry(string Seed, int Species, string SpeciesName, bool Shiny, int Stars);
+public sealed record AchievementDef(string Id, string Icon, string Name, string Description, int Target, string Category);
+public sealed record AchievementEvent(string EventType, string? Detail);
 public sealed record MoveDto(string Name, string Type);
 public sealed record RewardDto(string Name, int Qty);
 public sealed record RaidResultDto(

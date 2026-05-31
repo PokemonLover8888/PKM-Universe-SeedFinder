@@ -320,6 +320,39 @@
   .globe-tip b{color:#a8d4ff;font-size:13px;}
   .globe-tip .gt-now{color:#3ee06a;font-weight:800;margin-top:5px;display:block;}
   .globe-help{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#ccc;pointer-events:none;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:6px;z-index:3;}
+  /* === 🏆 Achievements panel + unlock toast === */
+  .achfab{position:fixed;bottom:24px;right:168px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));border:none;color:#000;font-size:22px;cursor:pointer;box-shadow:0 12px 32px rgba(212,175,55,.45);z-index:65;display:grid;place-items:center;}
+  .achfab:hover{transform:scale(1.1);}
+  .achfab .achbadge{position:absolute;top:-4px;right:-4px;background:#a855f7;color:#fff;border-radius:10px;padding:2px 7px;font-size:10px;font-weight:800;}
+  @media(max-width:560px){.achfab{bottom:148px;right:18px;}}
+  .ach-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:130;padding:18px;overflow-y:auto;}
+  .ach-modal.on{display:flex;animation:rise .25s ease;}
+  .ach-wrap{background:linear-gradient(180deg,#1a1a26,#0a0a14);border:1px solid var(--gold-dim);border-radius:18px;max-width:820px;width:100%;max-height:92vh;overflow-y:auto;padding:24px;box-shadow:0 30px 90px rgba(0,0,0,.8),0 0 60px rgba(212,175,55,.15);position:relative;}
+  .ach-wrap .ach-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+  .ach-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #2c2c36;}
+  .ach-head .ah-title{font-size:20px;font-weight:900;color:var(--gold-lt);}
+  .ach-head .ah-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .ach-progressbar{flex:1;background:#0c0c0f;border:1px solid var(--line);border-radius:10px;height:12px;overflow:hidden;min-width:140px;}
+  .ach-progressbar div{height:100%;background:linear-gradient(90deg,var(--gold-lt),var(--gold-dim));border-radius:10px;transition:width .5s;}
+  .ach-cat{margin-top:18px;}
+  .ach-cat h5{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:800;margin:0 0 10px;}
+  .ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .ach-card{background:#0c0c0f;border:1px solid #1e1e27;border-radius:12px;padding:12px;display:flex;gap:11px;align-items:center;position:relative;transition:.2s;filter:grayscale(0.85);opacity:.6;}
+  .ach-card.unlocked{background:linear-gradient(180deg,#241f10,#1a1a26);border-color:var(--gold);filter:none;opacity:1;box-shadow:0 0 18px rgba(212,175,55,.15);}
+  .ach-card .ach-icon{font-size:30px;flex:0 0 36px;text-align:center;line-height:1;}
+  .ach-card.unlocked .ach-icon{filter:drop-shadow(0 0 6px var(--gold));}
+  .ach-card .ach-body{flex:1;min-width:0;}
+  .ach-card .ach-name{font-weight:800;font-size:13px;color:var(--text);}
+  .ach-card.unlocked .ach-name{color:var(--gold-lt);}
+  .ach-card .ach-desc{font-size:11px;color:var(--muted);margin-top:1px;line-height:1.35;}
+  .ach-card .ach-mini{margin-top:6px;background:#0c0c0f;border:1px solid var(--line);border-radius:6px;height:6px;overflow:hidden;}
+  .ach-card .ach-mini div{height:100%;background:linear-gradient(90deg,var(--gold-lt),var(--gold-dim));border-radius:6px;}
+  .ach-card .ach-count{font-size:10px;color:var(--muted);margin-top:3px;text-align:right;}
+  .ach-card.unlocked .ach-tick{position:absolute;top:6px;right:8px;color:var(--gold);font-size:14px;}
+  /* Unlock celebration toast (bigger than regular toast) */
+  #achtoast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-160px);background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;padding:14px 22px;border-radius:14px;font-size:14px;font-weight:800;box-shadow:0 16px 48px rgba(212,175,55,.5),0 0 30px rgba(212,175,55,.3);transition:transform .45s cubic-bezier(.2,1.4,.3,1);z-index:75;display:flex;align-items:center;gap:10px;}
+  #achtoast.show{transform:translateX(-50%) translateY(0);}
+  #achtoast .ai{font-size:26px;}
   footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}footer a{color:var(--gold);text-decoration:none;}
 </style>
 </head>
@@ -404,7 +437,13 @@
   <footer>PKM Universe Reborn · seeds work in <b>!ra &lt;seed&gt; &lt;stars&gt; &lt;progress&gt;</b> · <a href="https://creator.pkm-universe.com">creator.pkm-universe.com</a></footer>
 </div>
 <button class="chat-fab" id="chatFab" title="Chat with PKM Universe AI">💬</button>
+<button class="achfab" id="achFab" title="🏆 Achievements">🏆<span class="achbadge" id="achBadge" style="display:none">0</span></button>
 <button class="globe-fab" id="globeFab" title="🌐 Live world map of PKM Universe raid hosts">🌐</button>
+<div class="ach-modal" id="achModal"><div class="ach-wrap"><button class="ach-close" id="achClose">✕</button>
+  <div class="ach-head"><div style="font-size:36px">🏆</div><div style="flex:1"><div class="ah-title" id="ahTitle">Achievements</div><div class="ah-sub" id="ahSub">Log in to start earning badges.</div></div><div style="text-align:right;min-width:120px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700">Progress</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span id="ahPct" style="font-weight:800;color:var(--gold-lt);font-size:14px;min-width:40px">0%</span><div class="ach-progressbar"><div id="ahBar" style="width:0%"></div></div></div></div></div>
+  <div id="achBody"></div>
+</div></div>
+<div id="achtoast"></div>
 <div class="globe-modal" id="globeModal"><div class="globe-wrap">
   <div class="globe-title">🌐 PKM Universe — Live Host Map</div>
   <div class="globe-sub" id="globeSub">Loading…</div>
@@ -1227,6 +1266,90 @@ document.getElementById('globeModal').addEventListener('click',e=>{if(e.target.i
 
 // Load recommendations once the page settles (after auth + species + wishlist init)
 window.addEventListener('load',()=>{setTimeout(loadRecommendations,1500);});
+
+// ============================================================
+// 🏆 ACHIEVEMENTS
+// ============================================================
+let _achDefs=null, _achUnlocked=new Set(), _achProgress={};
+
+async function loadAchievements(){
+  try{
+    const r=await(await fetch('/api/achievements')).json();
+    _achDefs=r.definitions||[];_achProgress=r.progress||{};
+    const prevUnlocked=new Set(_achUnlocked);
+    _achUnlocked=new Set(r.unlocked||[]);
+    // Detect newly unlocked → celebrate
+    for(const id of _achUnlocked){if(!prevUnlocked.has(id)){const def=_achDefs.find(d=>d.id===id);if(def&&prevUnlocked.size>0)celebrateAchievement(def);}}
+    // Badge count on fab
+    const badge=document.getElementById('achBadge');
+    if(_achUnlocked.size>0){badge.textContent=_achUnlocked.size;badge.style.display='block';}else{badge.style.display='none';}
+    // Render the modal body if it's open or for later
+    renderAchievementBody(r.loggedIn);
+  }catch(_){}
+}
+
+function renderAchievementBody(loggedIn){
+  if(!_achDefs)return;
+  const body=document.getElementById('achBody');
+  if(loggedIn===false){body.innerHTML='<div style="color:var(--muted);text-align:center;padding:40px">Log in with Discord to start earning achievements!</div>';document.getElementById('ahSub').textContent='Log in to start earning badges.';document.getElementById('ahPct').textContent='—';return;}
+  const total=_achDefs.length, unlocked=_achUnlocked.size, pct=Math.round(unlocked/total*100);
+  document.getElementById('ahSub').textContent=`${unlocked} / ${total} unlocked · keep going!`;
+  document.getElementById('ahPct').textContent=pct+'%';
+  document.getElementById('ahBar').style.width=pct+'%';
+  // Group by category
+  const cats={};_achDefs.forEach(d=>{(cats[d.category]=cats[d.category]||[]).push(d);});
+  body.innerHTML=Object.entries(cats).map(([cat,list])=>{
+    const cards=list.map(d=>{
+      const have=_achProgress[d.id]||0;
+      const done=_achUnlocked.has(d.id);
+      const barpct=Math.min(100,Math.round(have/d.target*100));
+      return `<div class="ach-card ${done?'unlocked':''}">${done?'<span class="ach-tick">✓</span>':''}<div class="ach-icon">${d.icon}</div><div class="ach-body"><div class="ach-name">${d.name}</div><div class="ach-desc">${d.description}</div>${d.target>1?`<div class="ach-mini"><div style="width:${barpct}%"></div></div><div class="ach-count">${Math.min(have,d.target)} / ${d.target}</div>`:''}</div></div>`;
+    }).join('');
+    return `<div class="ach-cat"><h5>${cat}</h5><div class="ach-grid">${cards}</div></div>`;
+  }).join('');
+}
+
+function celebrateAchievement(def){
+  const t=document.getElementById('achtoast');
+  t.innerHTML=`<span class="ai">${def.icon}</span><div><div style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:800;opacity:.7">Achievement Unlocked!</div><div>${def.name}</div></div>`;
+  t.classList.add('show');
+  if(typeof confetti==='function'){const rect=t.getBoundingClientRect();confetti(rect.left+rect.width/2,rect.top+rect.height/2);}
+  clearTimeout(t._tt);t._tt=setTimeout(()=>t.classList.remove('show'),4500);
+}
+
+// Fire UI events to the backend (no-op if not logged in)
+function achEvent(eventType,detail){
+  fetch('/api/achievements/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventType,detail:detail||null})}).then(r=>r.ok?loadAchievements():null).catch(()=>{});
+}
+
+// Wire the fab + modal
+document.getElementById('achFab').addEventListener('click',()=>{document.getElementById('achModal').classList.add('on');loadAchievements();});
+document.getElementById('achClose').addEventListener('click',()=>document.getElementById('achModal').classList.remove('on'));
+document.getElementById('achModal').addEventListener('click',e=>{if(e.target.id==='achModal')document.getElementById('achModal').classList.remove('on');});
+
+// Wire event reporters by monkey-patching the existing handlers
+(function wireAchievementHooks(){
+  // 3D viewer opens
+  const _oV3=window.showViewer3D;if(_oV3)window.showViewer3D=function(r){achEvent('viewer3d_open');return _oV3(r);};
+  // Coach views
+  const _oC=window.showCoach;if(_oC)window.showCoach=function(r){achEvent('coach_view');if(r&&r.teraName)achEvent('tera_caught',r.teraName);return _oC(r);};
+  // Party builder
+  const _oP=window.showPartyBuilder;if(_oP)window.showPartyBuilder=function(r){achEvent('party_builder');return _oP(r);};
+  // Globe open
+  const _oG=window.openGlobe;if(_oG)window.openGlobe=function(){achEvent('globe_open');return _oG();};
+  // Share
+  const _oS=window.shareSeed;if(_oS)window.shareSeed=function(r){achEvent('share_copied');return _oS(r);};
+  // Voice mic
+  const _mic=document.getElementById('aimic');if(_mic)_mic.addEventListener('click',()=>achEvent('voice_used'));
+  // Vision (file input)
+  const _file=document.getElementById('aifile');if(_file)_file.addEventListener('change',e=>{if(e.target.files&&e.target.files.length)achEvent('vision_used');});
+  // Chat send → message counter
+  const _send=document.getElementById('chatSend');if(_send)_send.addEventListener('click',()=>achEvent('chat_msg'));
+})();
+
+// Initial achievements load + a poll on focus to catch updates
+window.addEventListener('load',()=>{setTimeout(loadAchievements,1800);});
+window.addEventListener('focus',()=>{if(_achDefs)loadAchievements();});
 
 // Hydrate permalink (waits until card() exists; this script runs after card is defined)
 window.addEventListener('load',()=>{setTimeout(hydratePermalink,40);});
