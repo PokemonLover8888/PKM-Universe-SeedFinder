@@ -1,7 +1,7 @@
 // PKM Universe Seed Finder — Service Worker
 // Network-first for HTML + /api/species so updates are seen immediately. Cache-first for
 // static icons + external CDN sprites/cries (which are immutable URLs).
-const CACHE = 'pkmu-seeds-v10';
+const CACHE = 'pkmu-seeds-v11';
 const SHELL = ['/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', e => {
