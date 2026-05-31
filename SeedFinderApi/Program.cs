@@ -449,6 +449,41 @@ app.MapPost("/api/ai/suggest", async (AiSuggestRequest req) =>
     catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
 });
 
+// --- AI Lookup Summary: analyze a batch lookup, return a punchy one-liner ---
+app.MapPost("/api/ai/lookup-summary", async (AiLookupSummaryRequest req) =>
+{
+    if (string.IsNullOrEmpty(geminiKey)) return Results.Json(new { ok = false });
+    var rows = req.Results ?? Array.Empty<AiSummaryRow>();
+    if (rows.Length == 0) return Results.Json(new { ok = false });
+    try
+    {
+        int total = rows.Length;
+        int shinies = rows.Count(r => r.Shiny);
+        int flawless = rows.Count(r => r.FlawlessIVs >= 6);
+        var byTera = rows.GroupBy(r => r.TeraType ?? "?").OrderByDescending(g => g.Count()).First();
+        var bySpecies = rows.GroupBy(r => r.SpeciesName).OrderByDescending(g => g.Count()).First();
+        var prompt = $"Write a single punchy sentence summarizing this batch of {total} Tera Raid seeds: {shinies} shiny, {flawless} flawless 6IV, dominant tera type is {byTera.Key} ({byTera.Count()}), most common species is {bySpecies.Key} ({bySpecies.Count()}). Make it vivid and useful for a raid host. No markdown.";
+        var text = await GeminiCallAsync(new { contents = new[] { new { parts = new[] { new { text = prompt } } } }, generationConfig = new { temperature = 0.6 } });
+        return Results.Json(new { ok = true, text = text.Trim().Trim('"'), stats = new { total, shinies, flawless, topTera = byTera.Key, topSpecies = bySpecies.Key } });
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = ex.Message }); }
+});
+
+// --- Reorder rotation: proxies a new index list to the bot. Bot must implement /api/raid/reorder ---
+app.MapPost("/api/raid/reorder", async (HttpContext ctx, RaidReorderRequest req) =>
+{
+    if (!ctx.Request.Cookies.TryGetValue("pku_sess", out var t) || !sessions.TryGetValue(t, out var u))
+        return Results.Json(new { ok = false, error = "login" }, statusCode: 401);
+    if (!u.Verified) return Results.Json(new { ok = false, error = "notmember" }, statusCode: 403);
+    try
+    {
+        var ord = string.Join(',', req.Order ?? Array.Empty<int>());
+        var resp = await botHttp.GetStringAsync($"{botBase}/api/raid/reorder?order={Uri.EscapeDataString(ord)}");
+        return Results.Content(resp, "application/json");
+    }
+    catch (Exception ex) { return Results.Json(new { ok = false, error = "bot didn't accept reorder: " + ex.Message }); }
+});
+
 // --- AI Summary: 1-2 sentence explainer above a search result list ---
 app.MapPost("/api/ai/summary", async (AiSummaryRequest req) =>
 {
@@ -814,6 +849,8 @@ public sealed record AiRecommendRequest(HistoryRow[]? History, HistoryRow[]? Wis
 public sealed record WishlistEntry(string Seed, int Species, string SpeciesName, bool Shiny, int Stars);
 public sealed record AchievementDef(string Id, string Icon, string Name, string Description, int Target, string Category);
 public sealed record AchievementEvent(string EventType, string? Detail);
+public sealed record AiLookupSummaryRequest(AiSummaryRow[]? Results);
+public sealed record RaidReorderRequest(int[]? Order);
 public sealed record MoveDto(string Name, string Type);
 public sealed record RewardDto(string Name, int Qty);
 public sealed record RaidResultDto(

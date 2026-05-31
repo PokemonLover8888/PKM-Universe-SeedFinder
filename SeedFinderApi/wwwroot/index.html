@@ -353,6 +353,26 @@
   #achtoast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-160px);background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;padding:14px 22px;border-radius:14px;font-size:14px;font-weight:800;box-shadow:0 16px 48px rgba(212,175,55,.5),0 0 30px rgba(212,175,55,.3);transition:transform .45s cubic-bezier(.2,1.4,.3,1);z-index:75;display:flex;align-items:center;gap:10px;}
   #achtoast.show{transform:translateX(-50%) translateY(0);}
   #achtoast .ai{font-size:26px;}
+  /* === Lookup: file drop + filters + AI summary === */
+  .lookup-drop{display:flex;align-items:center;gap:10px;background:var(--panel2);border:2px dashed var(--line);border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:.18s;}
+  .lookup-drop:hover,.lookup-drop.over{border-color:var(--gold);color:var(--gold);background:#1a160a;}
+  .lookup-drop b{color:var(--gold-lt);}
+  .lookup-summary{display:none;background:linear-gradient(90deg,#2a1f4a,#1a1a26);border:1px solid #4a3a6a;border-radius:11px;padding:11px 16px;margin:12px 0;font-size:13px;color:#dbdee1;}
+  .lookup-summary.on{display:block;animation:rise .35s ease;}
+  .lookup-summary .ls-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .lookup-summary .ls-chip{background:#0c0c0f;border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--gold-lt);font-weight:700;}
+  .lookup-filters{display:none;gap:7px;flex-wrap:wrap;margin:10px 0 4px;}
+  .lookup-filters.on{display:flex;}
+  .lookup-filter{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:18px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;}
+  .lookup-filter:hover{border-color:var(--gold);color:var(--gold);}
+  .lookup-filter.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);}
+  /* === Up Next: drag-to-reorder === */
+  .qcard{cursor:grab;transition:transform .15s,box-shadow .15s,opacity .15s;}
+  .qcard:active{cursor:grabbing;}
+  .qcard.dragging{opacity:.35;transform:scale(.96);}
+  .qcard.dropbefore{box-shadow:-3px 0 0 var(--gold-lt);}
+  .qcard.dropafter{box-shadow:3px 0 0 var(--gold-lt);}
+  .upnext .strip{padding-bottom:14px;}
   footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}footer a{color:var(--gold);text-decoration:none;}
 </style>
 </head>
@@ -407,8 +427,16 @@
 
   <details class="lookup">
     <summary>🔁 Reverse / batch lookup — paste seeds or !ra commands to see what they are</summary>
+    <div class="lookup-drop" id="lookupDrop">📥 <b>Drop a .txt of seeds here</b> · or click to pick a file · or just paste below ↓<input type="file" id="lookupFile" accept=".txt,.csv,.log" style="display:none"/></div>
     <textarea id="lookupinput" placeholder="One per line. Bare seeds (02AEAC78) or full commands (!ra 02AEAC78 6 6). Great for verifying community seeds or importing a whole list."></textarea>
     <div class="actions"><button class="go" id="lookupbtn">Look up</button><span class="status" id="lookupstatus"></span></div>
+    <div class="lookup-summary" id="lookupSummary"></div>
+    <div class="lookup-filters" id="lookupFilters">
+      <button class="lookup-filter on" data-f="all">All</button>
+      <button class="lookup-filter" data-f="shiny">✦ Shiny only</button>
+      <button class="lookup-filter" data-f="flawless">💎 Flawless 6IV</button>
+      <button class="lookup-filter" data-f="6star">⭐ 6★ only</button>
+    </div>
   </details>
 
   <details class="mypanel" id="mypanel" open>
@@ -625,16 +653,64 @@ document.getElementById('surprise').addEventListener('click',async e=>{
   }catch(_){document.getElementById('species').value='';document.getElementById('shiny').value='true';document.getElementById('ivs').value='';search();}
   btn.textContent=orig;btn.disabled=false;
 });
+// ============================================================
+// 📥 LOOKUP: file drop + filter chips + AI summary
+// ============================================================
+let _lookupResults=[], _lookupFilter='all';
+function renderLookupResults(){
+  box.innerHTML='';
+  let list=_lookupResults;
+  if(_lookupFilter==='shiny')list=list.filter(r=>r.shiny);
+  else if(_lookupFilter==='flawless')list=list.filter(r=>(r.iVs||[]).every(v=>v===31));
+  else if(_lookupFilter==='6star')list=list.filter(r=>r.stars===6);
+  list.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
+}
+async function loadLookupSummary(results){
+  const banner=document.getElementById('lookupSummary');
+  if(!results||results.length<2){banner.classList.remove('on');return;}
+  try{
+    const rows=results.slice(0,50).map(r=>({speciesName:r.speciesName,shiny:r.shiny,stars:r.stars,teraType:r.teraName,flawlessIVs:r.flawlessIVs,nature:r.nature||'?'}));
+    const r=await(await fetch('/api/ai/lookup-summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({results:rows})})).json();
+    if(!r.ok||!r.text){banner.classList.remove('on');return;}
+    const s=r.stats||{};
+    banner.innerHTML=`<div><b style="color:var(--gold-lt)">🧠</b> ${r.text}</div><div class="ls-stats"><span class="ls-chip">${s.total||0} seeds</span><span class="ls-chip">✦ ${s.shinies||0} shiny</span><span class="ls-chip">💎 ${s.flawless||0} flawless</span><span class="ls-chip">${s.topTera||'?'} tera (top)</span><span class="ls-chip">${s.topSpecies||'?'} (top species)</span></div>`;
+    banner.classList.add('on');
+  }catch(_){banner.classList.remove('on');}
+}
+function pasteFileIntoLookup(file){
+  if(!file)return;
+  const fr=new FileReader();
+  fr.onload=()=>{document.getElementById('lookupinput').value=String(fr.result).trim();toast(`📥 Loaded ${file.name}`);document.getElementById('lookupbtn').click();};
+  fr.readAsText(file);
+}
+(function wireLookupDrop(){
+  const drop=document.getElementById('lookupDrop');
+  const inp=document.getElementById('lookupFile');
+  drop.addEventListener('click',()=>inp.click());
+  inp.addEventListener('change',e=>{if(e.target.files[0])pasteFileIntoLookup(e.target.files[0]);e.target.value='';});
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)pasteFileIntoLookup(f);});
+})();
+document.querySelectorAll('#lookupFilters .lookup-filter').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#lookupFilters .lookup-filter').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');_lookupFilter=btn.dataset.f;renderLookupResults();
+}));
+
 document.getElementById('lookupbtn').addEventListener('click',async()=>{
   const lines=document.getElementById('lookupinput').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const st=document.getElementById('lookupstatus');
   if(!lines.length){st.textContent='Paste at least one seed.';return;}
   st.innerHTML='<span class="spinner"></span> Looking up…';document.getElementById('empty').style.display='none';box.innerHTML='';
+  document.getElementById('lookupFilters').classList.remove('on');document.getElementById('lookupSummary').classList.remove('on');
   try{
     const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')||'6'),stars:val('stars')?parseInt(val('stars')):6,seeds:lines};
     const res=await(await fetch('/api/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-    res.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
+    _lookupResults=res||[];_lookupFilter='all';
+    document.querySelectorAll('#lookupFilters .lookup-filter').forEach(b=>b.classList.toggle('on',b.dataset.f==='all'));
+    renderLookupResults();
     st.innerHTML=`Resolved <b style="color:var(--gold)">${res.length}</b> / ${lines.length} seed(s)`;
+    if(res.length>=2){document.getElementById('lookupFilters').classList.add('on');loadLookupSummary(res);}
     if(!res.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='None resolved — check they are valid 8-character hex seeds.';}
   }catch(e){st.textContent='Error: '+e.message;}
 });
@@ -677,10 +753,44 @@ function updateQueue(q){
   const box=document.getElementById('upnext'),strip=document.getElementById('upnextstrip');
   if(!Array.isArray(q)||!q.length){box.classList.remove('on');return;}
   box.classList.add('on');
+  window._queueOrder=q.map((_,i)=>i);
   strip.innerHTML=q.map((r,i)=>{
     const urls=spriteChain(r.species,r.shiny);
-    return `<div class="qcard ${r.shiny?'shiny':''}">${i===0?'<span class="qnow">NOW</span>':''}${r.shiny?'<span class="qbadge">✦</span>':''}<img src="${r.species>0?urls[0]:''}" data-f='${JSON.stringify(urls.slice(1))}' onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><div class="qn">${r.name}</div><div class="qs">${'★'.repeat(r.stars)}</div></div>`;
+    return `<div class="qcard ${r.shiny?'shiny':''}" draggable="true" data-idx="${i}" title="Drag to reorder rotation">${i===0?'<span class="qnow">NOW</span>':''}${r.shiny?'<span class="qbadge">✦</span>':''}<img src="${r.species>0?urls[0]:''}" data-f='${JSON.stringify(urls.slice(1))}' onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><div class="qn">${r.name}</div><div class="qs">${'★'.repeat(r.stars)}</div></div>`;
   }).join('');
+  wireQueueDrag();
+}
+function wireQueueDrag(){
+  const strip=document.getElementById('upnextstrip');
+  let dragIdx=-1;
+  strip.querySelectorAll('.qcard').forEach(card=>{
+    card.addEventListener('dragstart',e=>{dragIdx=+card.dataset.idx;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{card.classList.remove('dragging');strip.querySelectorAll('.qcard').forEach(c=>c.classList.remove('dropbefore','dropafter'));});
+    card.addEventListener('dragover',e=>{e.preventDefault();const rect=card.getBoundingClientRect();const before=(e.clientX-rect.left)<rect.width/2;strip.querySelectorAll('.qcard').forEach(c=>c.classList.remove('dropbefore','dropafter'));card.classList.add(before?'dropbefore':'dropafter');});
+    card.addEventListener('drop',async e=>{
+      e.preventDefault();
+      const dropIdx=+card.dataset.idx;
+      if(dragIdx<0||dragIdx===dropIdx)return;
+      const rect=card.getBoundingClientRect();const before=(e.clientX-rect.left)<rect.width/2;
+      const order=[...window._queueOrder];
+      const [moved]=order.splice(dragIdx,1);
+      let target=dropIdx;if(dragIdx<dropIdx)target--;if(!before)target++;
+      order.splice(target,0,moved);
+      window._queueOrder=order;
+      // optimistic UI update
+      const cards=Array.from(strip.querySelectorAll('.qcard'));
+      const newOrder=order.map(i=>cards[i]);
+      strip.innerHTML='';newOrder.forEach((c,i)=>{c.dataset.idx=i;strip.appendChild(c);});
+      cards.forEach(c=>c.classList.remove('dropbefore','dropafter'));
+      // push to backend
+      try{
+        const resp=await(await fetch('/api/raid/reorder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order})})).json();
+        if(resp.ok)toast('✓ Rotation reordered on the bot!');
+        else toast('Reorder rejected: '+(resp.error||'?'));
+      }catch(e){toast('Reorder failed: '+e.message);}
+      wireQueueDrag();
+    });
+  });
 }
 async function pollQueue(){ if(sseConnected)return; try{ updateQueue(await(await fetch('/api/queue',{cache:'no-store'})).json()); }catch(e){document.getElementById('upnext').classList.remove('on');} }
 pollQueue();setInterval(pollQueue,10000);
