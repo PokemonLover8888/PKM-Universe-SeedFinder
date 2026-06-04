@@ -614,7 +614,8 @@ async function loadSpecies(announce){
 
 function val(id){const v=document.getElementById(id).value;return v===""?null:v;}
 function scaleLabel(s){if(s==null)return"?";if(s===0)return"XXXS";if(s===255)return"XXXL";if(s<=50)return"XS";if(s<=110)return"S";if(s<=170)return"M";return"L";}
-function spriteChain(id,shiny){const b="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";return shiny?[`${b}/other/home/shiny/${id}.png`,`${b}/other/official-artwork/shiny/${id}.png`,`${b}/shiny/${id}.png`,`${b}/other/home/${id}.png`]:[`${b}/other/home/${id}.png`,`${b}/other/official-artwork/${id}.png`,`${b}/${id}.png`];}
+const BLANK_SPRITE='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+function spriteChain(id,shiny){if(!(id>0))return [BLANK_SPRITE];const b="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";return shiny?[`${b}/other/home/shiny/${id}.png`,`${b}/other/official-artwork/shiny/${id}.png`,`${b}/shiny/${id}.png`,`${b}/other/home/${id}.png`]:[`${b}/other/home/${id}.png`,`${b}/other/official-artwork/${id}.png`,`${b}/${id}.png`];}
 function radar(ivs,color){if(!ivs)return'';const order=[0,1,2,5,4,3],labels=["HP","Atk","Def","Spe","SpD","SpA"];const cx=64,cy=64,R=44,grid=[],axes=[],pts=[],labs=[];for(let k=0;k<6;k++){const a=(-90+k*60)*Math.PI/180,gx=cx+Math.cos(a)*R,gy=cy+Math.sin(a)*R;grid.push([gx,gy]);axes.push(`<line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" stroke="#33333f"/>`);const v=ivs[order[k]],rr=R*(v/31),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;pts.push(`${px},${py}`);const lx=cx+Math.cos(a)*(R+11),ly=cy+Math.sin(a)*(R+11),c=v===31?'#f3d979':'#9a9aa6';labs.push(`<text x="${lx}" y="${ly+3}" fill="${c}" font-size="9" font-weight="700" text-anchor="middle">${labels[k]}</text>`);}const ring=f=>grid.map(([x,y])=>`${cx+(x-cx)*f},${cy+(y-cy)*f}`).join(' ');return `<svg width="128" height="128" viewBox="0 0 128 128"><polygon points="${ring(1)}" fill="none" stroke="#2c2c36"/><polygon points="${ring(.66)}" fill="none" stroke="#23232c"/><polygon points="${ring(.33)}" fill="none" stroke="#23232c"/>${axes.join('')}<polygon points="${pts.join(' ')}" fill="${color}55" stroke="${color}" stroke-width="2"/>${pts.map(p=>{const[x,y]=p.split(',');return `<circle cx="${x}" cy="${y}" r="2" fill="${color}"/>`}).join('')}${labs.join('')}</svg>`;}
 function teraGem(color){return `<svg class="watermark" viewBox="0 0 100 100"><polygon points="50,4 84,32 68,96 32,96 16,32" fill="${color}"/><polygon points="50,4 84,32 50,40 16,32" fill="#fff" opacity=".3"/></svg>`;}
 function natureStr(nat){const m=NAT[nat];return m?`${nat} <span class="up">↑${m[0]}</span> <span class="down">↓${m[1]}</span>`:`${nat}`;}
@@ -1096,7 +1097,7 @@ async function showCoach(r){
     const k=c.coach||{};
     const counters=(k.counters||[]).map(x=>{
       const id=nameToId[(x.name||'').toLowerCase()]||0;
-      const sp=id?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
+      const sp=Number(id)>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
       return `<div class="coach-counter">${sp?`<img src="${sp}" onerror="this.style.visibility='hidden'"/>`:'<div style="width:42px;flex:0 0 42px"></div>'}<div><div class="cn">${x.name||'?'}</div><div class="cr">${x.reason||''}</div></div></div>`;
     }).join('');
     const moves=(k.moves||[]).map(mv=>`<div class="coach-mv">${mv}</div>`).join('');
@@ -1241,7 +1242,7 @@ async function showPartyBuilder(r){
     document.getElementById('partyStrategy').innerHTML=`<b>Strategy:</b> ${p.strategy||'—'}`;
     document.getElementById('partyGrid').innerHTML=(p.team||[]).map(mon=>{
       const id=nameToId[(mon.name||'').toLowerCase()]||0;
-      const sp=id?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
+      const sp=Number(id)>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
       const tColor=TC[mon.tera]||'#888';
       const moves=(mon.moves||[]).map(mv=>`<div class="pm-mv">${mv}</div>`).join('');
       return `<div class="party-mon">

@@ -150,7 +150,7 @@ const SAMPLE=[
 ];
 const BSTAT_LABELS=["HP","Atk","Def","SpA","SpD","Spe"];
 function scaleLabel(s){if(s===0)return"XXXS";if(s===255)return"XXXL";if(s<=50)return"XS";if(s<=110)return"S";if(s<=170)return"M";return"L";}
-function spriteChain(id,shiny){const b="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";return shiny?[`${b}/other/home/shiny/${id}.png`,`${b}/other/official-artwork/shiny/${id}.png`,`${b}/shiny/${id}.png`]:[`${b}/other/home/${id}.png`,`${b}/other/official-artwork/${id}.png`,`${b}/${id}.png`];}
+function spriteChain(id,shiny){if(!(Number(id)>0))return ['data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='];const b="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";return shiny?[`${b}/other/home/shiny/${id}.png`,`${b}/other/official-artwork/shiny/${id}.png`,`${b}/shiny/${id}.png`]:[`${b}/other/home/${id}.png`,`${b}/other/official-artwork/${id}.png`,`${b}/${id}.png`];}
 function radar(ivs,color){const order=[0,1,2,5,4,3],labels=["HP","Atk","Def","Spe","SpD","SpA"];const cx=64,cy=64,R=44,grid=[],axes=[],pts=[],labs=[];
   for(let k=0;k<6;k++){const a=(-90+k*60)*Math.PI/180,gx=cx+Math.cos(a)*R,gy=cy+Math.sin(a)*R;grid.push([gx,gy]);axes.push(`<line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" stroke="#33333f"/>`);const v=ivs[order[k]],rr=R*(v/31),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;pts.push(`${px},${py}`);const lx=cx+Math.cos(a)*(R+11),ly=cy+Math.sin(a)*(R+11),c=v===31?'#f3d979':'#9a9aa6';labs.push(`<text x="${lx}" y="${ly+3}" fill="${c}" font-size="9" font-weight="700" text-anchor="middle">${labels[k]}</text>`);}
   const ring=f=>grid.map(([x,y])=>`${cx+(x-cx)*f},${cy+(y-cy)*f}`).join(' ');
