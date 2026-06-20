@@ -13,6 +13,21 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAn
 
 var app = builder.Build();
 app.UseCors();
+
+// Live API data (now-hosting, rotations, stream, etc.) must NEVER be cached by the browser or
+// Cloudflare — otherwise a normal tab refresh serves a stale raid (you'd need a hard refresh to
+// see the real one). Force no-store on every /api/ response so each fetch is always current.
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.Path.StartsWithSegments("/api"))
+    {
+        ctx.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+        ctx.Response.Headers["Pragma"] = "no-cache";
+        ctx.Response.Headers["Expires"] = "0";
+    }
+    await next();
+});
+
 app.UseDefaultFiles();
 // Force no-cache on the service worker + HTML shell so deploys propagate immediately past
 // Cloudflare. Sprites/JSON/etc. keep the long cache they already use.
@@ -39,6 +54,19 @@ app.MapGet("/api/health", () => Results.Ok(new { ok = true, service = "pkm-unive
 // at :9090). Browser can't reach the bot directly, so the finder relays it.
 var botHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
 var botBase = Environment.GetEnvironmentVariable("BOT_URL") ?? "http://host.docker.internal:9090";
+
+// Per-map bot routing. Each raid bot now runs its own web API on its own port
+// (Paldea 9100, Kitakami 9090, Blueberry 9110). Any can be overridden via env.
+// Unknown/blank location falls back to the Kitakami bot (the legacy single bot).
+string BotUrlFor(string? location) => (location ?? "").Trim().ToLowerInvariant() switch
+{
+    "paldea"    => Environment.GetEnvironmentVariable("BOT_URL_PALDEA")    ?? "http://host.docker.internal:9100",
+    "blueberry" => Environment.GetEnvironmentVariable("BOT_URL_BLUEBERRY") ?? "http://host.docker.internal:9110",
+    _           => Environment.GetEnvironmentVariable("BOT_URL_KITAKAMI")  ?? botBase,
+};
+
+// Maps shown on the site, in display order.
+var rotationMaps = new[] { ("Paldea", "paldea"), ("Kitakami", "kitakami"), ("Blueberry", "blueberry") };
 app.MapGet("/api/nowhosting", async () =>
 {
     try
@@ -53,6 +81,40 @@ app.MapGet("/api/queue", async () =>
 {
     try { return Results.Content(await botHttp.GetStringAsync($"{botBase}/api/raid/queue"), "application/json"); }
     catch { return Results.Content("[]", "application/json"); }
+});
+
+// Aggregate every map's bot rotation in one call so the site can show all 3 side by side.
+// Each bot is queried independently; if one is offline it comes back online:false instead of failing the whole call.
+app.MapGet("/api/rotations", async () =>
+{
+    var tasks = rotationMaps.Select(async m =>
+    {
+        var baseUrl = BotUrlFor(m.Item2);
+        object? now = null, queue = null;
+        bool online = false;
+        try
+        {
+            var nowJson = await botHttp.GetStringAsync($"{baseUrl}/api/raid/now");
+            now = System.Text.Json.JsonSerializer.Deserialize<object>(nowJson);
+            // "online" must mean the bot is actually connected to its Switch and able to host —
+            // not merely that its web API answered. A stopped routine / disconnected Switch = offline.
+            online = true;
+            using (var nowDoc = System.Text.Json.JsonDocument.Parse(nowJson))
+            {
+                if (nowDoc.RootElement.TryGetProperty("switchOnline", out var so) && so.ValueKind == System.Text.Json.JsonValueKind.False)
+                    online = false;
+            }
+            try
+            {
+                var qJson = await botHttp.GetStringAsync($"{baseUrl}/api/raid/queue");
+                queue = System.Text.Json.JsonSerializer.Deserialize<object>(qJson);
+            }
+            catch { }
+        }
+        catch { }
+        return new { map = m.Item1, online, now, queue };
+    });
+    return Results.Json(await Task.WhenAll(tasks));
 });
 
 // --- Server-Sent Events: real-time push of raid state + activity ticker ---
@@ -219,7 +281,7 @@ app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
         return Results.Json(new { ok = false, error = "notmember" }, statusCode: 403);
     try
     {
-        var url = $"{botBase}/api/raid/add?seed={Uri.EscapeDataString(req.Seed ?? "")}&stars={req.Stars}&progress={req.Progress}&location={Uri.EscapeDataString(req.Location ?? "Kitakami")}";
+        var url = $"{BotUrlFor(req.Location)}/api/raid/add?seed={Uri.EscapeDataString(req.Seed ?? "")}&stars={req.Stars}&progress={req.Progress}&location={Uri.EscapeDataString(req.Location ?? "Kitakami")}";
         var respText = await botHttp.GetStringAsync(url);
         // Record the queued raid against the logged-in user (My Raids history)
         try
@@ -478,7 +540,7 @@ app.MapPost("/api/raid/reorder", async (HttpContext ctx, RaidReorderRequest req)
     try
     {
         var ord = string.Join(',', req.Order ?? Array.Empty<int>());
-        var resp = await botHttp.GetStringAsync($"{botBase}/api/raid/reorder?order={Uri.EscapeDataString(ord)}");
+        var resp = await botHttp.GetStringAsync($"{BotUrlFor(req.Location)}/api/raid/reorder?order={Uri.EscapeDataString(ord)}");
         return Results.Content(resp, "application/json");
     }
     catch (Exception ex) { return Results.Json(new { ok = false, error = "bot didn't accept reorder: " + ex.Message }); }
@@ -539,24 +601,65 @@ app.MapGet("/api/species", (string? map, int? stars, int? progress, bool? all, R
     };
     int progressVal = progress is >= 3 and <= 6 ? progress.Value : 6;
     int starsVal = stars is >= 1 and <= 6 ? stars.Value : 0;
-    int contentType = starsVal == 6 ? 1 : 0;
 
-    var byStars = engine.GetSpeciesByStars(mapVal, progressVal, contentType);
-    HashSet<int> ids;
+    HashSet<int> ids = new HashSet<int>();
     if (starsVal == 0)
     {
-        ids = new HashSet<int>();
-        foreach (var s in byStars.Values) foreach (var id in s) ids.Add(id);
+        // No specific star tier requested → return EVERY species that can appear in a raid
+        // for this map: standard table (contentType 0), 6★ black-crystal raids (contentType 1),
+        // and event/distribution raids (contentType 3). Each call is cached after first build.
+        foreach (var ct in new[] { 0, 1, 3 })
+        {
+            var byStarsCt = engine.GetSpeciesByStars(mapVal, progressVal, ct);
+            foreach (var s in byStarsCt.Values) foreach (var id in s) ids.Add(id);
+        }
     }
     else
     {
-        ids = byStars.TryGetValue(starsVal, out var set) ? set : new HashSet<int>();
+        // Specific star tier: union that star's species across ALL content types
+        // (standard + 6★ black-crystal + event) so the pool isn't artificially limited
+        // to a single table. E.g. a 6★ pool now includes both standard-6★ and event-6★ mons.
+        foreach (var ct in new[] { 0, 1, 3 })
+        {
+            var byStars = engine.GetSpeciesByStars(mapVal, progressVal, ct);
+            if (byStars.TryGetValue(starsVal, out var set))
+                foreach (var id in set) ids.Add(id);
+        }
     }
     var outList = new List<object>();
     foreach (var id in ids.OrderBy(x => x))
         if (id > 0 && id < list.Length && !string.IsNullOrWhiteSpace(list[id]))
             outList.Add(new { id, name = list[id] });
     return Results.Ok(outList);
+});
+
+// /api/dex/raidinfo — for the Pokédex: where does this species appear as a raid boss?
+// Returns, per map (Paldea/Kitakami/Blueberry), the set of star tiers it bosses at,
+// unioned across all content types (standard + 6★ black + event). This is the unique
+// "raid intelligence" the public Pokédex sites can't replicate — it's from our engine.
+app.MapGet("/api/dex/raidinfo", (int species, RaidEngine engine) =>
+{
+    if (species <= 0) return Results.BadRequest(new { error = "species required" });
+    var maps = new[]
+    {
+        (Name: "Paldea", Map: TeraRaidMapParent.Paldea),
+        (Name: "Kitakami", Map: TeraRaidMapParent.Kitakami),
+        (Name: "Blueberry", Map: TeraRaidMapParent.Blueberry),
+    };
+    var result = new List<object>();
+    foreach (var (name, map) in maps)
+    {
+        var stars = new SortedSet<int>();
+        foreach (var ct in new[] { 0, 1, 3 })
+        {
+            var byStars = engine.GetSpeciesByStars(map, 6, ct);
+            foreach (var kv in byStars)
+                if (kv.Value.Contains(species)) stars.Add(kv.Key);
+        }
+        if (stars.Count > 0)
+            result.Add(new { map = name, stars = stars.ToArray() });
+    }
+    return Results.Ok(new { species, raidable = result.Count > 0, maps = result });
 });
 
 app.MapPost("/api/search", (SearchRequest req, RaidEngine engine) =>
@@ -883,7 +986,7 @@ public sealed record WishlistEntry(string Seed, int Species, string SpeciesName,
 public sealed record AchievementDef(string Id, string Icon, string Name, string Description, int Target, string Category);
 public sealed record AchievementEvent(string EventType, string? Detail);
 public sealed record AiLookupSummaryRequest(AiSummaryRow[]? Results);
-public sealed record RaidReorderRequest(int[]? Order);
+public sealed record RaidReorderRequest(int[]? Order, string? Location);
 public sealed record SaveListRequest(string? Name, string[]? Seeds, string? Game, string? Location, int? StoryProgress, int? Stars);
 public sealed record SavedList(string Id, string Name, string[] Seeds, string? Game, string? Location, int? StoryProgress, int? Stars, string Owner, long Created);
 public sealed record MoveDto(string Name, string Type);

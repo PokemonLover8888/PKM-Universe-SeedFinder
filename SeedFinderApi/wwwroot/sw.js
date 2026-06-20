@@ -1,7 +1,7 @@
 // PKM Universe Seed Finder — Service Worker
 // Network-first for HTML + /api/species so updates are seen immediately. Cache-first for
 // static icons + external CDN sprites/cries (which are immutable URLs).
-const CACHE = 'pkmu-seeds-v12';
+const CACHE = 'pkmu-seeds-v13';
 const SHELL = ['/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', e => {
@@ -14,16 +14,10 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET') return;
-  // Bypass entirely — these endpoints must always hit network
-  if (url.pathname.startsWith('/api/stream') || url.pathname.startsWith('/api/auth') || url.pathname.startsWith('/api/host')
-      || url.pathname.startsWith('/api/nowhosting') || url.pathname.startsWith('/api/queue')
-      || url.pathname.startsWith('/api/search') || url.pathname.startsWith('/api/lookup')
-      || url.pathname.startsWith('/api/myraids') || url.pathname.startsWith('/api/wishlist')
-      || url.pathname.startsWith('/api/ai') || url.pathname.startsWith('/api/r/')
-      || url.pathname.startsWith('/api/leaderboard') || url.pathname.startsWith('/r/')
-      || url.pathname.startsWith('/api/species') || url.pathname.startsWith('/api/network')
-      || url.pathname.startsWith('/api/achievements') || url.pathname.startsWith('/api/lists')
-      || url.pathname.startsWith('/api/raid/reorder') || url.pathname.startsWith('/list/')) return;
+  // Bypass entirely — ALL live API data must always hit network (never serve a cached/stale raid).
+  // (Previously a hand-maintained list missed /api/rotations, so the live "Now Hosting" went stale
+  // on normal refresh while a hard refresh — which bypasses the SW — looked correct.)
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/r/') || url.pathname.startsWith('/list/')) return;
   // Network-first for the HTML shell (so deploys are seen instantly), cache-first for everything else
   if (url.pathname === '/' || url.pathname.endsWith('.html')) {
     e.respondWith(fetch(e.request).then(resp => {
