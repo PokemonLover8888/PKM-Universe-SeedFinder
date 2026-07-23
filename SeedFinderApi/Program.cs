@@ -281,7 +281,7 @@ app.MapPost("/api/host", async (HttpContext ctx, HostRequest req) =>
         return Results.Json(new { ok = false, error = "notmember" }, statusCode: 403);
     try
     {
-        var url = $"{BotUrlFor(req.Location)}/api/raid/add?seed={Uri.EscapeDataString(req.Seed ?? "")}&stars={req.Stars}&progress={req.Progress}&location={Uri.EscapeDataString(req.Location ?? "Kitakami")}";
+        var url = $"{BotUrlFor(req.Location)}/api/raid/add?seed={Uri.EscapeDataString(req.Seed ?? "")}&stars={req.Stars}&progress={req.Progress}&location={Uri.EscapeDataString(req.Location ?? "Kitakami")}&userid={Uri.EscapeDataString(u.Id)}&user={Uri.EscapeDataString(u.Name)}";
         var respText = await botHttp.GetStringAsync(url);
         // Record the queued raid against the logged-in user (My Raids history)
         try
