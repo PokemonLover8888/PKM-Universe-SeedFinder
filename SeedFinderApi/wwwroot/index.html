@@ -460,7 +460,7 @@ button.surprise:hover{border-color:var(--vio);box-shadow:0 0 20px rgba(168,85,24
 .lb-row .lb-shiny{color:var(--gold-lt);font-weight:700;font-size:11.5px;}
 .lb-empty{color:var(--muted);text-align:center;padding:26px 12px;font-size:13px;}
 
-/* ── LOVE scene (reviews wall) ──────────────────────────────── */
+/* ── REP scene (reviews wall) ───────────────────────────────── */
 .rv-agg{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-bottom:26px;}
 .rv-score{font-family:var(--fd);font-weight:900;font-size:64px;line-height:1;color:var(--gold-lt);text-shadow:0 0 34px rgba(212,175,55,.45);}
 .rv-stars-big{color:var(--gold);font-size:21px;letter-spacing:4px;text-shadow:0 0 14px rgba(212,175,55,.5);}
@@ -862,7 +862,7 @@ body.shiny-protocol .grain{opacity:.09;}
   <button data-go="hunt" class="act"><span class="ri">🔮</span><span class="rl">HUNT</span></button>
   <button data-go="live"><span class="ri">⚔️</span><span class="rl">LIVE</span></button>
   <button data-go="fame"><span class="ri">🏆</span><span class="rl">FAME</span></button>
-  <button data-go="love"><span class="ri">💛</span><span class="rl">LOVE</span></button>
+  <button data-go="rep"><span class="ri">⭐</span><span class="rl">REP</span></button>
   <button data-go="guide"><span class="ri">📖</span><span class="rl">GUIDE</span></button>
   <button data-go="theater"><span class="ri">🎬</span><span class="rl">AIR</span></button>
   <div class="rail-foot"><a href="https://discord.gg/pkm-universe-reborn" target="_blank" rel="noopener" title="PKM Universe Reborn on Discord">💬</a><div class="rv">v3 · SEEDS</div></div>
@@ -1062,10 +1062,10 @@ body.shiny-protocol .grain{opacity:.09;}
     </div>
   </section>
 
-  <!-- ═══ SCENE: LOVE ═══ -->
-  <section class="scene" id="sc-love" data-scene="love">
+  <!-- ═══ SCENE: REP ═══ -->
+  <section class="scene" id="sc-rep" data-scene="rep">
     <div class="sc-head">
-      <div class="sc-eyebrow">Community Love</div>
+      <div class="sc-eyebrow">Trainer Reports</div>
       <h2 class="sc-title">TRAINERS <span class="g">TALK</span>.</h2>
     </div>
     <div class="rv-agg">
@@ -1123,7 +1123,7 @@ body.shiny-protocol .grain{opacity:.09;}
       <div class="gl-col">
         <h5>Community</h5>
         <a href="https://discord.gg/pkm-universe-reborn" target="_blank" rel="noopener">Discord — PKM Universe Reborn</a>
-        <a href="#/love">Trainer Reviews</a>
+        <a href="#/rep">Trainer Reviews</a>
         <a href="#/guide">Field Guide</a>
       </div>
       <div class="gl-col">
@@ -1147,7 +1147,7 @@ body.shiny-protocol .grain{opacity:.09;}
   </section>
 
   <div class="stage-foot">
-    <div><b>PKM Universe Reborn</b> · forged with 💛 in Indianapolis, Indiana · © <span id="bfYear">2026</span></div>
+    <div><b>PKM Universe Reborn</b> · Indianapolis, Indiana · © <span id="bfYear">2026</span></div>
     <div>Not affiliated with Nintendo, Creatures Inc., GAME FREAK, or The Pokémon Company.</div>
   </div>
 </div></main>
@@ -1161,7 +1161,7 @@ body.shiny-protocol .grain{opacity:.09;}
     <button data-go="hunt" class="act"><span class="di">🔮</span>HUNT</button>
     <button data-go="live"><span class="di">⚔️</span>LIVE</button>
     <button data-go="fame"><span class="di">🏆</span>FAME</button>
-    <button data-go="love"><span class="di">💛</span>LOVE</button>
+    <button data-go="rep"><span class="di">⭐</span>REP</button>
     <button data-go="guide"><span class="di">📖</span>GUIDE</button>
   </div>
 </nav>
@@ -1322,7 +1322,7 @@ function card(r,idx){
       <div class="label">Rewards</div><div class="rewards">${rewards}</div>
       <div class="seed">${r.seed}</div>
       <button class="host">🚀 Host on Raid-SV</button>
-      <div class="btns"><button data-c="${r.raCommand||`!ra ${r.seed} ${r.stars} 6`}">📋 Copy !ra</button><button class="partybtn">🪧 Party</button><button class="prev">👁 Embed</button><button class="flipbtn doflip">🃏 Flip</button></div>
+      <div class="btns"><button data-c="${r.seed}">Copy</button><button class="partybtn">🪧 Party</button><button class="prev">👁 Embed</button><button class="flipbtn doflip">🃏 Flip</button></div>
     </div>
     <div class="face back">
       <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div>
@@ -2387,7 +2387,7 @@ try{$('bfYear').textContent=new Date().getFullYear();}catch(_){}
 })();
 
 /* ── scene router ────────────────────────────────────────────── */
-const SCENES=['hunt','live','fame','love','guide','theater'];
+const SCENES=['hunt','live','fame','rep','guide','theater'];
 function go(name){
   if(!SCENES.includes(name))name='hunt';
   const apply=()=>{
@@ -2651,7 +2651,7 @@ function paletteActions(){
     {i:'🔮',t:'Go to HUNT — the Summoning Chamber',k:'scene',run:()=>go('hunt')},
     {i:'⚔️',t:'Go to LIVE — the Broadcast',k:'scene',run:()=>go('live')},
     {i:'🏆',t:'Go to FAME — Hall of Legends',k:'scene',run:()=>go('fame')},
-    {i:'💛',t:'Go to LOVE — Trainer Reviews',k:'scene',run:()=>go('love')},
+    {i:'⭐',t:'Go to REP — Trainer Reviews',k:'scene',run:()=>go('rep')},
     {i:'📖',t:'Go to GUIDE — Field Guide',k:'scene',run:()=>go('guide')},
     {i:'🎬',t:'Theater mode — full-screen broadcast',k:'scene',run:()=>go('theater')},
     {i:'🌐',t:'Open the live host globe',k:'tool',run:()=>{const f=$('globeFab');if(f)f.click();}},
@@ -2775,7 +2775,7 @@ addEventListener('keydown',e=>{
   const inField=e.target&&e.target.closest&&e.target.closest('input,textarea,select,[contenteditable="true"]');
   if(inField)return;
   const k=e.key.toLowerCase();
-  const map={'1':'hunt','2':'live','3':'fame','4':'love','5':'guide','6':'theater','t':'theater'};
+  const map={'1':'hunt','2':'live','3':'fame','4':'rep','5':'guide','6':'theater','t':'theater'};
   if(map[k]){go(map[k]);return;}
   if(k==='g'){const f=$('globeFab');if(f)f.click();return;}
   if(k==='c'){const f=$('chatFab');if(f)f.click();return;}

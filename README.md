@@ -63,6 +63,51 @@ Type filters (or talk to it, or paste a screenshot) → get accurate Tera Raid s
 - **🪧 AI Raid Party Builder** — 6-Pokémon counter team with item / ability / nature / tera / 4 moves / reasoning + Showdown-paste export + reroll
 - **🔗 Permalink share** — every card has a 🔗 button that copies a shareable URL like `/r/02AEAC78?stars=6&story=6&loc=Kitakami`; recipients open the page with the seed pre-loaded as the hero card
 
+## 2026 "RAID COMMAND" redesign
+
+`wwwroot/index.html` was rebuilt from zero (July 2026) — not a restyled page, a different kind
+of site: a **full-screen game-HUD app shell**, like opening a AAA game's main menu.
+
+- **Boot splash** — gold ring + PU monogram intro (once per session, click to skip)
+- **HUD frame** — fixed top bar with live LED telemetry per map (P·K·B) + "now hosting" readout,
+  left **scene rail**, and the gold ticker as a bottom status bar (picks up live raids)
+- **Five scenes** (hash-routed `#/hunt · #/live · #/fame · #/rep · #/guide`, no page scroll-wall):
+  - **HUNT** — the summoning chamber: AI concierge bar + angular Filter Console, with a
+    **Search / Decode** mode toggle (reverse lookup lives here too); results render in-scene
+    with a portal "cast" ring effect on every search
+  - **LIVE** — the broadcast: count-up stat band, 3-map bot board, globe + Discord launcher cards
+  - **FAME** — leaderboard podium, your raid history + wishlist, achievements launcher
+  - **REP** — masonry review wall driven by `wwwroot/reviews.json` (edit → commit → redeploy;
+    ships with sample reviews to replace with real quotes)
+  - **GUIDE** — how-it-works, trust strip, credits & links
+- **HUD design language** — Chakra Petch + Cinzel type, clip-path cut-corner panels, corner
+  brackets, scanline textures, portal rings behind the stage, gold cursor trail
+- **Mobile** — rail/ticker give way to a bottom **scene dock**; compact header; safe-area aware;
+  `prefers-reduced-motion` respected everywhere
+- `?calm` query param freezes all animation (screenshot/audit mode)
+
+### v3 advanced layer
+
+- **WebGL nebula** — Three.js GPU particle field (gold/cyan/violet clouds) with mouse-parallax
+  camera, layered under aurora beams; degrades to static under `prefers-reduced-motion`, off in `?calm`
+- **⌘ Command palette** — `Ctrl+K` (or the HUD ⌘ button): jump scenes, fire presets, open tools,
+  or type any raid boss name to lock it into the finder
+- **▦ Raid Boss Deck** — visual species picker: the current map's boss pool as sprite tiles
+- **🎬 Theater scene** (`#/theater`, rail "AIR") — full-screen auto-updating broadcast of whatever
+  the network is hosting; built for second screens and streams
+- **View Transitions** — cinematic cross-fades between scenes where the browser supports it
+- **Keyboard controls** — `1-6` scenes · `t` theater · `g` globe · `c` chat · `a` achievements ·
+  `/` focus the AI line · `Ctrl+K` palette
+- **Interface sound** — synthesized UI audio (scene sweeps, search cast), strictly **opt-in**
+  via the HUD 🔊 toggle, remembered per browser
+- **Live HUD telemetry** — per-map LED cluster, now-hosting readout, SSE activity pulse, HQ clock
+- **Typewriter command line** — the AI bar cycles real hunt ideas as a typed placeholder
+- **✦ Shiny Protocol** — a certain famous button sequence engages it
+
+The pre-redesign UI is preserved verbatim at `wwwroot/index-legacy.html` for rollback/diffing.
+The engine `<script>` (search, SSE, AI suite, 3D viewer, globe, achievements, OAuth) was
+transplanted unchanged — every element ID it touches exists in the new DOM.
+
 ## Architecture
 
 ```

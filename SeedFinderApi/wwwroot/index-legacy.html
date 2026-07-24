@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PKM Universe · Raid Seed Finder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d4af37'/%3E%3Ctext x='16' y='23' font-size='15' font-weight='800' text-anchor='middle' fill='%23000' font-family='sans-serif'%3EPU%3C/text%3E%3C/svg%3E" />
+<meta name="description" content="Find a seed for the exact shiny Tera Raid Pokémon you want — then host it on Raid-SV. Powered by the bot's own engine, so every seed is accurate." />
+<meta name="theme-color" content="#d4af37" />
+<meta property="og:title" content="PKM Universe · Raid Seed Finder" />
+<meta property="og:description" content="Find a seed for the exact shiny Tera Raid Pokémon you want — then host it on Raid-SV with one click." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://seeds.pkm-universe.com" />
+<meta property="og:image" content="https://pkm-universe.com/pkm-universe-icon.png" />
+<meta property="og:site_name" content="PKM Universe Reborn" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="PKM Universe · Raid Seed Finder" />
+<meta name="twitter:description" content="Find a seed for any shiny Tera Raid Pokémon, then host it on Raid-SV." />
+<meta name="twitter:image" content="https://pkm-universe.com/pkm-universe-icon.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="PKM Seeds" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<style>
+  :root{ --gold:#d4af37; --gold-lt:#f3d979; --gold-dim:#9c8128; --bg:#0c0c0f; --panel:#15151b; --panel2:#1e1e27; --line:#2c2c36; --text:#e8e8ea; --muted:#9a9aa6; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 700px at 50% -15%,#20202c,var(--bg));color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+  .wrap{max-width:1120px;margin:0 auto;padding:30px 20px 110px;position:relative;z-index:1;}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  .authchip{margin-left:auto;font-size:13px;}
+  .authchip a,.authchip button{background:#5865f2;color:#fff;border:none;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+  .authchip .me{background:#16261a;color:#7fe39a;border:1px solid #2e7d46;cursor:default;}
+  .authchip .lo{background:transparent;color:var(--muted);border:1px solid var(--line);margin-left:8px;padding:9px 12px;}
+  header .logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;font-size:21px;box-shadow:0 0 30px rgba(212,175,55,.45);}
+  h1{font-size:26px;margin:0;font-weight:800;}
+  h1 .grad{background:linear-gradient(90deg,var(--gold),#fff6d8,var(--gold-lt),var(--gold));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 3s linear infinite;}
+  @keyframes shimmer{to{background-position:200% center;}}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 22px;max-width:800px;}
+  .nowhosting{display:none;align-items:center;gap:14px;background:linear-gradient(90deg,#161b16,#13131a);border:1px solid #2e7d46;border-radius:14px;padding:12px 16px;margin-bottom:18px;}
+  .nowhosting.on{display:flex;}
+  .nowhosting .livedot{width:9px;height:9px;border-radius:50%;background:#3ee06a;animation:pulse 1.6s infinite;flex:0 0 9px;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(62,224,106,.6);}70%{box-shadow:0 0 0 8px rgba(62,224,106,0);}100%{box-shadow:0 0 0 0 rgba(62,224,106,0);}}
+  .nowhosting img{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 2px 4px #000);}
+  .nowhosting .nh-txt{flex:1;min-width:0;}.nowhosting .nh-txt .big{font-size:15px;font-weight:800;}.nowhosting .nh-txt .sub2{color:var(--muted);font-size:12px;}
+  .nowhosting .cd{font-weight:800;color:var(--gold-lt);font-size:14px;}.nowhosting .live-label{font-size:10px;font-weight:800;letter-spacing:1px;color:#3ee06a;text-transform:uppercase;}
+  .aibar{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
+  .aibar input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:11px;color:var(--text);padding:13px 16px;font-size:14px;}
+  .aibar input:focus{border-color:#a855f7;outline:none;box-shadow:0 0 0 3px rgba(168,85,247,.18);}
+  .aibar button{background:linear-gradient(135deg,#a855f7,#6b21a8);color:#fff;font-weight:800;border:none;border-radius:11px;padding:13px 22px;cursor:pointer;box-shadow:0 6px 20px rgba(168,85,247,.25);}
+  .aibar button:disabled{opacity:.55;cursor:not-allowed;}
+  .mypanel{display:none;background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:14px;padding:0 18px 18px;margin-top:18px;}
+  .mypanel.on{display:block;}
+  .mypanel summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;}
+  .mypanel summary::-webkit-details-marker{display:none;}.mypanel summary::before{content:"▸ ";}.mypanel[open] summary::before{content:"▾ ";}
+  .mygrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:700px){.mygrid{grid-template-columns:1fr;}}
+  .mysec h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:0 0 8px;}
+  .myitem{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:12px;margin-bottom:5px;}
+  .myitem img{width:34px;height:34px;object-fit:contain;flex:0 0 34px;}
+  .myitem .mn{font-weight:700;}.myitem .mt{color:var(--muted);font-size:10.5px;}
+  .myitem button{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;}
+  .myitem button:hover{border-color:var(--gold);color:var(--gold);}
+  .wishstar{position:absolute;top:6px;right:36px;background:transparent;border:none;font-size:18px;color:#555;cursor:pointer;z-index:4;transition:.15s;}
+  .wishstar.on{color:var(--gold-lt);text-shadow:0 0 8px var(--gold);}
+  .wishstar:hover{transform:scale(1.15);color:var(--gold);}
+  .livefeed{display:none;gap:14px;overflow-x:hidden;padding:8px 14px;margin-bottom:14px;font-size:12px;background:linear-gradient(90deg,#13131a,#0c0c0f);border:1px solid var(--line);border-radius:10px;color:var(--muted);}
+  .livefeed.on{display:flex;}
+  .livefeed .ev{flex:0 0 auto;white-space:nowrap;animation:slidein .4s ease;}
+  .livefeed .ev b{color:var(--gold-lt);margin-right:5px;}
+  @keyframes slidein{from{opacity:0;transform:translateX(-14px);}to{opacity:1;transform:translateX(0);}}
+  .upnext{margin-bottom:18px;display:none;}
+  .upnext.on{display:block;}
+  .upnext h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin:0 0 10px;}
+  .upnext .strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;}
+  /* Old single-bot widgets are superseded by the all-maps panel below */
+  .nowhosting,.upnext{display:none!important;}
+  /* --- Live Raid Bots: all 3 maps side by side --- */
+  .rotations{margin-bottom:18px;display:none;}
+  .rotations.on{display:block;}
+  .rotations .rot-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin:0 0 10px;}
+  .rot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media(max-width:760px){.rot-grid{grid-template-columns:1fr;}}
+  .rotcol{background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0;}
+  .rotcol .rc-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .rotcol .rc-map{font-weight:800;font-size:14px;}
+  .rotcol .rc-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;}
+  .rotcol .rc-dot.on{background:#3ee06a;box-shadow:0 0 8px #3ee06a;animation:pulse 1.6s infinite;}
+  .rotcol .rc-dot.off{background:#5a5a66;}
+  .rotcol .rc-status{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+  .rotcol .rc-now{display:flex;align-items:center;gap:10px;background:#161b16;border:1px solid #2e7d46;border-radius:10px;padding:8px 10px;margin-bottom:8px;}
+  .rotcol .rc-now.idle{background:var(--panel2);border-color:var(--line);}
+  .rotcol .rc-now img{width:40px;height:40px;object-fit:contain;flex:0 0 40px;}
+  .rotcol .rc-now .rn-name{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rotcol .rc-now .rn-sub{color:var(--muted);font-size:11px;}
+  .rotcol .rc-now .rn-cd{margin-left:auto;font-weight:800;color:var(--gold-lt);font-size:12px;text-align:right;line-height:1.3;}
+  .rotcol .rc-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+  .rotcol .rc-offline{color:var(--muted);font-size:12px;padding:16px 4px;text-align:center;}
+  .qcard{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;min-width:94px;position:relative;}
+  .qcard.shiny{border-color:var(--gold-dim);background:#1d1a12;}
+  .qcard img{width:52px;height:52px;object-fit:contain;}
+  .qcard .qn{font-size:11px;font-weight:700;margin-top:3px;}
+  .qcard .qs{font-size:10px;color:var(--gold);letter-spacing:1px;}
+  .qcard .qbadge{position:absolute;top:4px;left:6px;font-size:10px;color:var(--gold-lt);text-shadow:0 0 6px var(--gold);}
+  .qcard .qnow{position:absolute;top:4px;right:5px;font-size:8px;font-weight:800;color:#3ee06a;letter-spacing:.5px;}
+  .card{background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.35);}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .preset{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;}.preset:hover{border-color:var(--gold);color:var(--gold);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;}
+  label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px;font-size:14px;}
+  input:focus,select:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(212,175,55,.15);}
+  .rewardchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;}.rchip{font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:7px 13px;cursor:pointer;color:var(--muted);}.rchip.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);font-weight:700;}
+  .actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap;}
+  button.go{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:11px;padding:12px 26px;font-size:15px;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,.3);}button.go:disabled{opacity:.55;cursor:not-allowed;}
+  button.surprise{background:var(--panel2);border:1px solid var(--gold-dim);color:var(--gold-lt);font-weight:700;border-radius:11px;padding:12px 18px;font-size:14px;cursor:pointer;}
+  .status{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:9px;}
+  .spinner{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;}@keyframes sp{to{transform:rotate(360deg);}}
+  .results{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:20px;perspective:1300px;}
+  .r{position:relative;border-radius:18px;height:100%;transform-style:preserve-3d;transition:transform .1s ease;animation:rise .45s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .flipper{position:relative;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1);}.r.flipped .flipper{transform:rotateY(180deg);}
+  .face{border-radius:18px;padding:18px;overflow:hidden;background:linear-gradient(180deg,var(--panel),#101016);border:1px solid var(--line);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 14px 40px rgba(0,0,0,.5);}
+  .face.back{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;}
+  .r.shiny .face{border-color:transparent;background:linear-gradient(180deg,var(--panel),#101016) padding-box,linear-gradient(120deg,var(--gold-dim),var(--gold-lt),#fff3cf,var(--gold),var(--gold-dim)) border-box;border:1px solid transparent;background-size:100% 100%,300% 300%;animation:border-flow 6s linear infinite;}
+  @keyframes border-flow{to{background-position:0 0,300% 0;}}
+  .ambient{position:absolute;inset:0;opacity:.16;pointer-events:none;border-radius:18px;}.accent{position:absolute;top:0;left:0;right:0;height:3px;z-index:2;}
+  .watermark{position:absolute;right:-18px;bottom:-22px;width:150px;height:150px;opacity:.06;pointer-events:none;}
+  .foil{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.20) 47%,rgba(140,210,255,.28) 50%,rgba(255,210,140,.24) 53%,transparent 66%);background-size:200% 200%;mix-blend-mode:screen;transition:opacity .25s;border-radius:18px;}.r.shiny:hover .foil{opacity:1;}
+  .chk{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:6px;border:2px solid var(--gold-dim);background:#0008;cursor:pointer;z-index:5;display:grid;place-items:center;color:transparent;font-weight:800;font-size:13px;}.chk.on{background:var(--gold);color:#000;border-color:var(--gold);}
+  .particle{position:absolute;color:var(--gold-lt);pointer-events:none;opacity:0;text-shadow:0 0 6px var(--gold);animation:float 4s ease-in-out infinite;}@keyframes float{0%{opacity:0;transform:translateY(8px) scale(.6);}30%{opacity:.9;}70%{opacity:.7;}100%{opacity:0;transform:translateY(-26px) scale(1.1);}}
+  .burst{position:absolute;left:50%;top:50%;color:#fff;pointer-events:none;text-shadow:0 0 8px var(--gold-lt);opacity:0;}.burst.go{animation:burst .8s ease-out forwards;}@keyframes burst{0%{opacity:1;transform:translate(-50%,-50%) scale(.3);}100%{opacity:0;transform:translate(calc(-50% + var(--bx)),calc(-50% + var(--by))) scale(1.1);}}
+  .rarity{position:absolute;top:0;left:0;font-size:10px;font-weight:800;letter-spacing:1px;padding:4px 12px 5px;border-bottom-right-radius:12px;text-transform:uppercase;z-index:3;}.rarity.flawless{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;}.rarity.shiny{background:#2a2440;color:var(--gold-lt);border:1px solid var(--gold-dim);}
+  .head{display:flex;gap:14px;align-items:center;margin:6px 0;position:relative;}
+  .spritewrap{position:relative;flex:0 0 84px;width:84px;height:84px;display:grid;place-items:center;cursor:pointer;}.spritewrap .aura{position:absolute;width:76px;height:76px;border-radius:50%;filter:blur(16px);opacity:.55;}
+  .sprite{width:84px;height:84px;object-fit:contain;position:relative;filter:drop-shadow(0 4px 7px rgba(0,0,0,.6));animation:bob 3.4s ease-in-out infinite;}@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  .spk{position:absolute;left:6px;bottom:2px;font-size:10px;background:#0008;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;}
+  .ttl{flex:1;min-width:0;}.name{font-size:20px;font-weight:800;display:flex;align-items:center;gap:7px;}.name .sh{color:var(--gold-lt);text-shadow:0 0 12px var(--gold);}
+  .stars{color:var(--gold);font-size:15px;letter-spacing:2px;margin-top:2px;}
+  .gem{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;padding:5px 11px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}.gem .dot{width:9px;height:9px;border-radius:50%;}
+  .body{display:flex;gap:14px;align-items:center;margin:8px 0;}.radarwrap{flex:0 0 128px;}
+  .meta{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12px;}.meta .row{display:flex;justify-content:space-between;color:var(--muted);gap:8px;}.meta .row b{color:var(--text);font-weight:600;text-align:right;}.meta .perfect{color:var(--gold-lt);font-weight:700;}
+  .ha{font-size:9px;font-weight:800;background:#3a2a4a;color:#d6a8ff;border:1px solid #6a4a8a;border-radius:4px;padding:1px 4px;margin-left:5px;}
+  .up{color:#63e08a;}.down{color:#f07a7a;}
+  .label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin:8px 0 5px;}
+  .moves{display:grid;grid-template-columns:1fr 1fr;gap:5px;}.move{display:flex;align-items:center;gap:6px;font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 8px;}.move .mt{width:8px;height:8px;border-radius:2px;flex:0 0 8px;}
+  .typchips{display:flex;flex-wrap:wrap;gap:5px;}.tchip{font-size:11px;font-weight:700;border-radius:7px;padding:4px 9px;}
+  .rewards{display:flex;flex-wrap:wrap;gap:5px;}.rw{font-size:10.5px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 7px;color:var(--muted);}.rw.rare{border-color:var(--gold-dim);color:var(--gold-lt);background:#241f10;font-weight:700;}
+  .seed{font-family:Consolas,monospace;font-size:15px;letter-spacing:1.5px;background:var(--panel2);padding:9px;border-radius:9px;border:1px solid var(--line);margin:11px 0 10px;text-align:center;color:var(--gold-lt);}
+  .host{width:100%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:11px;padding:12px;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,.3);display:flex;align-items:center;justify-content:center;gap:8px;}.host.done{background:#1f3a22;color:#7fe39a;box-shadow:none;}
+  .btns{display:flex;gap:8px;margin-top:8px;}.btns button{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;}.btns button:hover{border-color:var(--gold);color:var(--gold);}
+  .back .bhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}.back .bname{font-size:17px;font-weight:800;}
+  .basestats{display:flex;flex-direction:column;gap:5px;}.bstat{display:grid;grid-template-columns:30px 1fr 28px;align-items:center;gap:8px;font-size:11px;}.bstat small{color:var(--muted);font-weight:700;}.bstat .bt{height:6px;background:var(--panel2);border-radius:4px;overflow:hidden;}.bstat .bf{height:100%;border-radius:4px;}.bstat .bv{text-align:right;font-weight:700;}
+  .flipbtn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;}.flipbtn:hover{border-color:var(--gold);color:var(--gold);}
+  .confetti{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:60;animation:conf .9s ease-out forwards;}@keyframes conf{to{transform:translate(var(--dx),var(--dy)) rotate(320deg);opacity:0;}}
+  #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(160px);background:linear-gradient(135deg,#1f3a22,#16261a);border:1px solid #2e7d46;color:#aef2c4;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.3,.4,1);z-index:50;}#toast.show{transform:translateX(-50%) translateY(0);}
+  #playlist{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(120px);display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1a1a22,#101016);border:1px solid var(--gold-dim);border-radius:14px;padding:12px 18px;box-shadow:0 16px 50px rgba(0,0,0,.6);z-index:55;transition:transform .35s cubic-bezier(.2,1.2,.4,1);}#playlist.show{transform:translateX(-50%) translateY(0);}#playlist .cnt{font-weight:800;color:var(--gold-lt);}#playlist .pl-host{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;}#playlist .pl-clear{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 14px;cursor:pointer;}
+  #bgstars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  .empty{color:var(--muted);text-align:center;padding:50px 20px;font-size:14px;}
+  .lookup{margin-top:16px;background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:14px;padding:0 18px 18px;}
+  .lookup summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;}
+  .lookup summary::-webkit-details-marker{display:none;}
+  .lookup summary::before{content:"▸ ";}
+  .lookup[open] summary::before{content:"▾ ";}
+  .lookup textarea{width:100%;min-height:84px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px;font-family:Consolas,monospace;font-size:13px;resize:vertical;margin-bottom:12px;}
+  .lookup textarea:focus{border-color:var(--gold);outline:none;}
+  .lookup .actions{margin-top:0;}
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}#modal.show{display:flex;}
+  .dwrap{background:#313338;border-radius:12px;max-width:480px;width:100%;padding:16px;font-size:14px;}.dwrap .dclose{float:right;color:#b5bac1;cursor:pointer;font-size:18px;}
+  .dmsg{display:flex;gap:12px;}.davatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;flex:0 0 40px;}.dauthor{color:#f2f3f5;font-weight:600;}.dapp{background:#5865f2;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:5px;}.dtime{color:#949ba4;font-size:11px;margin-left:6px;}
+  .dembed{margin-top:6px;background:#2b2d31;border-left:4px solid var(--gold);border-radius:4px;padding:14px 16px;position:relative;}.dembed .deimg{position:absolute;top:14px;right:14px;width:72px;height:72px;object-fit:contain;}.detitle{color:#fff;font-weight:700;font-size:15px;margin-bottom:8px;max-width:330px;}.degrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;max-width:340px;}.deh{color:#fff;font-weight:700;font-size:12px;margin-bottom:2px;}.dev{color:#dbdee1;font-size:12px;line-height:1.5;}.defoot{color:#949ba4;font-size:11px;margin-top:10px;}.debtns{display:flex;gap:8px;margin-top:8px;}.debtn{background:#5865f2;color:#fff;border:none;border-radius:4px;padding:8px 14px;font-size:13px;font-weight:600;}.debtn.sec{background:#4e5058;}.debtn.link{background:transparent;border:1px solid #4e5058;color:#dbdee1;}
+  /* === AI bar enhancements: voice mic, vision upload, chat, typeahead === */
+  .aibar{flex-wrap:wrap;}
+  .aibar-inputwrap{flex:1;min-width:240px;position:relative;}
+  .aibar-inputwrap input{width:100%;}
+  .ai-icon{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:13px 14px;font-size:16px;cursor:pointer;transition:.15s;}
+  .ai-icon:hover{border-color:#a855f7;color:#fff;background:#2a1f4a;}
+  .ai-icon.on{background:#3d1d6b;border-color:#a855f7;color:#fff;animation:micpulse 1s ease-in-out infinite;}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(168,85,247,.6);}50%{box-shadow:0 0 0 8px rgba(168,85,247,0);}}
+  .ai-suggest{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#13131a;border:1px solid #4a3a6a;border-radius:11px;box-shadow:0 18px 40px rgba(0,0,0,.6);z-index:40;display:none;overflow:hidden;}
+  .ai-suggest.on{display:block;animation:rise .2s ease;}
+  .ai-suggest .ai-sg{padding:10px 14px;font-size:13px;color:#dbdee1;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid #1e1e27;}
+  .ai-suggest .ai-sg:hover,.ai-suggest .ai-sg.k{background:#2a1f4a;color:#fff;}
+  .ai-suggest .ai-sg:last-child{border-bottom:none;}
+  .ai-suggest .ai-sg::before{content:'✨';color:#a855f7;}
+  .ai-summary{display:none;margin:14px 0 4px;padding:14px 18px;background:linear-gradient(90deg,#2a1f4a 0%,#1a1a26 100%);border:1px solid #4a3a6a;border-radius:12px;color:#dbdee1;font-size:13.5px;line-height:1.55;}
+  .ai-summary.on{display:block;animation:rise .4s ease;}
+  .ai-summary b{color:#f3d979;}
+  .ai-vision-preview{display:none;margin:10px 0 4px;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:11px;align-items:center;gap:12px;}
+  .ai-vision-preview.on{display:flex;}
+  .ai-vision-preview img{width:64px;height:64px;object-fit:contain;border-radius:8px;background:#0c0c0f;flex:0 0 64px;}
+  .ai-vision-preview .vp-txt{flex:1;font-size:13px;color:#dbdee1;}
+  .ai-vision-preview .vp-txt b{color:#f3d979;}
+  .ai-vision-preview .vp-x{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;cursor:pointer;}
+  /* === Floating chat bubble + slide-in chat panel === */
+  .chat-fab{position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#6b21a8);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 14px 36px rgba(168,85,247,.5);z-index:65;display:grid;place-items:center;animation:fabpulse 3s ease-in-out infinite;}
+  @keyframes fabpulse{0%,100%{transform:scale(1);box-shadow:0 14px 36px rgba(168,85,247,.5);}50%{transform:scale(1.06);box-shadow:0 14px 50px rgba(168,85,247,.75);}}
+  .chat-fab:hover{transform:scale(1.12);}
+  .chat-panel{position:fixed;bottom:24px;right:24px;width:380px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100vh - 48px);background:linear-gradient(180deg,#1a1a26,#0f0f15);border:1px solid #4a3a6a;border-radius:18px;display:none;flex-direction:column;box-shadow:0 26px 80px rgba(0,0,0,.8),0 0 60px rgba(168,85,247,.15);z-index:70;overflow:hidden;}
+  .chat-panel.on{display:flex;animation:chatin .3s cubic-bezier(.3,1.4,.5,1);}
+  @keyframes chatin{from{opacity:0;transform:translateY(20px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .chat-head{padding:14px 16px;border-bottom:1px solid #2c2c36;display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#2a1f4a,#1a1a26);}
+  .chat-orb{font-size:22px;animation:bob 3s ease-in-out infinite;}
+  .chat-title b{display:block;font-size:14px;color:var(--text);}
+  .chat-sub{font-size:11px;color:var(--muted);}
+  .chat-close{margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+  .chat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+  .chat-msg{padding:10px 13px;border-radius:13px;font-size:13px;line-height:1.5;max-width:88%;animation:chatfade .25s ease;}
+  @keyframes chatfade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,#a855f7,#6b21a8);color:#fff;border-bottom-right-radius:4px;}
+  .chat-msg.ai{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-bottom-left-radius:4px;}
+  .chat-msg.ai b{color:var(--gold-lt);}
+  .chat-msg .applybtn{display:block;margin-top:8px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;}
+  .chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #2c2c36;background:#13131a;}
+  .chat-input input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 12px;font-size:13px;}
+  .chat-input button{background:linear-gradient(135deg,#a855f7,#6b21a8);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:800;cursor:pointer;}
+  @media(max-width:560px){.chat-panel{width:calc(100vw - 16px);right:8px;bottom:8px;height:78vh;}.chat-fab{bottom:18px;right:18px;}}
+  /* === Coach modal === */
+  .coach-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:120;padding:20px;}
+  .coach-modal.on{display:flex;animation:rise .25s ease;}
+  .coach-wrap{background:linear-gradient(180deg,#1a1a26,#0f0f15);border:1px solid var(--gold-dim);border-radius:18px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.7);position:relative;}
+  .coach-wrap .coach-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+  .coach-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #2c2c36;}
+  .coach-head img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 3px 6px #000);}
+  .coach-title{font-size:18px;font-weight:800;color:var(--gold-lt);}
+  .coach-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .coach-body h4{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin:14px 0 8px;}
+  .coach-counter{display:flex;align-items:center;gap:10px;background:#13131a;border:1px solid #2c2c36;border-radius:10px;padding:9px 12px;margin-bottom:6px;}
+  .coach-counter img{width:42px;height:42px;object-fit:contain;flex:0 0 42px;}
+  .coach-counter .cn{font-weight:700;font-size:13px;color:var(--gold-lt);}
+  .coach-counter .cr{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:1px;}
+  .coach-moves{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .coach-mv{background:#13131a;border:1px solid #2c2c36;border-radius:8px;padding:9px;text-align:center;font-size:12px;font-weight:700;color:var(--text);}
+  .coach-tip{background:#241f10;border:1px solid var(--gold-dim);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--gold-lt);}
+  .coach-tera{background:#1f1a2e;border:1px solid #4a3a6a;border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--text);}
+  .coach-tera b{color:#c9a3ff;}
+  /* === Coach button on card === */
+  .coachbtn{position:absolute;top:7px;right:62px;background:linear-gradient(135deg,#a855f7,#6b21a8);border:none;color:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;z-index:4;box-shadow:0 4px 12px rgba(168,85,247,.4);}
+  .coachbtn:hover{transform:scale(1.05);}
+  /* === 3D Viewer button + modal (Three.js) === */
+  .viewer3dbtn{position:absolute;top:7px;right:96px;background:linear-gradient(135deg,#4d90d5,#1e3a5f);border:none;color:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;z-index:4;box-shadow:0 4px 12px rgba(77,144,213,.4);}
+  .viewer3dbtn:hover{transform:scale(1.05);}
+  .viewer3d-modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:130;padding:20px;}
+  .viewer3d-modal.on{display:flex;animation:rise .25s ease;}
+  .viewer3d-wrap{position:relative;background:linear-gradient(180deg,#0a0a14,#000);border:1px solid var(--gold-dim);border-radius:18px;max-width:640px;width:100%;height:560px;max-height:90vh;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.8),0 0 80px rgba(212,175,55,.15);}
+  .viewer3d-canvas{width:100%;height:100%;display:block;cursor:grab;}
+  .viewer3d-canvas:active{cursor:grabbing;}
+  .viewer3d-title{position:absolute;top:14px;left:18px;font-size:17px;font-weight:800;color:var(--gold-lt);text-shadow:0 2px 10px rgba(0,0,0,.9);pointer-events:none;z-index:3;}
+  .viewer3d-sub{position:absolute;top:38px;left:18px;font-size:11px;color:#ddd;text-shadow:0 2px 6px #000;pointer-events:none;z-index:3;}
+  .viewer3d-close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.55);border:1px solid var(--line);color:var(--text);font-size:18px;cursor:pointer;border-radius:8px;width:34px;height:34px;z-index:5;}
+  .viewer3d-help{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#ccc;pointer-events:none;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:6px;z-index:3;}
+  /* === Raid Party Builder === */
+  .party-modal{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:125;padding:18px;overflow-y:auto;}
+  .party-modal.on{display:flex;animation:rise .25s ease;}
+  .party-wrap{background:linear-gradient(180deg,#1a1a26,#0f0f15);border:1px solid var(--gold-dim);border-radius:18px;max-width:760px;width:100%;max-height:92vh;overflow-y:auto;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.7);position:relative;}
+  .party-wrap .party-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+  .party-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #2c2c36;}
+  .party-head img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 3px 6px #000);}
+  .party-title{font-size:18px;font-weight:800;color:var(--gold-lt);}
+  .party-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .party-strategy{background:#1f1a2e;border:1px solid #4a3a6a;border-radius:10px;padding:11px 14px;font-size:13px;color:var(--text);line-height:1.5;margin-bottom:14px;}
+  .party-strategy b{color:#c9a3ff;}
+  .party-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:580px){.party-grid{grid-template-columns:1fr;}}
+  .party-mon{display:flex;gap:10px;background:#13131a;border:1px solid #2c2c36;border-radius:12px;padding:10px;}
+  .party-mon img{width:60px;height:60px;object-fit:contain;flex:0 0 60px;align-self:flex-start;}
+  .party-mon .pm-body{flex:1;min-width:0;font-size:12px;}
+  .party-mon .pm-name{font-weight:800;color:var(--gold-lt);font-size:13.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .party-mon .pm-role{font-size:9.5px;background:#3a2a4a;color:#d6a8ff;border:1px solid #6a4a8a;border-radius:4px;padding:1px 5px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+  .party-mon .pm-meta{color:var(--muted);font-size:11px;margin-top:2px;line-height:1.4;}
+  .party-mon .pm-tera{display:inline-block;font-size:10px;font-weight:800;padding:1px 6px;border-radius:5px;}
+  .party-mon .pm-moves{margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+  .party-mon .pm-mv{font-size:10.5px;background:#0c0c0f;border:1px solid #2c2c36;border-radius:5px;padding:3px 6px;color:var(--text);text-align:center;}
+  .party-mon .pm-reason{margin-top:6px;font-size:10.5px;color:var(--muted);line-height:1.45;font-style:italic;}
+  .party-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+  .party-actions button{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .party-actions button:hover{border-color:var(--gold);color:var(--gold);}
+  .party-actions button.primary{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;border-color:transparent;}
+  /* === Leaderboard panel === */
+  .lbpanel{background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid var(--line);border-radius:14px;padding:0 18px 18px;margin-top:16px;}
+  .lbpanel summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;display:flex;align-items:center;gap:8px;}
+  .lbpanel summary::-webkit-details-marker{display:none;}.lbpanel summary::before{content:"▸ ";}.lbpanel[open] summary::before{content:"▾ ";}
+  .lb-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .lb-tab{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;}
+  .lb-tab.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);}
+  .lb-podium{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;margin-bottom:12px;align-items:end;}
+  .lb-pod{background:linear-gradient(180deg,#1a1a26,#0c0c0f);border:1px solid var(--line);border-radius:12px;padding:14px 8px;text-align:center;}
+  .lb-pod.first{border-color:var(--gold);box-shadow:0 0 30px rgba(212,175,55,.25);padding-top:18px;}
+  .lb-pod.second{border-color:#aaa;}
+  .lb-pod.third{border-color:#cd7f32;}
+  .lb-pod .lb-medal{font-size:24px;}
+  .lb-pod .lb-name{font-weight:800;font-size:13px;color:var(--text);margin-top:5px;}
+  .lb-pod .lb-total{font-size:24px;font-weight:900;color:var(--gold-lt);margin-top:3px;line-height:1;}
+  .lb-pod .lb-sub{font-size:10.5px;color:var(--muted);margin-top:2px;}
+  .lb-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12.5px;margin-bottom:5px;}
+  .lb-row .lb-rank{width:24px;text-align:center;color:var(--muted);font-weight:800;}
+  .lb-row .lb-nm{flex:1;font-weight:700;}
+  .lb-row .lb-stat{color:var(--muted);font-size:11px;margin-right:8px;}
+  .lb-row .lb-shiny{color:var(--gold-lt);font-weight:700;font-size:11.5px;}
+  .lb-empty{color:var(--muted);text-align:center;padding:24px 12px;font-size:13px;}
+  /* === Share button on card === */
+  .sharebtn{position:absolute;top:7px;right:128px;background:linear-gradient(135deg,#5865f2,#3946b8);border:none;color:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;z-index:4;box-shadow:0 4px 12px rgba(88,101,242,.4);}
+  .sharebtn:hover{transform:scale(1.05);}
+  /* === Permalink hero banner === */
+  .permabanner{display:none;background:linear-gradient(90deg,#241f10,#1a1a26);border:1px solid var(--gold-dim);border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--gold-lt);}
+  .permabanner.on{display:flex;align-items:center;gap:10px;animation:rise .35s ease;}
+  .permabanner b{color:#fff;}
+  /* === ✨ Picked for you (AI recommendations carousel) === */
+  .recopanel{display:none;margin-top:18px;background:linear-gradient(180deg,var(--panel),#13131a);border:1px solid #4a3a6a;border-radius:14px;padding:16px 18px;}
+  .recopanel.on{display:block;animation:rise .4s ease;}
+  .recopanel h4{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#c9a3ff;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .recogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  .recocard{background:linear-gradient(180deg,#1a1426,#0f0d18);border:1px solid #2c2c36;border-radius:11px;padding:13px;cursor:pointer;transition:.18s;position:relative;overflow:hidden;}
+  .recocard:hover{border-color:#a855f7;transform:translateY(-2px);box-shadow:0 12px 30px rgba(168,85,247,.25);}
+  .recocard::before{content:'';position:absolute;inset:0;background:radial-gradient(120px 120px at 80% 0%,rgba(168,85,247,.18),transparent);pointer-events:none;}
+  .recocard .rh{font-size:14px;font-weight:800;color:var(--gold-lt);position:relative;}
+  .recocard .rr{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45;position:relative;}
+  .recocard .rf{font-size:11px;color:#c9a3ff;font-weight:700;margin-top:8px;position:relative;}
+  .recocard .rgo{font-size:11px;font-weight:800;color:#a855f7;margin-top:8px;position:relative;}
+  /* === 🔔 Wishlist alert banner === */
+  .wishalert{display:none;background:linear-gradient(90deg,#241f10 0%,#1a1a26 100%);border:2px solid var(--gold);border-radius:13px;padding:14px 18px;margin-bottom:14px;font-size:14px;color:var(--gold-lt);align-items:center;gap:14px;box-shadow:0 0 30px rgba(212,175,55,.4);animation:wishpulse 2.5s ease-in-out infinite;}
+  .wishalert.on{display:flex;}
+  @keyframes wishpulse{0%,100%{box-shadow:0 0 30px rgba(212,175,55,.4);}50%{box-shadow:0 0 50px rgba(212,175,55,.8);}}
+  .wishalert img{width:54px;height:54px;object-fit:contain;flex:0 0 54px;}
+  .wishalert .wa-body{flex:1;}
+  .wishalert .wa-body b{color:#fff;font-size:16px;font-weight:800;}
+  .wishalert .wa-x{background:transparent;border:1px solid var(--gold-dim);color:var(--gold-lt);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;}
+  /* === 🌐 Globe (live host world map) === */
+  .globe-fab{position:fixed;bottom:24px;right:96px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#4d90d5,#1e3a5f);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 12px 32px rgba(77,144,213,.5);z-index:65;display:grid;place-items:center;}
+  .globe-fab:hover{transform:scale(1.1);}
+  @media(max-width:560px){.globe-fab{bottom:84px;right:18px;}}
+  .globe-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:130;padding:20px;}
+  .globe-modal.on{display:flex;animation:rise .25s ease;}
+  .globe-wrap{position:relative;background:linear-gradient(180deg,#02060e,#000);border:1px solid #4d90d5;border-radius:18px;max-width:720px;width:100%;height:620px;max-height:92vh;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.85),0 0 80px rgba(77,144,213,.2);}
+  .globe-canvas{width:100%;height:100%;display:block;cursor:grab;}
+  .globe-canvas:active{cursor:grabbing;}
+  .globe-title{position:absolute;top:14px;left:18px;font-size:17px;font-weight:800;color:#a8d4ff;text-shadow:0 2px 10px rgba(0,0,0,.9);pointer-events:none;z-index:3;}
+  .globe-sub{position:absolute;top:38px;left:18px;font-size:11px;color:#ddd;text-shadow:0 2px 6px #000;pointer-events:none;z-index:3;}
+  .globe-close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.55);border:1px solid var(--line);color:var(--text);font-size:18px;cursor:pointer;border-radius:8px;width:34px;height:34px;z-index:5;}
+  .globe-tip{position:absolute;background:rgba(10,14,28,.95);border:1px solid #4d90d5;border-radius:9px;padding:10px 14px;font-size:12px;color:var(--text);pointer-events:none;display:none;z-index:4;box-shadow:0 8px 24px rgba(0,0,0,.8);max-width:240px;}
+  .globe-tip.on{display:block;}
+  .globe-tip b{color:#a8d4ff;font-size:13px;}
+  .globe-tip .gt-now{color:#3ee06a;font-weight:800;margin-top:5px;display:block;}
+  .globe-help{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#ccc;pointer-events:none;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:6px;z-index:3;}
+  /* === 🏆 Achievements panel + unlock toast === */
+  .achfab{position:fixed;bottom:24px;right:168px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));border:none;color:#000;font-size:22px;cursor:pointer;box-shadow:0 12px 32px rgba(212,175,55,.45);z-index:65;display:grid;place-items:center;}
+  .achfab:hover{transform:scale(1.1);}
+  .achfab .achbadge{position:absolute;top:-4px;right:-4px;background:#a855f7;color:#fff;border-radius:10px;padding:2px 7px;font-size:10px;font-weight:800;}
+  @media(max-width:560px){.achfab{bottom:148px;right:18px;}}
+  .ach-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:130;padding:18px;overflow-y:auto;}
+  .ach-modal.on{display:flex;animation:rise .25s ease;}
+  .ach-wrap{background:linear-gradient(180deg,#1a1a26,#0a0a14);border:1px solid var(--gold-dim);border-radius:18px;max-width:820px;width:100%;max-height:92vh;overflow-y:auto;padding:24px;box-shadow:0 30px 90px rgba(0,0,0,.8),0 0 60px rgba(212,175,55,.15);position:relative;}
+  .ach-wrap .ach-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+  .ach-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #2c2c36;}
+  .ach-head .ah-title{font-size:20px;font-weight:900;color:var(--gold-lt);}
+  .ach-head .ah-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .ach-progressbar{flex:1;background:#0c0c0f;border:1px solid var(--line);border-radius:10px;height:12px;overflow:hidden;min-width:140px;}
+  .ach-progressbar div{height:100%;background:linear-gradient(90deg,var(--gold-lt),var(--gold-dim));border-radius:10px;transition:width .5s;}
+  .ach-cat{margin-top:18px;}
+  .ach-cat h5{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:800;margin:0 0 10px;}
+  .ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .ach-card{background:#0c0c0f;border:1px solid #1e1e27;border-radius:12px;padding:12px;display:flex;gap:11px;align-items:center;position:relative;transition:.2s;filter:grayscale(0.85);opacity:.6;}
+  .ach-card.unlocked{background:linear-gradient(180deg,#241f10,#1a1a26);border-color:var(--gold);filter:none;opacity:1;box-shadow:0 0 18px rgba(212,175,55,.15);}
+  .ach-card .ach-icon{font-size:30px;flex:0 0 36px;text-align:center;line-height:1;}
+  .ach-card.unlocked .ach-icon{filter:drop-shadow(0 0 6px var(--gold));}
+  .ach-card .ach-body{flex:1;min-width:0;}
+  .ach-card .ach-name{font-weight:800;font-size:13px;color:var(--text);}
+  .ach-card.unlocked .ach-name{color:var(--gold-lt);}
+  .ach-card .ach-desc{font-size:11px;color:var(--muted);margin-top:1px;line-height:1.35;}
+  .ach-card .ach-mini{margin-top:6px;background:#0c0c0f;border:1px solid var(--line);border-radius:6px;height:6px;overflow:hidden;}
+  .ach-card .ach-mini div{height:100%;background:linear-gradient(90deg,var(--gold-lt),var(--gold-dim));border-radius:6px;}
+  .ach-card .ach-count{font-size:10px;color:var(--muted);margin-top:3px;text-align:right;}
+  .ach-card.unlocked .ach-tick{position:absolute;top:6px;right:8px;color:var(--gold);font-size:14px;}
+  /* Unlock celebration toast (bigger than regular toast) */
+  #achtoast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-160px);background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;padding:14px 22px;border-radius:14px;font-size:14px;font-weight:800;box-shadow:0 16px 48px rgba(212,175,55,.5),0 0 30px rgba(212,175,55,.3);transition:transform .45s cubic-bezier(.2,1.4,.3,1);z-index:75;display:flex;align-items:center;gap:10px;}
+  #achtoast.show{transform:translateX(-50%) translateY(0);}
+  #achtoast .ai{font-size:26px;}
+  /* === Advanced filters section + live toggle === */
+  .advfilters{margin-top:16px;border-top:1px solid var(--line);padding-top:6px;}
+  .advfilters summary{cursor:pointer;padding:10px 0;font-weight:700;color:var(--gold-lt);font-size:13px;list-style:none;}
+  .advfilters summary::-webkit-details-marker{display:none;}
+  .advfilters summary::before{content:"▸ ";}
+  .advfilters[open] summary::before{content:"▾ ";}
+  .rtoggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;font-weight:700;user-select:none;}
+  .rtoggle input{width:auto;cursor:pointer;accent-color:var(--gold);}
+  .rewardchips .rchip{cursor:pointer;}
+  /* === Lookup: file drop + filters + AI summary === */
+  .lookup-drop{display:flex;align-items:center;gap:10px;background:var(--panel2);border:2px dashed var(--line);border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:.18s;}
+  .lookup-drop:hover,.lookup-drop.over{border-color:var(--gold);color:var(--gold);background:#1a160a;}
+  .lookup-drop b{color:var(--gold-lt);}
+  .lookup-summary{display:none;background:linear-gradient(90deg,#2a1f4a,#1a1a26);border:1px solid #4a3a6a;border-radius:11px;padding:11px 16px;margin:12px 0;font-size:13px;color:#dbdee1;}
+  .lookup-summary.on{display:block;animation:rise .35s ease;}
+  .lookup-summary .ls-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .lookup-summary .ls-chip{background:#0c0c0f;border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--gold-lt);font-weight:700;}
+  .lookup-filters{display:none;gap:7px;flex-wrap:wrap;margin:10px 0 4px;}
+  .lookup-filters.on{display:flex;}
+  .lookup-filter{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:18px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;}
+  .lookup-filter:hover{border-color:var(--gold);color:var(--gold);}
+  .lookup-filter.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);}
+  .lookup-toolbar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px;}
+  .lookup-toolbar.on{display:flex;}
+  .lookup-toolbar select,.lookup-toolbar button{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;}
+  .lookup-toolbar button:hover{border-color:var(--gold);color:var(--gold);}
+  .lookup-toolbar button.primary{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;border-color:transparent;}
+  .lookup-toolbar .lt-sep{flex:1;}
+  .lookup-toolbar .lt-sel{font-size:11px;color:var(--muted);}
+  /* === Up Next: drag-to-reorder === */
+  .qcard{cursor:grab;transition:transform .15s,box-shadow .15s,opacity .15s;}
+  .qcard:active{cursor:grabbing;}
+  .qcard.dragging{opacity:.35;transform:scale(.96);}
+  .qcard.dropbefore{box-shadow:-3px 0 0 var(--gold-lt);}
+  .qcard.dropafter{box-shadow:3px 0 0 var(--gold-lt);}
+  .upnext .strip{padding-bottom:14px;}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}footer a{color:var(--gold);text-decoration:none;}
+</style>
+</head>
+<body>
+<canvas id="bgstars"></canvas>
+<div class="wrap">
+  <header><div class="logo">PU</div><h1>PKM Universe · <span class="grad">Raid Seed Finder</span></h1>
+    <div class="authchip" id="authchip"><a href="/api/auth/login">🔑 Login with Discord</a></div>
+  </header>
+  <p class="sub">Find a seed for the exact Tera Raid Pokémon you want, then host it on Raid-SV. Powered by the same engine the bot uses, so every seed is guaranteed accurate. Click a sprite for its cry · 🃏 flip for base stats · 👁 preview the Discord embed.</p>
+
+  <div class="nowhosting" id="nowhosting">
+    <span class="livedot"></span><div><div class="live-label">Live</div></div>
+    <img id="nh-sprite" alt=""/>
+    <div class="nh-txt"><div class="big" id="nh-name">—</div><div class="sub2" id="nh-sub">—</div></div>
+    <div style="text-align:right"><div class="sub2">Trainers</div><div class="cd" id="nh-joined">—</div></div>
+    <div style="text-align:right"><div class="sub2">Timer</div><div class="cd" id="nh-cd">—</div></div>
+  </div>
+
+  <div class="livefeed" id="livefeed"></div>
+  <div class="upnext" id="upnext"><h3>⏭ Up Next in the Rotation</h3><div class="strip" id="upnextstrip"></div></div>
+  <div class="rotations" id="rotations"><h3 class="rot-title">⚔ Live Raid Bots — Paldea · Kitakami · Blueberry</h3><div class="rot-grid" id="rotgrid"></div></div>
+
+  <div class="aibar">
+    <div class="aibar-inputwrap">
+      <input id="aiq" placeholder="✨ Ask AI · type, talk 🎤, or paste a screenshot 📷…" autocomplete="off"/>
+      <div class="ai-suggest" id="aiSuggest"></div>
+    </div>
+    <button class="ai-icon" id="aimic" title="🎤 Voice search">🎤</button>
+    <button class="ai-icon" id="aiimg" title="📷 Identify from screenshot (drag/paste/click)">📷</button>
+    <button class="ai-icon" id="aichat" title="💬 Open chat assistant">💬</button>
+    <button id="aigo">Ask AI</button>
+    <input type="file" id="aifile" accept="image/*" style="display:none"/>
+  </div>
+  <div class="ai-vision-preview" id="aiVisionPreview"></div>
+  <div class="ai-summary" id="aiSummary"></div>
+
+  <div class="card">
+    <div class="presets" id="presets"></div>
+    <div class="grid">
+      <div><label>Game</label><select id="game"><option>Scarlet</option><option>Violet</option></select></div>
+      <div><label>Location</label><select id="location"><option>Paldea</option><option selected>Kitakami</option><option>Blueberry</option></select></div>
+      <div><label>Story Progress</label><select id="progress"><option value="6" selected>Post-Game (6★)</option><option value="5">5★</option><option value="4">4★</option><option value="3">3★</option></select></div>
+      <div><label>Stars</label><select id="stars"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option value="4" selected>4</option><option>5</option><option>6</option></select></div>
+      <div><label>Species</label><input id="species" list="specieslist" placeholder="e.g. Quagsire" autocomplete="off"/><datalist id="specieslist"></datalist></div>
+      <div><label>Shiny</label><select id="shiny"><option value="true" selected>Shiny only</option><option value="">Any</option><option value="false">Not shiny</option></select></div>
+      <div><label>Tera Type</label><select id="tera"><option value="">Any</option></select></div>
+      <div><label>Min Perfect IVs</label><select id="ivs"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div><label>Max Results</label><select id="max"><option>10</option><option selected>25</option><option>50</option></select></div>
+    </div>
+    <details class="advfilters" id="advFilters">
+      <summary>🔬 More filters — nature · gender · ability · scale · 🎁 rewards</summary>
+      <div class="grid" style="margin-top:12px">
+        <div><label>Nature</label><select id="nature"><option value="">Any</option></select></div>
+        <div><label>Gender</label><select id="gender"><option value="">Any</option><option>Male</option><option>Female</option><option>Genderless</option></select></div>
+        <div><label>Hidden Ability</label><select id="hidden"><option value="">Any</option><option value="true">HA only</option></select></div>
+        <div><label>Scale</label><select id="scale"><option value="">Any</option><option>XXXS</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XXXL</option></select></div>
+        <div><label>🎁 Reward Item</label><input id="rewarditem" list="rewardlist" placeholder="e.g. Bottle Cap" autocomplete="off"/><datalist id="rewardlist"></datalist></div>
+        <div><label>Min Reward Qty</label><select id="rewardqty"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>8</option><option>10</option></select></div>
+        <div><label>Multi-species (comma list)</label><input id="multispecies" placeholder="e.g. Dragapult, Garchomp" autocomplete="off"/></div>
+        <div><label>Start seed (hex)</label><input id="startseed" placeholder="e.g. AB000000" autocomplete="off"/></div>
+      </div>
+      <div class="rewardchips" id="rewardChips"></div>
+      <div class="actions" style="margin-top:12px">
+        <label class="rtoggle" title="Scan deeper and return the highest-IV seeds, ranked"><input type="checkbox" id="bestof"/> 🏅 Best-of mode (rank by IVs)</label>
+        <button class="surprise" id="savePreset" type="button" style="padding:8px 14px;font-size:13px">⭐ Save these filters as a preset</button>
+      </div>
+    </details>
+    <div class="actions"><button class="go" id="go">Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><label class="rtoggle" title="Search automatically as you change filters"><input type="checkbox" id="realtime"/> ⚡ Live</label><span class="status" id="status"></span></div>
+  </div>
+
+  <details class="lookup">
+    <summary>🔁 Reverse / batch lookup — paste seeds or !ra commands to see what they are</summary>
+    <div class="lookup-drop" id="lookupDrop">📥 <b>Drop a .txt of seeds here</b> · or click to pick a file · or just paste below ↓<input type="file" id="lookupFile" accept=".txt,.csv,.log" style="display:none"/></div>
+    <textarea id="lookupinput" placeholder="One per line. Bare seeds (02AEAC78) or full commands (!ra 02AEAC78 6 6). Great for verifying community seeds or importing a whole list."></textarea>
+    <div class="actions"><button class="go" id="lookupbtn">Look up</button><span class="status" id="lookupstatus"></span></div>
+    <div class="lookup-summary" id="lookupSummary"></div>
+    <div class="lookup-filters" id="lookupFilters">
+      <button class="lookup-filter on" data-f="all">All</button>
+      <button class="lookup-filter" data-f="shiny">✦ Shiny only</button>
+      <button class="lookup-filter" data-f="flawless">💎 Flawless 6IV</button>
+      <button class="lookup-filter" data-f="6star">⭐ 6★ only</button>
+    </div>
+    <div class="lookup-toolbar" id="lookupToolbar">
+      <label class="lt-sel" style="font-weight:700">Sort
+        <select id="lookupSort">
+          <option value="paste">Paste order</option>
+          <option value="iv">Most IVs</option>
+          <option value="star">Stars (high→low)</option>
+          <option value="species">Species A→Z</option>
+          <option value="shiny">Shiny first</option>
+        </select>
+      </label>
+      <button id="lookupSelectAll">☑ Select all</button>
+      <span class="lt-sel" id="lookupSelCount">0 selected</span>
+      <span class="lt-sep"></span>
+      <button id="lookupHostAll" class="primary">🚀 Host selected</button>
+      <button id="lookupExport">📋 Export ▾</button>
+      <button id="lookupSaveList">💾 Save as list</button>
+    </div>
+  </details>
+
+  <details class="mypanel" id="mypanel" open>
+    <summary>👤 My Activity — raids you've hosted &amp; your ⭐ wishlist</summary>
+    <div class="mygrid">
+      <div class="mysec"><h4>🚀 My Hosted Raids</h4><div id="myraidslist">—</div></div>
+      <div class="mysec"><h4>⭐ Wishlist</h4><div id="mywishlist">—</div></div>
+    </div>
+  </details>
+
+  <details class="lbpanel" id="lbpanel">
+    <summary>🏆 Community Leaderboard — top PKM Universe raid hosts</summary>
+    <div class="lb-tabs">
+      <button class="lb-tab on" data-period="week">This Week</button>
+      <button class="lb-tab" data-period="month">This Month</button>
+      <button class="lb-tab" data-period="alltime">All Time</button>
+    </div>
+    <div id="lb-content"><div class="lb-empty"><span class="spinner"></span> Loading…</div></div>
+  </details>
+
+  <div class="permabanner" id="permabanner"></div>
+  <div class="wishalert" id="wishAlert"></div>
+  <details class="recopanel" id="recoPanel" open><h4>✨ Picked for you — AI looked at your raid history & wishlist</h4><div class="recogrid" id="recoGrid"></div></details>
+  <div class="results" id="results"></div>
+  <div class="empty" id="empty">Set your filters and hit <b>Find Seeds</b> — or tap a <b>preset</b>.</div>
+  <footer>PKM Universe Reborn · seeds work in <b>!ra &lt;seed&gt; &lt;stars&gt; &lt;progress&gt;</b> · <a href="https://creator.pkm-universe.com">creator.pkm-universe.com</a></footer>
+</div>
+<button class="chat-fab" id="chatFab" title="Chat with PKM Universe AI">💬</button>
+<button class="achfab" id="achFab" title="🏆 Achievements">🏆<span class="achbadge" id="achBadge" style="display:none">0</span></button>
+<button class="globe-fab" id="globeFab" title="🌐 Live world map of PKM Universe raid hosts">🌐</button>
+<div class="ach-modal" id="achModal"><div class="ach-wrap"><button class="ach-close" id="achClose">✕</button>
+  <div class="ach-head"><div style="font-size:36px">🏆</div><div style="flex:1"><div class="ah-title" id="ahTitle">Achievements</div><div class="ah-sub" id="ahSub">Log in to start earning badges.</div></div><div style="text-align:right;min-width:120px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700">Progress</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span id="ahPct" style="font-weight:800;color:var(--gold-lt);font-size:14px;min-width:40px">0%</span><div class="ach-progressbar"><div id="ahBar" style="width:0%"></div></div></div></div></div>
+  <div id="achBody"></div>
+</div></div>
+<div id="achtoast"></div>
+<div class="globe-modal" id="globeModal"><div class="globe-wrap">
+  <div class="globe-title">🌐 PKM Universe — Live Host Map</div>
+  <div class="globe-sub" id="globeSub">Loading…</div>
+  <button class="globe-close" id="globeClose">✕</button>
+  <canvas class="globe-canvas" id="globeCanvas"></canvas>
+  <div class="globe-tip" id="globeTip"></div>
+  <div class="globe-help">drag to rotate · scroll to zoom · click a glow to inspect</div>
+</div></div>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head"><span class="chat-orb">🤖</span><div class="chat-title"><b>PKM Universe AI</b><div class="chat-sub">Hunt seeds · get coached · ask anything</div></div><button class="chat-close" id="chatClose">✕</button></div>
+  <div class="chat-body" id="chatBody"><div class="chat-msg ai">Hi! I'm your PKM Universe raid partner.<br><br>Try: <b>"shiny 6IV Dragapult"</b> · <b>"how do I counter dragon-tera Charizard?"</b> · <b>"surprise me with a good kitakami raid"</b></div></div>
+  <div class="chat-input"><input id="chatIn" placeholder="Type a message…" autocomplete="off"/><button id="chatSend">➤</button></div>
+</div>
+<div class="coach-modal" id="coachModal"><div class="coach-wrap"><button class="coach-close">✕</button>
+  <div class="coach-head"><img id="coachSprite" alt=""/><div><div class="coach-title" id="coachTitle">—</div><div class="coach-sub" id="coachSub">—</div></div></div>
+  <div class="coach-body" id="coachBody"></div>
+</div></div>
+<div class="viewer3d-modal" id="viewer3dModal"><div class="viewer3d-wrap">
+  <div class="viewer3d-title" id="v3dTitle">—</div>
+  <div class="viewer3d-sub" id="v3dSub">—</div>
+  <button class="viewer3d-close" id="v3dClose">✕</button>
+  <canvas class="viewer3d-canvas" id="v3dCanvas"></canvas>
+  <div class="viewer3d-help">drag to rotate · scroll to zoom · cry on click</div>
+</div></div>
+<div class="party-modal" id="partyModal"><div class="party-wrap"><button class="party-close">✕</button>
+  <div class="party-head"><img id="partySprite" alt=""/><div><div class="party-title" id="partyTitle">—</div><div class="party-sub" id="partySub">—</div></div></div>
+  <div class="party-strategy" id="partyStrategy"></div>
+  <div class="party-grid" id="partyGrid"></div>
+  <div class="party-actions" id="partyActions"></div>
+</div></div>
+<div id="toast"></div>
+<div id="playlist"><span class="cnt" id="pl-count">0 selected</span><button class="pl-host" id="pl-host">📋 Copy all !ra commands</button><button class="pl-clear" id="pl-clear">Clear</button></div>
+<div id="modal"><div class="dwrap" id="dwrap"></div></div>
+
+<script>
+const TC={Normal:"#9099a1",Fighting:"#ce4069",Flying:"#8fa8dd",Poison:"#ab6ac8",Ground:"#d97746",Rock:"#c7b78b",Bug:"#90c12c",Ghost:"#5269ac",Steel:"#5a8ea1",Fire:"#ff9d55",Water:"#4d90d5",Grass:"#63bb5b",Electric:"#f3d23b",Psychic:"#f97176",Ice:"#74cec0",Dragon:"#0a6dc4",Dark:"#5a5366",Fairy:"#ec8fe6"};
+const TERA=Object.keys(TC);
+const WEAK={Normal:["Fighting"],Fighting:["Flying","Psychic","Fairy"],Flying:["Rock","Electric","Ice"],Poison:["Ground","Psychic"],Ground:["Water","Grass","Ice"],Rock:["Fighting","Ground","Steel","Water","Grass"],Bug:["Flying","Rock","Fire"],Ghost:["Ghost","Dark"],Steel:["Fighting","Ground","Fire"],Fire:["Ground","Rock","Water"],Water:["Grass","Electric"],Grass:["Flying","Poison","Bug","Fire","Ice"],Electric:["Ground"],Psychic:["Bug","Ghost","Dark"],Ice:["Fighting","Rock","Steel","Fire"],Dragon:["Ice","Dragon","Fairy"],Dark:["Fighting","Bug","Fairy"],Fairy:["Poison","Steel"]};
+const NAT={Adamant:["Atk","SpA"],Bold:["Def","Atk"],Calm:["SpD","Atk"],Careful:["SpD","SpA"],Gentle:["SpD","Def"],Hasty:["Spe","Def"],Impish:["Def","SpA"],Jolly:["Spe","SpA"],Lax:["Def","SpD"],Lonely:["Atk","Def"],Mild:["SpA","Def"],Modest:["SpA","Atk"],Naive:["Spe","SpD"],Naughty:["Atk","SpD"],Quiet:["SpA","Spe"],Rash:["SpA","SpD"],Relaxed:["Def","Spe"],Sassy:["SpD","Spe"],Timid:["Spe","Atk"],Brave:["Atk","Spe"]};
+const RARE=["Herba Mystica","Ability Patch","Bottle Cap","Ability Capsule","PP Max","Sweet Herba Mystica","Salty Herba Mystica","Sour Herba Mystica","Bitter Herba Mystica","Spicy Herba Mystica"];
+const PRESETS=[["💎 Perfect Shiny 6★",{stars:"6",ivs:"6",shiny:"true"}],["✦ Any Shiny (Kitakami)",{stars:"6",ivs:"",shiny:"true"}],["🧢 5IV+ Shiny",{ivs:"5",shiny:"true"}]];
+const BSTAT_LABELS=["HP","Atk","Def","SpA","SpD","Spe"];
+let nameToId={};
+
+const REWARD_QUICK=["Bottle Cap","Ability Patch","Ability Capsule","Sweet Herba Mystica","Salty Herba Mystica","Bitter Herba Mystica","Exp. Candy XL","PP Max","Rare Candy","Nugget"];
+(async()=>{
+  const tera=document.getElementById('tera');TERA.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t;tera.appendChild(o);});
+  const presetsBox=document.getElementById('presets');PRESETS.forEach(([lbl,v])=>{const b=document.createElement('button');b.className='preset';b.textContent=lbl;b.onclick=()=>{if(v.stars!==undefined)document.getElementById('stars').value=v.stars;if(v.ivs!==undefined)document.getElementById('ivs').value=v.ivs;if(v.shiny!==undefined)document.getElementById('shiny').value=v.shiny;toast('Preset applied: '+lbl);maybeRealtime();};presetsBox.appendChild(b);});
+  // Nature dropdown
+  const nat=document.getElementById('nature');Object.keys(NAT).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;nat.appendChild(o);});
+  // Reward datalist + quick chips
+  const rdl=document.getElementById('rewardlist');[...REWARD_QUICK,...RARE].filter((v,i,a)=>a.indexOf(v)===i).forEach(it=>{const o=document.createElement('option');o.value=it;rdl.appendChild(o);});
+  const rc=document.getElementById('rewardChips');REWARD_QUICK.forEach(it=>{const b=document.createElement('span');b.className='rchip';b.textContent=it;b.onclick=()=>{const inp=document.getElementById('rewarditem');const on=inp.value===it;inp.value=on?'':it;rc.querySelectorAll('.rchip').forEach(c=>c.classList.toggle('on',c.textContent===inp.value));maybeRealtime();};rc.appendChild(b);});
+  await loadSpecies();
+  // Re-load species dropdown whenever map/stars/progress changes — keeps the list to ACTUAL raid bosses for that pool
+  ['location','stars','progress'].forEach(id=>document.getElementById(id).addEventListener('change',()=>loadSpecies(true)));
+  // Realtime: any filter change triggers a debounced search when ⚡ Live is on
+  ['game','location','progress','stars','species','shiny','tera','ivs','max','nature','gender','hidden','scale','rewarditem','rewardqty'].forEach(id=>{
+    const el=document.getElementById(id);if(el){el.addEventListener('change',maybeRealtime);if(el.tagName==='INPUT')el.addEventListener('input',maybeRealtime);}
+  });
+})();
+
+let _rtTimer;
+function maybeRealtime(){
+  if(!document.getElementById('realtime').checked)return;
+  clearTimeout(_rtTimer);
+  _rtTimer=setTimeout(()=>{window._lastQ=null;search();},450);
+}
+
+async function loadSpecies(announce){
+  const map=document.getElementById('location').value||'Kitakami';
+  const stars=document.getElementById('stars').value||'';
+  const progress=document.getElementById('progress').value||'6';
+  const url=`/api/species?map=${encodeURIComponent(map)}&progress=${progress}${stars?`&stars=${stars}`:''}`;
+  try{
+    const sp=await(await fetch(url)).json();
+    const dl=document.getElementById('specieslist');dl.innerHTML='';
+    nameToId={};
+    sp.forEach(s=>{nameToId[s.name.toLowerCase()]=s.id;const o=document.createElement('option');o.value=s.name;dl.appendChild(o);});
+    // Clear the species field if its current value isn't in the new (filtered) list
+    const cur=document.getElementById('species');
+    if(cur.value && !nameToId[cur.value.toLowerCase()])cur.value='';
+    // Show the count near the field
+    const lbl=cur.previousElementSibling;if(lbl&&lbl.tagName==='LABEL'){const base='Species';lbl.textContent=`${base} · ${sp.length} in this pool`;}
+    if(announce)toast(`✓ ${sp.length} raid species available in ${map}${stars?` at ${stars}★`:''}`);
+  }catch(e){console.error('species load failed',e);}
+}
+
+function val(id){const v=document.getElementById(id).value;return v===""?null:v;}
+function scaleLabel(s){if(s==null)return"?";if(s===0)return"XXXS";if(s===255)return"XXXL";if(s<=50)return"XS";if(s<=110)return"S";if(s<=170)return"M";return"L";}
+const BLANK_SPRITE='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+function spriteChain(id,shiny){if(!(id>0))return [BLANK_SPRITE];const b="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";return shiny?[`${b}/other/home/shiny/${id}.png`,`${b}/other/official-artwork/shiny/${id}.png`,`${b}/shiny/${id}.png`,`${b}/other/home/${id}.png`]:[`${b}/other/home/${id}.png`,`${b}/other/official-artwork/${id}.png`,`${b}/${id}.png`];}
+function radar(ivs,color){if(!ivs)return'';const order=[0,1,2,5,4,3],labels=["HP","Atk","Def","Spe","SpD","SpA"];const cx=64,cy=64,R=44,grid=[],axes=[],pts=[],labs=[];for(let k=0;k<6;k++){const a=(-90+k*60)*Math.PI/180,gx=cx+Math.cos(a)*R,gy=cy+Math.sin(a)*R;grid.push([gx,gy]);axes.push(`<line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" stroke="#33333f"/>`);const v=ivs[order[k]],rr=R*(v/31),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;pts.push(`${px},${py}`);const lx=cx+Math.cos(a)*(R+11),ly=cy+Math.sin(a)*(R+11),c=v===31?'#f3d979':'#9a9aa6';labs.push(`<text x="${lx}" y="${ly+3}" fill="${c}" font-size="9" font-weight="700" text-anchor="middle">${labels[k]}</text>`);}const ring=f=>grid.map(([x,y])=>`${cx+(x-cx)*f},${cy+(y-cy)*f}`).join(' ');return `<svg width="128" height="128" viewBox="0 0 128 128"><polygon points="${ring(1)}" fill="none" stroke="#2c2c36"/><polygon points="${ring(.66)}" fill="none" stroke="#23232c"/><polygon points="${ring(.33)}" fill="none" stroke="#23232c"/>${axes.join('')}<polygon points="${pts.join(' ')}" fill="${color}55" stroke="${color}" stroke-width="2"/>${pts.map(p=>{const[x,y]=p.split(',');return `<circle cx="${x}" cy="${y}" r="2" fill="${color}"/>`}).join('')}${labs.join('')}</svg>`;}
+function teraGem(color){return `<svg class="watermark" viewBox="0 0 100 100"><polygon points="50,4 84,32 68,96 32,96 16,32" fill="${color}"/><polygon points="50,4 84,32 50,40 16,32" fill="#fff" opacity=".3"/></svg>`;}
+function natureStr(nat){const m=NAT[nat];return m?`${nat} <span class="up">↑${m[0]}</span> <span class="down">↓${m[1]}</span>`:`${nat}`;}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function confetti(x,y){const cols=['#d4af37','#f3d979','#fff','#63bb5b','#4d90d5','#ec8fe6'];for(let i=0;i<24;i++){const c=document.createElement('i');c.className='confetti';c.style.left=x+'px';c.style.top=y+'px';c.style.background=cols[i%cols.length];const a=Math.random()*6.28,d=40+Math.random()*90;c.style.setProperty('--dx',Math.cos(a)*d+'px');c.style.setProperty('--dy',(Math.sin(a)*d-40)+'px');document.body.appendChild(c);setTimeout(()=>c.remove(),900);}}
+function playCry(id){try{const a=new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`);a.volume=.4;a.play().catch(()=>{});}catch(e){}}
+function sparkleBurst(w){for(let i=0;i<10;i++){const s=document.createElement('span');s.className='burst go';s.textContent='✦';const a=Math.random()*6.28,d=22+Math.random()*30;s.style.setProperty('--bx',Math.cos(a)*d+'px');s.style.setProperty('--by',Math.sin(a)*d+'px');s.style.fontSize=(8+Math.random()*7)+'px';w.appendChild(s);setTimeout(()=>s.remove(),800);}}
+
+const selected=new Map();
+function updatePlaylist(){const pl=document.getElementById('playlist');document.getElementById('pl-count').textContent=selected.size+' selected';pl.classList.toggle('show',selected.size>0);}
+document.getElementById('pl-clear').onclick=()=>{selected.clear();document.querySelectorAll('.chk').forEach(c=>c.classList.remove('on'));updatePlaylist();};
+document.getElementById('pl-host').onclick=e=>{if(!selected.size)return;const cmds=[...selected.values()].map(r=>r.raCommand).join('\n');navigator.clipboard.writeText(cmds);confetti(e.clientX,e.clientY);toast(`📋 Copied ${selected.size} !ra commands — paste them in #raid-kitakami to queue a rotation!`);};
+
+function showEmbed(r){const color=TC[r.teraName]||'#888',urls=spriteChain(r.species,r.shiny),counters=(WEAK[r.teraName]||[]).join(', ');const movesTxt=(r.moves||[]).map(m=>'- '+m.name).join('<br>')||'—';const rewardsTxt=(r.rewards||[]).slice(0,5).map(x=>`<b>${x.name}</b> ×${x.qty}`).join('<br>')||'—';
+  document.getElementById('dwrap').innerHTML=`<span class="dclose" onclick="document.getElementById('modal').classList.remove('show')">✕</span><div style="color:#949ba4;font-size:11px;margin-bottom:8px">How it appears in <b style="color:#dbdee1">#raid-kitakami</b></div><div class="dmsg"><div class="davatar">PU</div><div style="flex:1"><div><span class="dauthor">Electivire-SV-Raid-Bot</span><span class="dapp">APP</span><span class="dtime">today</span></div><div class="dembed" style="border-left-color:${color}"><img class="deimg" src="${urls[0]}"/><div class="detitle">${'★'.repeat(r.stars)} ${r.shiny?'Shiny ':''}${r.speciesName}</div><div class="degrid"><div><div class="deh">Stats</div><div class="dev"><b>Nature:</b> ${r.nature}<br><b>Ability:</b> ${r.ability}<br><b>IVs:</b> ${(r.iVs||[]).join('/')}<br><b>Scale:</b> ${scaleLabel(r.scale)}</div></div><div><div class="deh">Moves</div><div class="dev">${movesTxt}</div></div><div><div class="deh">Counter with</div><div class="dev" style="color:${color}">${counters}</div></div><div><div class="deh">Rewards</div><div class="dev">${rewardsTxt}</div></div></div><div class="deh" style="margin-top:10px">Raid Starting: <span style="color:#dbdee1;font-weight:400">in 3 minutes</span></div><div class="defoot">🏆 pkm-universe.com</div></div><div class="debtns"><button class="debtn">🔑 Get Code</button><button class="debtn sec">📋 Rules</button><button class="debtn link">pkm-universe.com ↗</button></div></div></div>`;
+  document.getElementById('modal').classList.add('show');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')e.currentTarget.classList.remove('show');});
+
+const box=document.getElementById('results');
+function card(r,idx){
+  const color=TC[r.teraName]||'#888',allMax=(r.iVs||[]).every(v=>v===31),urls=spriteChain(r.species,r.shiny);
+  const rarity=allMax?`<div class="rarity flawless">✦ Flawless 6IV</div>`:(r.shiny?`<div class="rarity shiny">Shiny</div>`:``);
+  const moves=(r.moves||[]).map(m=>`<div class="move"><span class="mt" style="background:${TC[m.type]||'#555'}"></span>${m.name}</div>`).join('')||'<span style="color:var(--muted);font-size:11px">—</span>';
+  const counters=(WEAK[r.teraName]||[]).map(t=>`<span class="tchip" style="background:${TC[t]}22;color:${TC[t]};border:1px solid ${TC[t]}66">${t}</span>`).join('');
+  const rewards=(r.rewards||[]).map(x=>`<span class="rw ${RARE.includes(x.name)?'rare':''}">${x.name} ×${x.qty}</span>`).join('')||'<span style="color:var(--muted);font-size:11px">—</span>';
+  const bs=r.baseStats||[];const bmax=Math.max(...(bs.length?bs:[1]),150);const basebars=bs.map((v,i)=>{const c=v>=120?'#63bb5b':v>=90?'#c9b35a':v>=60?'#d97746':'#9c5a5a';return `<div class="bstat"><small>${BSTAT_LABELS[i]}</small><div class="bt"><div class="bf" style="width:${v/bmax*100}%;background:${c}"></div></div><span class="bv">${v}</span></div>`;}).join('');
+  const el=document.createElement('div');el.className='r'+(r.shiny?' shiny':'');el.style.animationDelay=(idx*60)+'ms';
+  el.innerHTML=`<div class="flipper">
+    <div class="face front">
+      <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div><div class="accent" style="background:linear-gradient(90deg,transparent,${color},transparent)"></div>${teraGem(color)}<div class="foil"></div>${rarity}
+      <button class="wishstar ${typeof isWished==='function'&&isWished(r.seed)?'on':''}" title="Save to wishlist">${typeof isWished==='function'&&isWished(r.seed)?'★':'☆'}</button>
+      <button class="coachbtn" title="🧠 AI Raid Coach — counters, moves, advice">🧠</button>
+      <button class="viewer3dbtn" title="🎮 3D Pokémon Viewer">🎮</button>
+      <button class="sharebtn" title="🔗 Copy shareable link">🔗</button>
+      <div class="chk" title="Select for bulk copy">✓</div>
+      <div class="head"><div class="spritewrap" title="Click for cry + sparkle"><div class="aura" style="background:${color}"></div><img class="sprite" src="${urls[0]}" data-f='${JSON.stringify(urls.slice(1))}' alt="${r.speciesName}" onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><span class="spk">🔊</span></div>
+        <div class="ttl"><div class="name">${r.shiny?'<span class="sh">✦</span>':''}${r.speciesName}</div><div class="stars">${'★'.repeat(r.stars)}</div></div>
+        <div class="gem" style="background:${color}22;color:${color};border:1px solid ${color}55"><span class="dot" style="background:${color}"></span>${r.teraName}</div></div>
+      <div class="body"><div class="radarwrap">${radar(r.iVs,color)}</div>
+        <div class="meta"><div class="row"><span>Ability</span><b>${r.ability||'—'}${r.hidden?'<span class="ha">HA</span>':''}</b></div><div class="row"><span>Nature</span><b>${natureStr(r.nature)}</b></div><div class="row"><span>Gender</span><b>${r.gender||'—'}</b></div><div class="row"><span>Scale</span><b>${r.scale} · ${scaleLabel(r.scale)}</b></div><div class="row"><span>Perfect IVs</span><b class="perfect">${r.flawlessIVs}/6</b></div></div></div>
+      <div class="label">Moves</div><div class="moves">${moves}</div>
+      <div class="label">⚔️ Weak to — counter with</div><div class="typchips">${counters}</div>
+      <div class="label">Rewards</div><div class="rewards">${rewards}</div>
+      <div class="seed">${r.seed}</div>
+      <button class="host">🚀 Host on Raid-SV</button>
+      <div class="btns"><button data-c="${r.seed}">Copy</button><button class="partybtn">🪧 Party</button><button class="prev">👁 Embed</button><button class="flipbtn doflip">🃏 Flip</button></div>
+    </div>
+    <div class="face back">
+      <div class="ambient" style="background:radial-gradient(150px 150px at 82% -10%,${color},transparent)"></div>
+      <div class="bhead"><div class="bname">${r.speciesName}</div><button class="flipbtn doflip">↩ Back</button></div>
+      <div class="label">Base Stats</div><div class="basestats">${basebars||'<span style="color:var(--muted);font-size:11px">—</span>'}</div>
+      <div class="label" style="margin-top:12px">Raid Moves</div><div class="moves">${moves}</div>
+      <div class="label" style="margin-top:12px">Ability</div><div class="dev" style="font-size:13px;color:var(--text)">${r.ability||'—'}${r.hidden?'<span class="ha">HA</span>':''} · ${natureStr(r.nature)}</div>
+    </div></div>`;
+  const sw=el.querySelector('.spritewrap');sw.addEventListener('click',()=>{playCry(r.species);sparkleBurst(sw);});
+  const chk=el.querySelector('.chk');chk.addEventListener('click',ev=>{ev.stopPropagation();chk.classList.toggle('on');if(chk.classList.contains('on'))selected.set(r.seed,r);else selected.delete(r.seed);updatePlaylist();});
+  const ws=el.querySelector('.wishstar');if(ws)ws.addEventListener('click',ev=>{ev.stopPropagation();const on=toggleWish({seed:r.seed,species:r.species,speciesName:r.speciesName,shiny:r.shiny,stars:r.stars});ws.textContent=on?'★':'☆';ws.classList.toggle('on',on);});
+  const cb=el.querySelector('.coachbtn');if(cb)cb.addEventListener('click',ev=>{ev.stopPropagation();if(typeof showCoach==='function')showCoach(r);});
+  const v3=el.querySelector('.viewer3dbtn');if(v3)v3.addEventListener('click',ev=>{ev.stopPropagation();if(typeof showViewer3D==='function')showViewer3D(r);});
+  const shb=el.querySelector('.sharebtn');if(shb)shb.addEventListener('click',ev=>{ev.stopPropagation();if(typeof shareSeed==='function')shareSeed(r);});
+  const pyb=el.querySelector('.partybtn');if(pyb)pyb.addEventListener('click',ev=>{ev.stopPropagation();if(typeof showPartyBuilder==='function')showPartyBuilder(r);});
+  const hb=el.querySelector('.host');hb.addEventListener('click',async()=>{
+    if(hb.classList.contains('done'))return;
+    if(!authState.loggedIn){toast('Log in with Discord to host →');location.href='/api/auth/login';return;}
+    if(!authState.verified){toast('You need Elite Raid Bot Access to host — get it on Ko-fi.');return;}
+    const orig=hb.innerHTML;hb.innerHTML='<span class="spin"></span> Queuing…';
+    try{
+      const loc=document.getElementById('location').value;const prog=parseInt(document.getElementById('progress').value||'6');
+      const resp=await(await fetch('/api/host',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:r.seed,stars:r.stars,progress:prog,location:loc})})).json();
+      if(resp.ok){const b=hb.getBoundingClientRect();confetti(b.left+b.width/2,b.top);hb.classList.add('done');hb.textContent='✓ Queued on Raid-SV!';toast(`🚀 ${r.speciesName} queued — hosting next on Raid-SV!`);if(typeof aiAnnounce==='function')aiAnnounce(r);setTimeout(()=>{hb.classList.remove('done');hb.innerHTML=orig;},2800);}
+      else{toast('Couldn\'t host: '+(resp.error||'error'));hb.innerHTML=orig;}
+    }catch(e){toast('Host failed: '+e.message);hb.innerHTML=orig;}
+  });
+  el.querySelector('.prev').addEventListener('click',()=>showEmbed(r));
+  el.querySelectorAll('.doflip').forEach(b=>b.addEventListener('click',()=>el.classList.toggle('flipped')));
+  el.querySelector('button[data-c]').addEventListener('click',ev=>{const btn=ev.currentTarget;navigator.clipboard.writeText(btn.dataset.c);const t=btn.textContent;btn.textContent='Copied!';btn.style.color='var(--gold)';setTimeout(()=>{btn.textContent=t;btn.style.color='';},1100);});
+  if(r.shiny)for(let p=0;p<5;p++){const s=document.createElement('i');s.className='particle';s.textContent='✦';s.style.left=(10+Math.random()*80)+'%';s.style.bottom=(10+Math.random()*40)+'%';s.style.animationDelay=(Math.random()*4)+'s';s.style.fontSize=(7+Math.random()*5)+'px';el.querySelector('.front').appendChild(s);}
+  return el;
+}
+function bindTilt(){document.querySelectorAll('.r').forEach(card=>{const foil=card.querySelector('.foil');card.addEventListener('mousemove',e=>{if(card.classList.contains('flipped'))return;const b=card.getBoundingClientRect();const x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;card.style.transform=`rotateY(${(x-.5)*6}deg) rotateX(${-(y-.5)*6}deg)`;if(foil)foil.style.backgroundPosition=`${x*200}% ${y*200}%`;});card.addEventListener('mouseleave',()=>{card.style.transform='';});});}
+
+async function search(){
+  const go=document.getElementById('go'),status=document.getElementById('status');
+  const speciesRaw=document.getElementById('species').value.trim();let species=null;
+  if(speciesRaw){species=/^\d+$/.test(speciesRaw)?parseInt(speciesRaw):(nameToId[speciesRaw.toLowerCase()]||null);if(!species){status.innerHTML="Unknown species — pick from the list.";return;}}
+  // Multi-species comma list → resolve each name to a dex id
+  let speciesList=null;const msRaw=(document.getElementById('multispecies')?.value||'').trim();
+  if(msRaw){speciesList=msRaw.split(',').map(s=>s.trim().toLowerCase()).map(n=>nameToId[n]).filter(Boolean);if(!speciesList.length)speciesList=null;}
+  let startSeed=null;const ssRaw=(document.getElementById('startseed')?.value||'').trim().replace(/^0x/i,'');
+  if(ssRaw&&/^[0-9a-fA-F]{1,8}$/.test(ssRaw))startSeed=parseInt(ssRaw,16);
+  const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')),stars:val('stars')?parseInt(val('stars')):null,species,shiny:val('shiny')===null?null:val('shiny')==='true',teraType:val('tera')?parseInt(val('tera')):null,minFlawlessIVs:val('ivs')?parseInt(val('ivs')):null,maxResults:parseInt(val('max')),nature:val('nature'),gender:val('gender'),hiddenAbility:val('hidden')==='true'?true:null,scale:val('scale'),rewardItem:(document.getElementById('rewarditem').value.trim()||null),rewardMinQty:val('rewardqty')?parseInt(val('rewardqty')):null,speciesList,bestOf:document.getElementById('bestof')?.checked||null,startSeed};
+  go.disabled=true;status.innerHTML='<span class="spinner"></span> Searching the seed space…';document.getElementById('empty').style.display='none';box.innerHTML='';
+  try{const res=await(await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(!res.results.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='No matches — widen your filters (Any tera, fewer IVs, or a species that appears at this star level).';}
+    res.results.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
+    status.innerHTML=`<b style="color:var(--gold)">${res.results.length}</b>&nbsp;found · scanned ${res.scanned.toLocaleString()} seeds · ${res.elapsedMs} ms${res.hitLimit?' · try widening filters':''}`;
+    if(typeof aiSummarizeResults==='function')aiSummarizeResults(window._lastQ||describeFilters(body),res.results);
+  }catch(e){status.innerHTML="Error: "+e.message;}
+  go.disabled=false;
+}
+function describeFilters(b){const bits=[];if(b.shiny===true)bits.push('shiny');if(b.minFlawlessIVs)bits.push(b.minFlawlessIVs+'IV+');if(b.stars)bits.push(b.stars+'★');if(b.teraType!=null)bits.push(TERA[b.teraType]+' tera');if(b.species)bits.push((Object.entries(nameToId).find(([n,i])=>i===b.species)||['?'])[0]);if(b.location)bits.push('@ '+b.location);return bits.join(' ')||'all raids';}
+document.getElementById('go').addEventListener('click',()=>{window._lastQ=null;search();});
+document.getElementById('surprise').addEventListener('click',async e=>{
+  confetti(e.clientX,e.clientY);
+  const btn=e.currentTarget,orig=btn.textContent;btn.textContent='🎲 AI rolling…';btn.disabled=true;
+  try{
+    const r=await(await fetch('/api/ai/surprise',{method:'POST'})).json();
+    if(r.ok&&r.surprise){const s=r.surprise;toast('🎲 '+(s.theme||'Surprise!'));window._lastQ=s.theme||null;applyAiFilters(s.filters||{});search();}
+    else{document.getElementById('species').value='';document.getElementById('shiny').value='true';document.getElementById('ivs').value='';toast('🎲 Rolling random shinies…');search();}
+  }catch(_){document.getElementById('species').value='';document.getElementById('shiny').value='true';document.getElementById('ivs').value='';search();}
+  btn.textContent=orig;btn.disabled=false;
+});
+// ============================================================
+// 📥 LOOKUP: file drop + filter chips + AI summary
+// ============================================================
+let _lookupResults=[], _lookupFilter='all', _lookupSort='paste';
+function renderLookupResults(){
+  box.innerHTML='';
+  let list=_lookupResults.slice();
+  if(_lookupFilter==='shiny')list=list.filter(r=>r.shiny);
+  else if(_lookupFilter==='flawless')list=list.filter(r=>(r.iVs||[]).every(v=>v===31));
+  else if(_lookupFilter==='6star')list=list.filter(r=>r.stars===6);
+  if(_lookupSort==='iv')list.sort((a,b)=>(b.flawlessIVs||0)-(a.flawlessIVs||0));
+  else if(_lookupSort==='star')list.sort((a,b)=>(b.stars||0)-(a.stars||0));
+  else if(_lookupSort==='species')list.sort((a,b)=>(a.speciesName||'').localeCompare(b.speciesName||''));
+  else if(_lookupSort==='shiny')list.sort((a,b)=>(b.shiny?1:0)-(a.shiny?1:0));
+  list.forEach((r,i)=>box.appendChild(card(r,i)));bindTilt();
+}
+async function loadLookupSummary(results){
+  const banner=document.getElementById('lookupSummary');
+  if(!results||results.length<2){banner.classList.remove('on');return;}
+  try{
+    const rows=results.slice(0,50).map(r=>({speciesName:r.speciesName,shiny:r.shiny,stars:r.stars,teraType:r.teraName,flawlessIVs:r.flawlessIVs,nature:r.nature||'?'}));
+    const r=await(await fetch('/api/ai/lookup-summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({results:rows})})).json();
+    if(!r.ok||!r.text){banner.classList.remove('on');return;}
+    const s=r.stats||{};
+    banner.innerHTML=`<div><b style="color:var(--gold-lt)">🧠</b> ${r.text}</div><div class="ls-stats"><span class="ls-chip">${s.total||0} seeds</span><span class="ls-chip">✦ ${s.shinies||0} shiny</span><span class="ls-chip">💎 ${s.flawless||0} flawless</span><span class="ls-chip">${s.topTera||'?'} tera (top)</span><span class="ls-chip">${s.topSpecies||'?'} (top species)</span></div>`;
+    banner.classList.add('on');
+  }catch(_){banner.classList.remove('on');}
+}
+function pasteFileIntoLookup(file){
+  if(!file)return;
+  const fr=new FileReader();
+  fr.onload=()=>{document.getElementById('lookupinput').value=String(fr.result).trim();toast(`📥 Loaded ${file.name}`);document.getElementById('lookupbtn').click();};
+  fr.readAsText(file);
+}
+(function wireLookupDrop(){
+  const drop=document.getElementById('lookupDrop');
+  const inp=document.getElementById('lookupFile');
+  drop.addEventListener('click',()=>inp.click());
+  inp.addEventListener('change',e=>{if(e.target.files[0])pasteFileIntoLookup(e.target.files[0]);e.target.value='';});
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)pasteFileIntoLookup(f);});
+})();
+document.querySelectorAll('#lookupFilters .lookup-filter').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#lookupFilters .lookup-filter').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');_lookupFilter=btn.dataset.f;renderLookupResults();updateLookupSelCount();
+}));
+document.getElementById('lookupSort').addEventListener('change',e=>{_lookupSort=e.target.value;renderLookupResults();updateLookupSelCount();});
+function updateLookupSelCount(){const n=selected.size;const el=document.getElementById('lookupSelCount');if(el)el.textContent=`${n} selected`;}
+// keep the count fresh as the user ticks card checkboxes
+document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('chk'))setTimeout(updateLookupSelCount,0);});
+document.getElementById('lookupSelectAll').addEventListener('click',()=>{
+  const cards=box.querySelectorAll('.r');const allOn=selected.size>=cards.length&&cards.length>0;
+  cards.forEach(el=>{const chk=el.querySelector('.chk');const seed=el.querySelector('.seed')?.textContent?.trim();if(!chk||!seed)return;
+    if(allOn){chk.classList.remove('on');selected.delete(seed);}else{chk.classList.add('on');const r=_lookupResults.find(x=>x.seed===seed);if(r)selected.set(seed,r);}});
+  updatePlaylist();updateLookupSelCount();
+});
+function lookupChosen(){return selected.size?[...selected.values()]:_lookupResults;}
+document.getElementById('lookupHostAll').addEventListener('click',async()=>{
+  if(!authState.loggedIn){toast('Log in with Discord to host →');location.href='/api/auth/login';return;}
+  if(!authState.verified){toast('You need Elite Raid Bot Access to host — get it on Ko-fi.');return;}
+  const chosen=lookupChosen();if(!chosen.length){toast('Nothing to host.');return;}
+  const loc=document.getElementById('location').value;const prog=parseInt(document.getElementById('progress').value||'6');
+  let ok=0;toast(`🚀 Queuing ${chosen.length} raid(s)…`);
+  for(const r of chosen){try{const resp=await(await fetch('/api/host',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:r.seed,stars:r.stars,progress:prog,location:loc})})).json();if(resp.ok)ok++;}catch(_){}}
+  toast(`✓ Queued ${ok}/${chosen.length} on Raid-SV!`);
+});
+document.getElementById('lookupExport').addEventListener('click',()=>{
+  const chosen=lookupChosen();if(!chosen.length){toast('Nothing to export.');return;}
+  const fmt=prompt('Export format: type "ra", "csv", or "showdown"','ra');if(!fmt)return;
+  let text='';
+  if(fmt.toLowerCase().startsWith('c')){
+    text='Seed,Species,Shiny,Stars,Tera,IVs,Nature,Ability\n'+chosen.map(r=>`${r.seed},${r.speciesName},${r.shiny?'yes':'no'},${r.stars},${r.teraName},${(r.iVs||[]).join('/')},${r.nature||''},${r.ability||''}`).join('\n');
+  }else if(fmt.toLowerCase().startsWith('s')){
+    text=chosen.map(r=>`${r.speciesName}\nTera Type: ${r.teraName}\n${r.nature||'Hardy'} Nature\nIVs: ${(r.iVs||[]).map((v,i)=>v+' '+['HP','Atk','Def','SpA','SpD','Spe'][i]).join(' / ')}`).join('\n\n');
+  }else{
+    text=chosen.map(r=>r.raCommand||`!ra ${r.seed} ${r.stars} 6`).join('\n');
+  }
+  navigator.clipboard.writeText(text).then(()=>toast(`📋 Exported ${chosen.length} as ${fmt}`)).catch(()=>prompt('Copy:',text));
+});
+document.getElementById('lookupSaveList').addEventListener('click',async()=>{
+  const chosen=lookupChosen();if(!chosen.length){toast('Nothing to save.');return;}
+  const name=prompt('Name this list:','Tonight\'s Queue');if(!name)return;
+  try{
+    const body={name,seeds:chosen.map(r=>r.seed),game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')||'6'),stars:val('stars')?parseInt(val('stars')):6};
+    const r=await(await fetch('/api/lists',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(r.ok){navigator.clipboard.writeText(r.url).catch(()=>{});toast(`💾 Saved "${name}" — link copied!`);}
+    else toast('Save failed: '+(r.error||'?'));
+  }catch(e){toast('Save failed: '+e.message);}
+});
+
+document.getElementById('lookupbtn').addEventListener('click',async()=>{
+  const lines=document.getElementById('lookupinput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const st=document.getElementById('lookupstatus');
+  if(!lines.length){st.textContent='Paste at least one seed.';return;}
+  st.innerHTML='<span class="spinner"></span> Looking up…';document.getElementById('empty').style.display='none';box.innerHTML='';
+  document.getElementById('lookupFilters').classList.remove('on');document.getElementById('lookupSummary').classList.remove('on');
+  try{
+    const body={game:val('game'),location:val('location'),storyProgress:parseInt(val('progress')||'6'),stars:val('stars')?parseInt(val('stars')):6,seeds:lines};
+    const res=await(await fetch('/api/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    _lookupResults=res||[];_lookupFilter='all';_lookupSort='paste';
+    document.querySelectorAll('#lookupFilters .lookup-filter').forEach(b=>b.classList.toggle('on',b.dataset.f==='all'));
+    document.getElementById('lookupSort').value='paste';
+    renderLookupResults();
+    st.innerHTML=`Resolved <b style="color:var(--gold)">${res.length}</b> / ${lines.length} seed(s)`;
+    if(res.length>=1){document.getElementById('lookupFilters').classList.add('on');document.getElementById('lookupToolbar').classList.add('on');updateLookupSelCount();}
+    if(res.length>=2)loadLookupSummary(res);
+    if(!res.length){const e=document.getElementById('empty');e.style.display='block';e.textContent='None resolved — check they are valid 8-character hex seeds.';}
+  }catch(e){st.textContent='Error: '+e.message;}
+});
+
+// --- Auth state (Discord login → Member-role gate for one-click host) ---
+let authState={loggedIn:false,verified:false,name:null};
+async function checkAuth(){
+  try{ authState=await(await fetch('/api/auth/me',{cache:'no-store'})).json(); }catch(e){ authState={loggedIn:false,verified:false}; }
+  const chip=document.getElementById('authchip');
+  if(authState.loggedIn){
+    const tag=authState.verified?'✓ Verified':'⚠ Not a member';
+    chip.innerHTML=`<span class="me">👤 ${authState.name} · ${tag}</span><button class="lo" id="logoutBtn">Log out</button>`;
+    document.getElementById('logoutBtn').onclick=async()=>{await fetch('/api/auth/logout',{method:'POST'});location.href='/';};
+  } else {
+    chip.innerHTML=`<a href="/api/auth/login">🔑 Login with Discord</a>`;
+  }
+}
+checkAuth();
+// login-result toast
+(()=>{const p=new URLSearchParams(location.search).get('login');if(p==='ok')toast('✓ Logged in — you can host raids now!');else if(p==='notmember')toast('Logged in — but you need Elite Raid Bot Access to host. Get it on Ko-fi.');else if(p)toast('Login failed — try again.');if(p)history.replaceState({},'',location.pathname);})();
+
+// Now-Hosting renderer (called by both poll fallback and SSE push)
+function updateNow(d){
+  const w=document.getElementById('nowhosting');
+  if(d&&d.active){
+    w.classList.add('on');
+    document.getElementById('nh-name').innerHTML=(d.shiny?'<span style="color:var(--gold-lt)">✦ </span>Shiny ':'')+(d.species||'Raid');
+    document.getElementById('nh-sub').textContent='★'.repeat(d.stars||0)+(d.tera?(' · '+d.tera+' Tera'):'')+(d.meta?(' · '+d.meta):'');
+    document.getElementById('nh-joined').textContent=(d.joined??0)+'/'+(d.capacity??4);
+    const t=d.timer;document.getElementById('nh-cd').textContent=(t>=0)?(Math.floor(t/60)+':'+String(t%60).padStart(2,'0')):'live';
+    const img=document.getElementById('nh-sprite');if(d.sprite){img.src=d.sprite;img.style.display='';}else{img.style.display='none';}
+  } else { w.classList.remove('on'); }
+}
+let sseConnected=false;
+async function pollNow(){ if(sseConnected)return; try{ updateNow(await(await fetch('/api/nowhosting',{cache:'no-store'})).json()); }catch(e){document.getElementById('nowhosting').classList.remove('on');} }
+pollNow();setInterval(pollNow,5000);
+
+// Up Next renderer (called by both poll fallback and SSE push)
+function updateQueue(q){
+  const box=document.getElementById('upnext'),strip=document.getElementById('upnextstrip');
+  if(!Array.isArray(q)||!q.length){box.classList.remove('on');return;}
+  box.classList.add('on');
+  window._queueOrder=q.map((_,i)=>i);
+  strip.innerHTML=q.map((r,i)=>{
+    const urls=spriteChain(r.species,r.shiny);
+    return `<div class="qcard ${r.shiny?'shiny':''}" draggable="true" data-idx="${i}" title="Drag to reorder rotation">${i===0?'<span class="qnow">NOW</span>':''}${r.shiny?'<span class="qbadge">✦</span>':''}<img src="${r.species>0?urls[0]:''}" data-f='${JSON.stringify(urls.slice(1))}' onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/><div class="qn">${r.name}</div><div class="qs">${'★'.repeat(r.stars)}</div></div>`;
+  }).join('');
+  wireQueueDrag();
+}
+function wireQueueDrag(){
+  const strip=document.getElementById('upnextstrip');
+  let dragIdx=-1;
+  strip.querySelectorAll('.qcard').forEach(card=>{
+    card.addEventListener('dragstart',e=>{dragIdx=+card.dataset.idx;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{card.classList.remove('dragging');strip.querySelectorAll('.qcard').forEach(c=>c.classList.remove('dropbefore','dropafter'));});
+    card.addEventListener('dragover',e=>{e.preventDefault();const rect=card.getBoundingClientRect();const before=(e.clientX-rect.left)<rect.width/2;strip.querySelectorAll('.qcard').forEach(c=>c.classList.remove('dropbefore','dropafter'));card.classList.add(before?'dropbefore':'dropafter');});
+    card.addEventListener('drop',async e=>{
+      e.preventDefault();
+      const dropIdx=+card.dataset.idx;
+      if(dragIdx<0||dragIdx===dropIdx)return;
+      const rect=card.getBoundingClientRect();const before=(e.clientX-rect.left)<rect.width/2;
+      const order=[...window._queueOrder];
+      const [moved]=order.splice(dragIdx,1);
+      let target=dropIdx;if(dragIdx<dropIdx)target--;if(!before)target++;
+      order.splice(target,0,moved);
+      window._queueOrder=order;
+      // optimistic UI update
+      const cards=Array.from(strip.querySelectorAll('.qcard'));
+      const newOrder=order.map(i=>cards[i]);
+      strip.innerHTML='';newOrder.forEach((c,i)=>{c.dataset.idx=i;strip.appendChild(c);});
+      cards.forEach(c=>c.classList.remove('dropbefore','dropafter'));
+      // push to backend
+      try{
+        const resp=await(await fetch('/api/raid/reorder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order})})).json();
+        if(resp.ok)toast('✓ Rotation reordered on the bot!');
+        else toast('Reorder rejected: '+(resp.error||'?'));
+      }catch(e){toast('Reorder failed: '+e.message);}
+      wireQueueDrag();
+    });
+  });
+}
+async function pollQueue(){ if(sseConnected)return; try{ updateQueue(await(await fetch('/api/queue',{cache:'no-store'})).json()); }catch(e){document.getElementById('upnext').classList.remove('on');} }
+pollQueue();setInterval(pollQueue,10000);
+
+// ---- Live Raid Bots: all 3 maps side by side (Paldea / Kitakami / Blueberry) ----
+function fmtTimer(t){return (t>=0)?(Math.floor(t/60)+':'+String(t%60).padStart(2,'0')):'live';}
+function rotSprite(species,shiny,directUrl){
+  const urls=spriteChain(species,shiny);
+  const first=(directUrl&&directUrl.length)?directUrl:(species>0?urls[0]:'');
+  const chain=(directUrl&&directUrl.length)?urls:urls.slice(1);
+  return `<img src="${first}" data-f='${JSON.stringify(chain)}' onerror="(function(i){var f=JSON.parse(i.getAttribute('data-f')||'[]');if(f.length){i.src=f.shift();i.setAttribute('data-f',JSON.stringify(f));}else{i.style.visibility='hidden';}})(this)"/>`;
+}
+window._rotOrders={};
+function renderRotations(rots){
+  const grid=document.getElementById('rotgrid');if(!grid)return;
+  const box=document.getElementById('rotations');if(box)box.classList.add('on');
+  grid.innerHTML=(rots||[]).map(r=>{
+    const map=r.map, mapKey=map.toLowerCase();
+    if(!r.online){
+      return `<div class="rotcol"><div class="rc-head"><span class="rc-dot off"></span><span class="rc-map">${map}</span><span class="rc-status">offline</span></div><div class="rc-offline">Bot not running</div></div>`;
+    }
+    const now=r.now, q=Array.isArray(r.queue)?r.queue:[];
+    window._rotOrders[mapKey]=q.map((_,i)=>i);
+    let nowHtml;
+    if(now&&now.active){
+      nowHtml=`<div class="rc-now">${rotSprite(0,now.shiny,now.sprite)}<div style="min-width:0"><div class="rn-name">${now.shiny?'✦ ':''}${now.species||'Raid'}</div><div class="rn-sub">${'★'.repeat(now.stars||0)}${now.tera?(' · '+now.tera+' Tera'):''}</div></div><div class="rn-cd">${(now.joined??0)+'/'+(now.capacity??4)}<br>${fmtTimer(now.timer)}</div></div>`;
+    } else {
+      nowHtml=`<div class="rc-now idle"><div class="rn-sub">Idle — no raid hosting right now</div></div>`;
+    }
+    const strip=`<div class="rc-strip" data-map="${mapKey}">${q.length?q.map((c,i)=>`<div class="qcard ${c.shiny?'shiny':''}" draggable="true" data-idx="${i}" title="Drag to reorder ${map} rotation">${i===0?'<span class="qnow">NOW</span>':''}${c.shiny?'<span class="qbadge">✦</span>':''}${rotSprite(c.species,c.shiny)}<div class="qn">${c.name}</div><div class="qs">${'★'.repeat(c.stars)}</div></div>`).join(''):'<div class="rc-offline">Empty rotation</div>'}</div>`;
+    return `<div class="rotcol"><div class="rc-head"><span class="rc-dot on"></span><span class="rc-map">${map}</span><span class="rc-status">online</span></div>${nowHtml}${strip}</div>`;
+  }).join('');
+  wireRotDrag();
+}
+function wireRotDrag(){
+  document.querySelectorAll('.rc-strip').forEach(strip=>{
+    const map=strip.dataset.map; let dragIdx=-1;
+    strip.querySelectorAll('.qcard').forEach(card=>{
+      card.addEventListener('dragstart',e=>{dragIdx=+card.dataset.idx;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+      card.addEventListener('dragend',()=>{card.classList.remove('dragging');strip.querySelectorAll('.qcard').forEach(c=>c.classList.remove('dropbefore','dropafter'));});
+      card.addEventListener('dragover',e=>{e.preventDefault();const rect=card.getBoundingClientRect();const before=(e.clientX-rect.left)<rect.width/2;strip.querySelectorAll('.qcard').forEach(c=>c.classList.remove('dropbefore','dropafter'));card.classList.add(before?'dropbefore':'dropafter');});
+      card.addEventListener('drop',async e=>{
+        e.preventDefault();const dropIdx=+card.dataset.idx;if(dragIdx<0||dragIdx===dropIdx)return;
+        const rect=card.getBoundingClientRect();const before=(e.clientX-rect.left)<rect.width/2;
+        const order=[...(window._rotOrders[map]||[])];const[moved]=order.splice(dragIdx,1);
+        let target=dropIdx;if(dragIdx<dropIdx)target--;if(!before)target++;order.splice(target,0,moved);
+        window._rotOrders[map]=order;
+        try{const resp=await(await fetch('/api/raid/reorder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order,location:map})})).json();if(resp.ok)toast('✓ '+map+' rotation reordered!');else toast('Reorder rejected: '+(resp.error||'?'));}catch(e){toast('Reorder failed: '+e.message);}
+        pollRotations();
+      });
+    });
+  });
+}
+async function pollRotations(){try{renderRotations(await(await fetch('/api/rotations',{cache:'no-store'})).json());}catch(e){}}
+pollRotations();setInterval(pollRotations,4000);
+
+// Live activity feed (push from SSE)
+function pushFeed(f){
+  const box=document.getElementById('livefeed');box.classList.add('on');
+  const div=document.createElement('div');div.className='ev';div.innerHTML=`<b>${f.icon||'•'}</b>${f.text||''}`;
+  box.insertBefore(div,box.firstChild);
+  while(box.children.length>6) box.removeChild(box.lastChild);
+}
+
+// SSE: real-time push of state + queue + feed events (with poll fallback)
+function bindSSE(){
+  try{
+    const ev=new EventSource('/api/stream');
+    ev.addEventListener('hello',()=>{sseConnected=true;});
+    ev.addEventListener('state',e=>{try{updateNow(JSON.parse(e.data));}catch(_){} });
+    ev.addEventListener('queue',e=>{try{updateQueue(JSON.parse(e.data));}catch(_){} });
+    ev.addEventListener('feed',e=>{try{pushFeed(JSON.parse(e.data));}catch(_){} });
+    ev.onerror=()=>{sseConnected=false;try{ev.close();}catch(_){}setTimeout(bindSSE,4000);};
+  }catch(e){sseConnected=false;setTimeout(bindSSE,4000);}
+}
+bindSSE();
+
+// --- Wishlist (localStorage, per browser) ---
+const WISH_KEY='pku_wish';
+function getWishlist(){try{return JSON.parse(localStorage.getItem(WISH_KEY)||'[]');}catch(_){return[];}}
+function setWishlistL(l){localStorage.setItem(WISH_KEY,JSON.stringify(l));}
+function isWished(seed){return getWishlist().some(x=>x.seed===seed);}
+function toggleWish(r){const list=getWishlist();const i=list.findIndex(x=>x.seed===r.seed);let on;if(i>=0){list.splice(i,1);on=false;toast('Removed from wishlist');}else{list.push({seed:r.seed,species:r.species,speciesName:r.speciesName||r.species,shiny:r.shiny,stars:r.stars,when:Date.now()});on=true;toast('⭐ Added to wishlist');}setWishlistL(list);renderMyPanel();return on;}
+
+// --- My Raids + Wishlist panel ---
+async function renderMyPanel(){
+  const panel=document.getElementById('mypanel');
+  if(!authState.loggedIn){panel.classList.remove('on');return;}
+  panel.classList.add('on');
+  // My Raids
+  let raids=[];
+  try{const r=await(await fetch('/api/myraids')).json();raids=r.raids||[];}catch(_){}
+  const ra=document.getElementById('myraidslist');
+  ra.innerHTML=raids.length?raids.slice(0,20).map(r=>{
+    const id=nameToId[(r.species||'').toLowerCase()]||0;
+    const sp=id>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${r.shiny?'shiny/':''}${id}.png`:'';
+    const ago=Math.floor((Date.now()/1000-r.when)/60);
+    return `<div class="myitem"><img src="${sp}" onerror="this.style.visibility='hidden'"/><div><div class="mn">${r.shiny?'✦ ':''}${r.species}</div><div class="mt">${'★'.repeat(r.stars)} · ${r.location||'Kitakami'} · ${ago<1?'just now':ago<60?ago+'m ago':Math.floor(ago/60)+'h ago'}</div></div></div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:12px;padding:4px">No raids hosted yet — click 🚀 Host on any card.</div>';
+  // Wishlist
+  const wl=getWishlist();
+  const wi=document.getElementById('mywishlist');
+  wi.innerHTML=wl.length?wl.map(w=>{
+    const sp=w.species>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${w.shiny?'shiny/':''}${w.species}.png`:'';
+    return `<div class="myitem"><img src="${sp}" onerror="this.style.visibility='hidden'"/><div><div class="mn">${w.shiny?'✦ ':''}${w.speciesName||w.species}</div><div class="mt">${'★'.repeat(w.stars)} · ${w.seed}</div></div><button data-rm="${w.seed}">✕</button></div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:12px;padding:4px">Click ⭐ on any result to wishlist it.</div>';
+  wi.querySelectorAll('button[data-rm]').forEach(b=>b.onclick=()=>{const l=getWishlist().filter(x=>x.seed!==b.dataset.rm);setWishlistL(l);renderMyPanel();});
+}
+// Re-render My panel whenever auth state changes
+const _origCheckAuth=checkAuth; checkAuth=async function(){await _origCheckAuth();renderMyPanel();};
+
+// ============================================================
+// AI SUITE — parse, typeahead, voice, vision, chat, coach, summary, announce
+// ============================================================
+
+// Shared: apply AI-parsed filter object to the form
+function applyAiFilters(f){
+  if(!f)return;
+  if(f.species&&nameToId[(''+f.species).toLowerCase()])document.getElementById('species').value=f.species;
+  if(f.shiny===true)document.getElementById('shiny').value='true';else if(f.shiny===false)document.getElementById('shiny').value='false';
+  if(f.stars)document.getElementById('stars').value=String(f.stars);
+  if(f.teraType){const t=TERA.indexOf(f.teraType);if(t>=0)document.getElementById('tera').value=String(t);}
+  if(f.minFlawlessIVs)document.getElementById('ivs').value=String(f.minFlawlessIVs);
+  if(f.location)document.getElementById('location').value=f.location;
+}
+
+// 1) Ask-AI button (natural-language parse → fill form → search)
+document.getElementById('aigo').addEventListener('click',async()=>{
+  const q=document.getElementById('aiq').value.trim();if(!q){toast('Type a query first.');return;}
+  const btn=document.getElementById('aigo'),orig=btn.textContent;btn.disabled=true;btn.textContent='✨ Thinking…';
+  window._lastQ=q;
+  try{
+    const res=await(await fetch('/api/ai/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})})).json();
+    if(!res.ok){toast('AI: '+(res.error||'failed'));btn.disabled=false;btn.textContent=orig;return;}
+    applyAiFilters(res.filters||{});
+    toast('✨ Filters set by AI — searching…');
+    search();
+  }catch(e){toast('AI failed: '+e.message);}
+  btn.disabled=false;btn.textContent=orig;
+});
+document.getElementById('aiq').addEventListener('keydown',e=>{
+  const sg=document.getElementById('aiSuggest');const items=sg.querySelectorAll('.ai-sg');
+  if(sg.classList.contains('on')&&items.length){
+    if(e.key==='ArrowDown'){e.preventDefault();window._sgI=Math.min(items.length-1,(window._sgI??-1)+1);items.forEach((el,i)=>el.classList.toggle('k',i===window._sgI));return;}
+    if(e.key==='ArrowUp'){e.preventDefault();window._sgI=Math.max(-1,(window._sgI??-1)-1);items.forEach((el,i)=>el.classList.toggle('k',i===window._sgI));return;}
+    if(e.key==='Enter'&&(window._sgI??-1)>=0){e.preventDefault();items[window._sgI].click();return;}
+    if(e.key==='Escape'){sg.classList.remove('on');return;}
+  }
+  if(e.key==='Enter')document.getElementById('aigo').click();
+});
+
+// 2) Typeahead (debounced 280ms)
+let _aiSgTimer;
+document.getElementById('aiq').addEventListener('input',e=>{
+  clearTimeout(_aiSgTimer);
+  const q=e.target.value.trim();const sg=document.getElementById('aiSuggest');
+  if(q.length<2){sg.classList.remove('on');return;}
+  _aiSgTimer=setTimeout(async()=>{
+    try{
+      const r=await(await fetch('/api/ai/suggest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({partial:q})})).json();
+      if(!r.ok||!Array.isArray(r.suggestions)||!r.suggestions.length){sg.classList.remove('on');return;}
+      sg.innerHTML=r.suggestions.slice(0,4).map(s=>`<div class="ai-sg">${String(s).replace(/</g,'&lt;')}</div>`).join('');
+      sg.classList.add('on');window._sgI=-1;
+      sg.querySelectorAll('.ai-sg').forEach(el=>el.onclick=()=>{document.getElementById('aiq').value=el.textContent;sg.classList.remove('on');document.getElementById('aigo').click();});
+    }catch(_){}
+  },280);
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.aibar'))document.getElementById('aiSuggest').classList.remove('on');});
+
+// 3) Voice input (Web Speech API)
+const _SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+document.getElementById('aimic').addEventListener('click',()=>{
+  if(!_SR){toast('Voice not supported here — try Chrome/Edge.');return;}
+  const r=new _SR();r.lang='en-US';r.interimResults=false;
+  const btn=document.getElementById('aimic');btn.classList.add('on');btn.textContent='🔴';
+  r.onresult=ev=>{const t=ev.results[0][0].transcript;document.getElementById('aiq').value=t;toast('🎤 Heard: '+t);document.getElementById('aigo').click();};
+  r.onerror=()=>toast('Voice failed — try again.');
+  r.onend=()=>{btn.classList.remove('on');btn.textContent='🎤';};
+  try{r.start();}catch(_){btn.classList.remove('on');btn.textContent='🎤';}
+});
+
+// 4) Vision (Gemini Vision) — click 📷, paste, or drag-drop an image
+async function visionFromFile(file){
+  if(!file||!file.type||!file.type.startsWith('image/'))return;
+  const fr=new FileReader();
+  fr.onload=async()=>{
+    const b64=String(fr.result).split(',')[1];
+    const preview=document.getElementById('aiVisionPreview');
+    preview.innerHTML=`<img src="${fr.result}"/><div class="vp-txt"><b>📷 Looking at your image…</b><br><span style="color:var(--muted)">Gemini Vision is identifying it.</span></div><button class="vp-x">✕</button>`;
+    preview.classList.add('on');
+    preview.querySelector('.vp-x').onclick=()=>preview.classList.remove('on');
+    try{
+      const r=await(await fetch('/api/ai/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:b64,mimeType:file.type})})).json();
+      if(!r.ok){preview.querySelector('.vp-txt').innerHTML='<b>Vision failed:</b> '+(r.error||'?');return;}
+      const f=r.filters||{};
+      preview.querySelector('.vp-txt').innerHTML=`<b>📷 Identified:</b> ${(f.shiny?'✦ Shiny ':'')+(f.species||'Unknown')}${f.stars?' · '+f.stars+'★':''}${f.teraType?' · '+f.teraType+' Tera':''}<br><span style="color:var(--muted)">Filters set — searching now.</span>`;
+      window._lastQ='screenshot of '+(f.species||'a Pokémon');
+      applyAiFilters(f);search();
+    }catch(e){preview.querySelector('.vp-txt').innerHTML='<b>Vision failed:</b> '+e.message;}
+  };
+  fr.readAsDataURL(file);
+}
+document.getElementById('aiimg').addEventListener('click',()=>document.getElementById('aifile').click());
+document.getElementById('aifile').addEventListener('change',e=>{if(e.target.files[0])visionFromFile(e.target.files[0]);e.target.value='';});
+document.addEventListener('paste',e=>{const items=(e.clipboardData||{}).items||[];for(const it of items)if(it.type&&it.type.startsWith('image/')){visionFromFile(it.getAsFile());break;}});
+['dragover','drop'].forEach(ev=>document.querySelector('.aibar').addEventListener(ev,e=>{e.preventDefault();if(ev==='drop'&&e.dataTransfer.files.length)visionFromFile(e.dataTransfer.files[0]);}));
+
+// 5) Result summary banner (Gemini one-liner above results)
+async function aiSummarizeResults(query,results){
+  const banner=document.getElementById('aiSummary');
+  if(!results||!results.length){banner.classList.remove('on');return;}
+  try{
+    const rows=results.slice(0,5).map(r=>({speciesName:r.speciesName,shiny:r.shiny,stars:r.stars,teraType:r.teraName,flawlessIVs:r.flawlessIVs,nature:r.nature||'?'}));
+    const r=await(await fetch('/api/ai/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query||'a search',results:rows})})).json();
+    if(r.ok&&r.text){banner.innerHTML='<b>🧠 AI says:</b> '+r.text;banner.classList.add('on');}
+    else banner.classList.remove('on');
+  }catch(_){banner.classList.remove('on');}
+}
+
+// 6) AI Raid Coach — opens modal with counters, moves, tera advice, tip
+async function showCoach(r){
+  const m=document.getElementById('coachModal');
+  document.getElementById('coachTitle').textContent=(r.shiny?'✦ ':'')+r.speciesName+' · '+'★'.repeat(r.stars);
+  document.getElementById('coachSub').textContent=r.teraName+' Tera · '+(r.ability||'?')+(r.hidden?' (HA)':'')+' · '+(r.nature||'?');
+  document.getElementById('coachSprite').src=spriteChain(r.species,r.shiny)[0];
+  document.getElementById('coachBody').innerHTML='<div style="text-align:center;padding:36px 10px;color:var(--muted)"><span class="spinner"></span><br><br>🧠 Coach is studying the matchup…</div>';
+  m.classList.add('on');
+  try{
+    const movesArr=(r.moves||[]).map(x=>x.name);
+    const c=await(await fetch('/api/ai/coach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({speciesName:r.speciesName,shiny:!!r.shiny,stars:r.stars,teraType:r.teraName,ability:r.ability,moves:movesArr})})).json();
+    if(!c.ok){document.getElementById('coachBody').innerHTML='<div style="color:#f07a7a">Coach failed: '+(c.error||'?')+'</div>';return;}
+    const k=c.coach||{};
+    const counters=(k.counters||[]).map(x=>{
+      const id=nameToId[(x.name||'').toLowerCase()]||0;
+      const sp=Number(id)>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
+      return `<div class="coach-counter">${sp?`<img src="${sp}" onerror="this.style.visibility='hidden'"/>`:'<div style="width:42px;flex:0 0 42px"></div>'}<div><div class="cn">${x.name||'?'}</div><div class="cr">${x.reason||''}</div></div></div>`;
+    }).join('');
+    const moves=(k.moves||[]).map(mv=>`<div class="coach-mv">${mv}</div>`).join('');
+    document.getElementById('coachBody').innerHTML=`
+      <h4>🛡 Best counters available in S/V</h4>${counters||'<div style="color:var(--muted)">—</div>'}
+      <h4>⚔ Top attack moves to bring</h4><div class="coach-moves">${moves||'<div style="color:var(--muted)">—</div>'}</div>
+      <h4>✨ Tera advice for your attacker</h4><div class="coach-tera">${k.teraAdvice||'—'}</div>
+      <h4>💡 Pre-raid tip</h4><div class="coach-tip">${k.tip||'—'}</div>`;
+  }catch(e){document.getElementById('coachBody').innerHTML='<div style="color:#f07a7a">Coach failed: '+e.message+'</div>';}
+}
+document.getElementById('coachModal').addEventListener('click',e=>{if(e.target.id==='coachModal'||e.target.classList.contains('coach-close'))document.getElementById('coachModal').classList.remove('on');});
+
+// 7) AI Announcer — auto-generate hype announcement when hosting
+async function aiAnnounce(r){
+  try{
+    const ar=await(await fetch('/api/ai/announce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({speciesName:r.speciesName,shiny:!!r.shiny,stars:r.stars,teraType:r.teraName,hosterName:(authState&&authState.name)||'a trainer'})})).json();
+    if(ar.ok&&ar.text){navigator.clipboard.writeText(ar.text).catch(()=>{});setTimeout(()=>toast('✨ AI announcement copied! Paste in #raid-kitakami.'),1400);}
+  }catch(_){}
+}
+
+// 8) Conversational chat panel
+let chatSessionId=null;
+function chatPush(role,html,filters){
+  const body=document.getElementById('chatBody');
+  const d=document.createElement('div');d.className='chat-msg '+role;d.innerHTML=html;
+  if(filters){
+    const btn=document.createElement('button');btn.className='applybtn';btn.textContent='✨ Apply filters & search';
+    btn.onclick=()=>{applyAiFilters(filters);window._lastQ='chat';search();toast('Filters applied — searching!');document.getElementById('chatPanel').classList.remove('on');};
+    d.appendChild(btn);
+  }
+  body.appendChild(d);body.scrollTop=body.scrollHeight;
+}
+async function chatSend(){
+  const inp=document.getElementById('chatIn');const t=inp.value.trim();if(!t)return;
+  chatPush('user',t.replace(/</g,'&lt;'));
+  inp.value='';inp.disabled=true;
+  const thinking=document.createElement('div');thinking.className='chat-msg ai';thinking.innerHTML='<span class="spinner"></span> Thinking…';
+  document.getElementById('chatBody').appendChild(thinking);document.getElementById('chatBody').scrollTop=999999;
+  try{
+    const r=await(await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:chatSessionId,message:t})})).json();
+    thinking.remove();
+    if(!r.ok)chatPush('ai','⚠ '+(r.error||'failed'));
+    else{chatSessionId=r.sessionId;chatPush('ai',(r.reply||'…').replace(/\n/g,'<br>'),r.filters);}
+  }catch(e){thinking.remove();chatPush('ai','⚠ '+e.message);}
+  inp.disabled=false;inp.focus();
+}
+document.getElementById('chatSend').addEventListener('click',chatSend);
+document.getElementById('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter')chatSend();});
+document.getElementById('chatFab').addEventListener('click',()=>{document.getElementById('chatPanel').classList.toggle('on');setTimeout(()=>document.getElementById('chatIn').focus(),200);});
+document.getElementById('chatClose').addEventListener('click',()=>document.getElementById('chatPanel').classList.remove('on'));
+document.getElementById('aichat').addEventListener('click',()=>{document.getElementById('chatPanel').classList.add('on');setTimeout(()=>document.getElementById('chatIn').focus(),200);});
+
+// ============================================================
+// 🔗 SHARE: copy permalink for a seed
+// ============================================================
+function shareSeed(r){
+  const loc=document.getElementById('location').value||'Kitakami';
+  const story=parseInt(document.getElementById('progress').value||'6');
+  const url=`${location.origin}/r/${r.seed}?stars=${r.stars}&story=${story}&loc=${encodeURIComponent(loc)}`;
+  navigator.clipboard.writeText(url).then(()=>toast(`🔗 Link copied — share ${r.shiny?'✦ ':''}${r.speciesName}!`)).catch(()=>{
+    prompt('Copy this link:', url);
+  });
+}
+
+// ============================================================
+// 📌 PERMALINK: hydrate /r/<seed> URL on page load
+// ============================================================
+async function hydratePermalink(){
+  const m=location.pathname.match(/^\/r\/([0-9A-Fa-f]{8})/);
+  if(!m)return false;
+  const seed=m[1].toUpperCase();
+  const qs=new URLSearchParams(location.search);
+  const loc=qs.get('loc')||'Kitakami';
+  const stars=qs.get('stars')||'6';
+  const story=qs.get('story')||'6';
+  try{document.getElementById('location').value=loc;document.getElementById('progress').value=story;document.getElementById('stars').value=stars;}catch(_){}
+  const banner=document.getElementById('permabanner');
+  banner.innerHTML=`📌 <b>Shared with you</b> — loading seed <code style="font-family:Consolas;color:var(--gold-lt)">${seed}</code>…`;
+  banner.classList.add('on');
+  try{
+    const url=`/api/r/${seed}?stars=${stars}&story=${story}&loc=${encodeURIComponent(loc)}`;
+    const r=await(await fetch(url)).json();
+    if(r&&r.seed){
+      const box=document.getElementById('results');box.innerHTML='';
+      box.appendChild(card(r,0));bindTilt();
+      document.getElementById('empty').style.display='none';
+      banner.innerHTML=`📌 <b>Shared with you:</b> ${r.shiny?'✦ Shiny ':''}${r.speciesName} · ${'★'.repeat(r.stars)} · ${r.teraName} Tera`;
+      return true;
+    }else{banner.innerHTML=`📌 Seed <code>${seed}</code> couldn't be loaded — try the form below.`;}
+  }catch(e){banner.innerHTML=`📌 Seed <code>${seed}</code> couldn't be loaded — ${e.message}`;}
+  return false;
+}
+
+// ============================================================
+// 🏆 LEADERBOARD: weekly / monthly / all-time top hosts
+// ============================================================
+async function loadLeaderboard(period){
+  const box=document.getElementById('lb-content');
+  box.innerHTML='<div class="lb-empty"><span class="spinner"></span> Loading…</div>';
+  try{
+    const r=await(await fetch(`/api/leaderboard?period=${period}`)).json();
+    const rows=r.topHosts||[];
+    if(!rows.length){box.innerHTML=`<div class="lb-empty">No raids hosted ${period==='week'?'this week':period==='month'?'this month':'yet'}. Be the first — host any seed above!</div>`;return;}
+    let html='';
+    const podium=rows.slice(0,3);
+    if(podium.length>=3){
+      const[a,b,c]=podium;
+      html+=`<div class="lb-podium">
+        <div class="lb-pod second"><div class="lb-medal">🥈</div><div class="lb-name">${b.name}</div><div class="lb-total">${b.total}</div><div class="lb-sub">raids · ✦ ${b.shinies}</div></div>
+        <div class="lb-pod first"><div class="lb-medal">👑</div><div class="lb-name">${a.name}</div><div class="lb-total">${a.total}</div><div class="lb-sub">raids · ✦ ${a.shinies}</div></div>
+        <div class="lb-pod third"><div class="lb-medal">🥉</div><div class="lb-name">${c.name}</div><div class="lb-total">${c.total}</div><div class="lb-sub">raids · ✦ ${c.shinies}</div></div>
+      </div>`;
+    }else{
+      html+=podium.map((row,i)=>`<div class="lb-pod ${i===0?'first':''}"><div class="lb-medal">${['👑','🥈','🥉'][i]}</div><div class="lb-name">${row.name}</div><div class="lb-total">${row.total}</div><div class="lb-sub">raids · ✦ ${row.shinies}</div></div>`).join('');
+    }
+    rows.slice(3).forEach((row,i)=>{html+=`<div class="lb-row"><div class="lb-rank">#${i+4}</div><div class="lb-nm">${row.name}</div><div class="lb-stat">fav: ${row.topSpecies}</div><div class="lb-shiny">${row.total} · ✦ ${row.shinies}</div></div>`;});
+    box.innerHTML=html;
+  }catch(e){box.innerHTML='<div class="lb-empty">Couldn\'t load leaderboard.</div>';}
+}
+document.querySelectorAll('#lbpanel .lb-tab').forEach(tab=>tab.addEventListener('click',()=>{
+  document.querySelectorAll('#lbpanel .lb-tab').forEach(t=>t.classList.toggle('on',t===tab));
+  loadLeaderboard(tab.dataset.period);
+}));
+document.getElementById('lbpanel').addEventListener('toggle',e=>{if(e.target.open&&!e.target._loaded){loadLeaderboard('week');e.target._loaded=true;}});
+
+// ============================================================
+// 🪧 RAID PARTY BUILDER: AI-generated 6-Pokémon counter team
+// ============================================================
+async function showPartyBuilder(r){
+  const m=document.getElementById('partyModal');
+  document.getElementById('partyTitle').textContent=`Counter party for ${r.shiny?'✦ ':''}${r.speciesName}`;
+  document.getElementById('partySub').textContent=`${'★'.repeat(r.stars)} · ${r.teraName} Tera · ${r.ability||'?'}`;
+  document.getElementById('partySprite').src=spriteChain(r.species,r.shiny)[0];
+  document.getElementById('partyStrategy').innerHTML='<span class="spinner"></span> AI is building your 6-Pokémon counter team…';
+  document.getElementById('partyGrid').innerHTML='';
+  document.getElementById('partyActions').innerHTML='';
+  m.classList.add('on');
+  try{
+    const resp=await(await fetch('/api/ai/party',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({speciesName:r.speciesName,shiny:!!r.shiny,stars:r.stars,teraType:r.teraName,ability:r.ability})})).json();
+    if(!resp.ok){document.getElementById('partyStrategy').textContent='Party builder failed: '+(resp.error||'?');return;}
+    const p=resp.party||{};
+    document.getElementById('partyStrategy').innerHTML=`<b>Strategy:</b> ${p.strategy||'—'}`;
+    document.getElementById('partyGrid').innerHTML=(p.team||[]).map(mon=>{
+      const id=nameToId[(mon.name||'').toLowerCase()]||0;
+      const sp=Number(id)>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`:'';
+      const tColor=TC[mon.tera]||'#888';
+      const moves=(mon.moves||[]).map(mv=>`<div class="pm-mv">${mv}</div>`).join('');
+      return `<div class="party-mon">
+        ${sp?`<img src="${sp}" onerror="this.style.visibility='hidden'"/>`:'<div style="width:60px;flex:0 0 60px"></div>'}
+        <div class="pm-body">
+          <div class="pm-name">${mon.name||'?'} <span class="pm-role">${mon.role||''}</span> <span class="pm-tera" style="background:${tColor}22;color:${tColor};border:1px solid ${tColor}66">${mon.tera||'?'} Tera</span></div>
+          <div class="pm-meta">${mon.ability||'?'} · ${mon.nature||'?'} · @ ${mon.item||'?'}</div>
+          <div class="pm-moves">${moves}</div>
+          <div class="pm-reason">${mon.reason||''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    const showdown=(p.team||[]).map(mon=>{
+      const lines=[];
+      lines.push(`${mon.name||'?'}${mon.item?' @ '+mon.item:''}`);
+      if(mon.ability)lines.push(`Ability: ${mon.ability}`);
+      if(mon.tera)lines.push(`Tera Type: ${mon.tera}`);
+      if(mon.nature)lines.push(`${mon.nature} Nature`);
+      (mon.moves||[]).forEach(mv=>lines.push(`- ${mv}`));
+      return lines.join('\n');
+    }).join('\n\n');
+    const actions=document.getElementById('partyActions');actions.innerHTML='';
+    const copy=document.createElement('button');copy.className='primary';copy.textContent='📋 Copy as Showdown Paste';
+    copy.onclick=()=>navigator.clipboard.writeText(showdown).then(()=>toast('📋 Showdown paste copied!')).catch(()=>toast('Copy failed'));
+    const reroll=document.createElement('button');reroll.textContent='🔄 Reroll team';reroll.onclick=()=>showPartyBuilder(r);
+    actions.append(copy,reroll);
+  }catch(e){document.getElementById('partyStrategy').textContent='Party builder failed: '+e.message;}
+}
+document.getElementById('partyModal').addEventListener('click',e=>{if(e.target.id==='partyModal'||e.target.classList.contains('party-close'))document.getElementById('partyModal').classList.remove('on');});
+
+// ============================================================
+// 🎮 3D POKÉMON VIEWER (Three.js scene)
+// ============================================================
+let _v3d=null;
+function showViewer3D(r){
+  const m=document.getElementById('viewer3dModal');
+  document.getElementById('v3dTitle').textContent=(r.shiny?'✦ ':'')+r.speciesName;
+  document.getElementById('v3dSub').textContent=`${'★'.repeat(r.stars)} · ${r.teraName} Tera`;
+  m.classList.add('on');
+  if(typeof THREE==='undefined'){toast('3D viewer needs Three.js — check your network.');return;}
+  if(_v3d){try{_v3d.cleanup();}catch(_){}_v3d=null;}
+  const canvas=document.getElementById('v3dCanvas');
+  // Defer one frame so canvas has its size after .on
+  requestAnimationFrame(()=>{
+    const w=canvas.clientWidth||600,h=canvas.clientHeight||540;
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(window.devicePixelRatio);renderer.setSize(w,h,false);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(45,w/h,0.1,100);
+    camera.position.set(0,0.2,4.5);
+    const teraHex=(TC[r.teraName]||'#d4af37').replace('#','0x');
+    const teraColor=parseInt(teraHex,16);
+    scene.add(new THREE.AmbientLight(0x303040,1.2));
+    const lt=new THREE.PointLight(teraColor,35,30,1);lt.position.set(0,1.5,3);scene.add(lt);
+    const lt2=new THREE.PointLight(0xffffff,8,30,2);lt2.position.set(-3,2,3);scene.add(lt2);
+    const urls=spriteChain(r.species,r.shiny);
+    const tex=new THREE.TextureLoader().load(urls[0]);
+    if(THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;
+    const planeMat=new THREE.MeshStandardMaterial({map:tex,transparent:true,alphaTest:0.02,side:THREE.DoubleSide,emissive:teraColor,emissiveIntensity:0.10,emissiveMap:tex});
+    const plane=new THREE.Mesh(new THREE.PlaneGeometry(3,3),planeMat);scene.add(plane);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(1.4,1.7,64),new THREE.MeshBasicMaterial({color:teraColor,transparent:true,opacity:0.5,side:THREE.DoubleSide}));
+    ring.rotation.x=-Math.PI/2;ring.position.y=-1.4;scene.add(ring);
+    const ring2=new THREE.Mesh(new THREE.RingGeometry(1.0,1.15,64),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.22,side:THREE.DoubleSide}));
+    ring2.rotation.x=-Math.PI/2;ring2.position.y=-1.39;scene.add(ring2);
+    const pGeo=new THREE.BufferGeometry();const pCount=180;const pos=new Float32Array(pCount*3);
+    for(let i=0;i<pCount;i++){pos[i*3]=(Math.random()-0.5)*8;pos[i*3+1]=(Math.random()-0.5)*5;pos[i*3+2]=(Math.random()-0.5)*5-1;}
+    pGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const pMat=new THREE.PointsMaterial({color:teraColor,size:0.045,transparent:true,opacity:0.75,blending:THREE.AdditiveBlending});
+    const particles=new THREE.Points(pGeo,pMat);scene.add(particles);
+    let rotY=0,rotX=0,isDragging=false,lastX=0,lastY=0,autoSpin=true,cameraDist=4.5;
+    function onDown(e){isDragging=true;autoSpin=false;const t=e.touches?.[0];lastX=t?t.clientX:e.clientX;lastY=t?t.clientY:e.clientY;}
+    function onMove(e){if(!isDragging)return;const t=e.touches?.[0];const cx=t?t.clientX:e.clientX;const cy=t?t.clientY:e.clientY;rotY+=(cx-lastX)*0.01;rotX+=(cy-lastY)*0.01;rotX=Math.max(-0.7,Math.min(0.7,rotX));lastX=cx;lastY=cy;}
+    function onUp(){isDragging=false;}
+    function onWheel(e){e.preventDefault();cameraDist=Math.max(2.5,Math.min(8,cameraDist+e.deltaY*0.003));}
+    function onClick(){if(!isDragging){try{const a=new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${r.species}.ogg`);a.volume=.4;a.play().catch(()=>{});}catch(_){}}}
+    canvas.addEventListener('mousedown',onDown);window.addEventListener('mousemove',onMove);window.addEventListener('mouseup',onUp);
+    canvas.addEventListener('touchstart',onDown,{passive:true});window.addEventListener('touchmove',onMove,{passive:true});window.addEventListener('touchend',onUp);
+    canvas.addEventListener('wheel',onWheel,{passive:false});canvas.addEventListener('click',onClick);
+    let frame=0,running=true;
+    (function loop(){
+      if(!running)return;
+      if(autoSpin)rotY+=0.005;
+      plane.rotation.y=rotY;plane.rotation.x=rotX*0.5;
+      plane.position.y=Math.sin(frame*0.02)*0.06;
+      camera.position.set(0,0.2,cameraDist);camera.lookAt(0,0,0);
+      ring.rotation.z+=0.004;particles.rotation.y+=0.0008;
+      renderer.render(scene,camera);frame++;requestAnimationFrame(loop);
+    })();
+    _v3d={cleanup(){running=false;
+      canvas.removeEventListener('mousedown',onDown);window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',onUp);
+      canvas.removeEventListener('touchstart',onDown);window.removeEventListener('touchmove',onMove);window.removeEventListener('touchend',onUp);
+      canvas.removeEventListener('wheel',onWheel);canvas.removeEventListener('click',onClick);
+      try{renderer.dispose();planeMat.dispose();tex.dispose();pGeo.dispose();pMat.dispose();}catch(_){}
+    }};
+  });
+}
+function closeViewer3D(){document.getElementById('viewer3dModal').classList.remove('on');if(_v3d){try{_v3d.cleanup();}catch(_){}_v3d=null;}}
+document.getElementById('v3dClose').addEventListener('click',closeViewer3D);
+document.getElementById('viewer3dModal').addEventListener('click',e=>{if(e.target.id==='viewer3dModal')closeViewer3D();});
+
+// ============================================================
+// ✨ AI PREDICTIVE RECOMMENDATIONS — "Picked for you" carousel
+// ============================================================
+async function loadRecommendations(){
+  // Need at least some history OR a wishlist for AI to learn from
+  let myRaids=[];try{const r=await(await fetch('/api/myraids')).json();myRaids=r.raids||[];}catch(_){}
+  const wish=(typeof getWishlist==='function')?getWishlist():[];
+  if(myRaids.length===0 && wish.length===0)return; // nothing to learn from yet
+  const history=myRaids.slice(0,15).map(r=>({species:r.species||'?',stars:r.stars||0,shiny:!!r.shiny,tera:''}));
+  const wishlist=wish.slice(0,15).map(w=>({species:w.speciesName||String(w.species||'?'),stars:w.stars||0,shiny:!!w.shiny,tera:''}));
+  try{
+    const r=await(await fetch('/api/ai/recommend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history,wishlist})})).json();
+    if(!r.ok||!r.reco||!Array.isArray(r.reco.picks))return;
+    const grid=document.getElementById('recoGrid');grid.innerHTML='';
+    r.reco.picks.forEach(p=>{
+      const c=document.createElement('div');c.className='recocard';
+      const f=p.filters||{};
+      const fbits=[];
+      if(f.shiny)fbits.push('✦ shiny');
+      if(f.stars)fbits.push(f.stars+'★');
+      if(f.teraType)fbits.push(f.teraType+' tera');
+      if(f.minFlawlessIVs)fbits.push(f.minFlawlessIVs+'IV+');
+      if(f.species)fbits.push(f.species);
+      if(f.location)fbits.push('@ '+f.location);
+      c.innerHTML=`<div class="rh">${p.theme||'Mystery pick'}</div><div class="rr">${p.reason||''}</div><div class="rf">${fbits.join(' · ')||'any'}</div><div class="rgo">▶ Try it</div>`;
+      c.onclick=()=>{if(typeof applyAiFilters==='function')applyAiFilters(f);window._lastQ=p.theme;toast('✨ '+(p.theme||'Searching'));search();};
+      grid.appendChild(c);
+    });
+    document.getElementById('recoPanel').classList.add('on');
+  }catch(_){}
+}
+
+// ============================================================
+// 🔔 WISHLIST ALERTS — hooks the existing SSE state stream
+// ============================================================
+let _lastWishHit='';
+function checkWishlistAlert(state){
+  if(!state||!state.active||!state.species)return;
+  const wish=(typeof getWishlist==='function')?getWishlist():[];
+  if(!wish.length)return;
+  const key=state.species+'/'+state.stars+'/'+state.shiny;
+  if(key===_lastWishHit)return; // avoid re-firing
+  const match=wish.find(w=>{
+    const ws=(w.speciesName||'').toLowerCase();
+    const ns=(state.species||'').toLowerCase();
+    return ws===ns && (!w.stars||w.stars===state.stars) && (w.shiny===undefined||w.shiny===state.shiny);
+  });
+  if(!match)return;
+  _lastWishHit=key;
+  const banner=document.getElementById('wishAlert');
+  const sprite=state.sprite||(typeof spriteChain==='function'?spriteChain(match.species,state.shiny)[0]:'');
+  banner.innerHTML=`<img src="${sprite}" onerror="this.style.visibility='hidden'"/><div class="wa-body">⭐ <b>WISHLIST MATCH HOSTING NOW!</b><br>${state.shiny?'✦ Shiny ':''}${state.species} · ${'★'.repeat(state.stars||0)} · ${state.tera||''} Tera — get the code on Discord!</div><button class="wa-x">Dismiss</button>`;
+  banner.classList.add('on');
+  banner.querySelector('.wa-x').onclick=()=>banner.classList.remove('on');
+  // also a celebratory toast and browser notification if permission granted
+  if(typeof toast==='function')toast(`⭐ Wishlist hit: ${state.species}!`);
+  try{if('Notification' in window && Notification.permission==='granted'){new Notification('⭐ PKM Universe — Wishlist Match!',{body:`${state.shiny?'✦ Shiny ':''}${state.species} ${state.stars}★ is hosting NOW`,icon:'/icon.svg'});}}catch(_){}
+}
+// Re-check the wishlist whenever an SSE state event arrives. The existing bindSSE() handler
+// already calls updateNow(); we patch it to ALSO call checkWishlistAlert(state).
+const _origUpdateNow=updateNow;updateNow=function(d){_origUpdateNow(d);try{checkWishlistAlert(d);}catch(_){}};
+// Ask for notification permission once when the user adds something to the wishlist
+const _origToggleWish=(typeof toggleWish==='function')?toggleWish:null;
+if(_origToggleWish){window.toggleWish=function(r){const result=_origToggleWish(r);if(result&&'Notification' in window && Notification.permission==='default'){Notification.requestPermission().catch(()=>{});}return result;};}
+
+// ============================================================
+// 🌐 WEBGL GLOBE — live world map of hosts
+// ============================================================
+let _globe=null;
+async function openGlobe(){
+  const m=document.getElementById('globeModal');m.classList.add('on');
+  if(typeof THREE==='undefined'){toast('Globe needs Three.js — check your network.');return;}
+  if(_globe){try{_globe.cleanup();}catch(_){}_globe=null;}
+  // Fetch host list
+  let hosts=[];
+  try{const r=await(await fetch('/api/network/hosts')).json();hosts=r.hosts||[];}catch(_){}
+  document.getElementById('globeSub').textContent=`${hosts.length} host${hosts.length===1?'':'s'} · ${hosts.filter(h=>h.active).length} currently hosting`;
+  requestAnimationFrame(()=>{
+    const canvas=document.getElementById('globeCanvas');
+    const w=canvas.clientWidth||680,h=canvas.clientHeight||580;
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(window.devicePixelRatio);renderer.setSize(w,h,false);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(45,w/h,0.1,100);camera.position.set(0,0,4);
+    scene.add(new THREE.AmbientLight(0x303048,1.3));
+    const dir=new THREE.DirectionalLight(0xa8d4ff,1.2);dir.position.set(3,2,4);scene.add(dir);
+    // Wireframe globe (no texture for snappy load)
+    const sphereGeo=new THREE.SphereGeometry(1.4,48,32);
+    const sphereMat=new THREE.MeshPhongMaterial({color:0x0f3a6e,shininess:30,transparent:true,opacity:0.85,wireframe:false});
+    const sphere=new THREE.Mesh(sphereGeo,sphereMat);scene.add(sphere);
+    // Wireframe overlay (continents-feel without a texture)
+    const wireGeo=new THREE.SphereGeometry(1.405,32,20);
+    const wireMat=new THREE.MeshBasicMaterial({color:0x4d90d5,wireframe:true,transparent:true,opacity:0.35});
+    const wire=new THREE.Mesh(wireGeo,wireMat);scene.add(wire);
+    // Atmosphere glow
+    const atmosGeo=new THREE.SphereGeometry(1.55,48,32);
+    const atmosMat=new THREE.MeshBasicMaterial({color:0x4d90d5,transparent:true,opacity:0.10,side:THREE.BackSide});
+    scene.add(new THREE.Mesh(atmosGeo,atmosMat));
+    // Convert lat/lng to xyz on sphere
+    function ll2xyz(lat,lng,r){const phi=(90-lat)*Math.PI/180,theta=(lng+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));}
+    // Place a glowing dot per host
+    const dotMeshes=[];
+    hosts.forEach(host=>{
+      const pos=ll2xyz(host.lat,host.lng,1.42);
+      const color=host.primary?0xffd700:(host.active?0x3ee06a:0x4d90d5);
+      const size=host.primary?0.06:(host.active?0.045:0.035);
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(size,16,12),new THREE.MeshBasicMaterial({color}));
+      dot.position.copy(pos);dot.userData=host;scene.add(dot);
+      // Pulse ring
+      const ring=new THREE.Mesh(new THREE.RingGeometry(size*1.5,size*2.2,24),new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.6,side:THREE.DoubleSide}));
+      ring.position.copy(pos);ring.lookAt(0,0,0);ring.userData={isRing:true,host};scene.add(ring);
+      dotMeshes.push({dot,ring,color,size,host});
+    });
+    // Drag rotation + zoom
+    let rotY=0,rotX=0,isDragging=false,lastX=0,lastY=0,autoSpin=true,camDist=4;
+    function onDown(e){isDragging=true;autoSpin=false;const t=e.touches?.[0];lastX=t?t.clientX:e.clientX;lastY=t?t.clientY:e.clientY;}
+    function onMove(e){if(!isDragging)return;const t=e.touches?.[0];const cx=t?t.clientX:e.clientX;const cy=t?t.clientY:e.clientY;rotY+=(cx-lastX)*0.008;rotX+=(cy-lastY)*0.008;rotX=Math.max(-1.2,Math.min(1.2,rotX));lastX=cx;lastY=cy;}
+    function onUp(){isDragging=false;}
+    function onWheel(e){e.preventDefault();camDist=Math.max(2.5,Math.min(7,camDist+e.deltaY*0.003));}
+    // Click → tooltip
+    const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();const tip=document.getElementById('globeTip');
+    function onClick(e){
+      const rect=canvas.getBoundingClientRect();
+      mouse.x=((e.clientX-rect.left)/rect.width)*2-1;mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+      raycaster.setFromCamera(mouse,camera);
+      const hits=raycaster.intersectObjects(dotMeshes.map(d=>d.dot));
+      if(hits.length){
+        const host=hits[0].object.userData;
+        tip.innerHTML=`<b>${host.name}</b><br>${host.country||''}${host.primary?' · MAIN':''}${host.demo?' · (demo node)':''}${host.active?`<span class="gt-now">▶ Hosting: ${host.shiny?'✦ Shiny ':''}${host.species||'?'} ${'★'.repeat(host.stars||0)}</span>`:''}`;
+        tip.style.left=(e.clientX-rect.left+12)+'px';tip.style.top=(e.clientY-rect.top+12)+'px';
+        tip.classList.add('on');setTimeout(()=>tip.classList.remove('on'),5000);
+      }else{tip.classList.remove('on');}
+    }
+    canvas.addEventListener('mousedown',onDown);window.addEventListener('mousemove',onMove);window.addEventListener('mouseup',onUp);
+    canvas.addEventListener('touchstart',onDown,{passive:true});window.addEventListener('touchmove',onMove,{passive:true});window.addEventListener('touchend',onUp);
+    canvas.addEventListener('wheel',onWheel,{passive:false});canvas.addEventListener('click',onClick);
+    let running=true,frame=0;
+    (function loop(){
+      if(!running)return;
+      if(autoSpin)rotY+=0.0025;
+      sphere.rotation.y=rotY;sphere.rotation.x=rotX;
+      wire.rotation.y=rotY;wire.rotation.x=rotX;
+      dotMeshes.forEach(d=>{d.dot.position.copy(ll2xyz(d.host.lat,d.host.lng,1.42).applyEuler(new THREE.Euler(rotX,rotY,0)));d.ring.position.copy(d.dot.position);d.ring.lookAt(camera.position);
+        const pulse=1+Math.sin(frame*0.06+d.host.lng*0.05)*0.25;d.ring.scale.set(pulse,pulse,pulse);});
+      camera.position.set(0,0,camDist);camera.lookAt(0,0,0);
+      renderer.render(scene,camera);frame++;requestAnimationFrame(loop);
+    })();
+    _globe={cleanup(){running=false;canvas.removeEventListener('mousedown',onDown);window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',onUp);canvas.removeEventListener('touchstart',onDown);window.removeEventListener('touchmove',onMove);window.removeEventListener('touchend',onUp);canvas.removeEventListener('wheel',onWheel);canvas.removeEventListener('click',onClick);try{renderer.dispose();sphereGeo.dispose();sphereMat.dispose();wireGeo.dispose();wireMat.dispose();}catch(_){}}};
+  });
+}
+function closeGlobe(){document.getElementById('globeModal').classList.remove('on');if(_globe){try{_globe.cleanup();}catch(_){}_globe=null;}}
+document.getElementById('globeFab').addEventListener('click',openGlobe);
+document.getElementById('globeClose').addEventListener('click',closeGlobe);
+document.getElementById('globeModal').addEventListener('click',e=>{if(e.target.id==='globeModal')closeGlobe();});
+
+// Load recommendations once the page settles (after auth + species + wishlist init)
+window.addEventListener('load',()=>{setTimeout(loadRecommendations,1500);});
+
+// ============================================================
+// 🏆 ACHIEVEMENTS
+// ============================================================
+let _achDefs=null, _achUnlocked=new Set(), _achProgress={};
+
+async function loadAchievements(){
+  try{
+    const r=await(await fetch('/api/achievements')).json();
+    _achDefs=r.definitions||[];_achProgress=r.progress||{};
+    const prevUnlocked=new Set(_achUnlocked);
+    _achUnlocked=new Set(r.unlocked||[]);
+    // Detect newly unlocked → celebrate
+    for(const id of _achUnlocked){if(!prevUnlocked.has(id)){const def=_achDefs.find(d=>d.id===id);if(def&&prevUnlocked.size>0)celebrateAchievement(def);}}
+    // Badge count on fab
+    const badge=document.getElementById('achBadge');
+    if(_achUnlocked.size>0){badge.textContent=_achUnlocked.size;badge.style.display='block';}else{badge.style.display='none';}
+    // Render the modal body if it's open or for later
+    renderAchievementBody(r.loggedIn);
+  }catch(_){}
+}
+
+function renderAchievementBody(loggedIn){
+  if(!_achDefs)return;
+  const body=document.getElementById('achBody');
+  if(loggedIn===false){body.innerHTML='<div style="color:var(--muted);text-align:center;padding:40px">Log in with Discord to start earning achievements!</div>';document.getElementById('ahSub').textContent='Log in to start earning badges.';document.getElementById('ahPct').textContent='—';return;}
+  const total=_achDefs.length, unlocked=_achUnlocked.size, pct=Math.round(unlocked/total*100);
+  document.getElementById('ahSub').textContent=`${unlocked} / ${total} unlocked · keep going!`;
+  document.getElementById('ahPct').textContent=pct+'%';
+  document.getElementById('ahBar').style.width=pct+'%';
+  // Group by category
+  const cats={};_achDefs.forEach(d=>{(cats[d.category]=cats[d.category]||[]).push(d);});
+  body.innerHTML=Object.entries(cats).map(([cat,list])=>{
+    const cards=list.map(d=>{
+      const have=_achProgress[d.id]||0;
+      const done=_achUnlocked.has(d.id);
+      const barpct=Math.min(100,Math.round(have/d.target*100));
+      return `<div class="ach-card ${done?'unlocked':''}">${done?'<span class="ach-tick">✓</span>':''}<div class="ach-icon">${d.icon}</div><div class="ach-body"><div class="ach-name">${d.name}</div><div class="ach-desc">${d.description}</div>${d.target>1?`<div class="ach-mini"><div style="width:${barpct}%"></div></div><div class="ach-count">${Math.min(have,d.target)} / ${d.target}</div>`:''}</div></div>`;
+    }).join('');
+    return `<div class="ach-cat"><h5>${cat}</h5><div class="ach-grid">${cards}</div></div>`;
+  }).join('');
+}
+
+function celebrateAchievement(def){
+  const t=document.getElementById('achtoast');
+  t.innerHTML=`<span class="ai">${def.icon}</span><div><div style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:800;opacity:.7">Achievement Unlocked!</div><div>${def.name}</div></div>`;
+  t.classList.add('show');
+  if(typeof confetti==='function'){const rect=t.getBoundingClientRect();confetti(rect.left+rect.width/2,rect.top+rect.height/2);}
+  clearTimeout(t._tt);t._tt=setTimeout(()=>t.classList.remove('show'),4500);
+}
+
+// Fire UI events to the backend (no-op if not logged in)
+function achEvent(eventType,detail){
+  fetch('/api/achievements/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventType,detail:detail||null})}).then(r=>r.ok?loadAchievements():null).catch(()=>{});
+}
+
+// Wire the fab + modal
+document.getElementById('achFab').addEventListener('click',()=>{document.getElementById('achModal').classList.add('on');loadAchievements();});
+document.getElementById('achClose').addEventListener('click',()=>document.getElementById('achModal').classList.remove('on'));
+document.getElementById('achModal').addEventListener('click',e=>{if(e.target.id==='achModal')document.getElementById('achModal').classList.remove('on');});
+
+// Wire event reporters by monkey-patching the existing handlers
+(function wireAchievementHooks(){
+  // 3D viewer opens
+  const _oV3=window.showViewer3D;if(_oV3)window.showViewer3D=function(r){achEvent('viewer3d_open');return _oV3(r);};
+  // Coach views
+  const _oC=window.showCoach;if(_oC)window.showCoach=function(r){achEvent('coach_view');if(r&&r.teraName)achEvent('tera_caught',r.teraName);return _oC(r);};
+  // Party builder
+  const _oP=window.showPartyBuilder;if(_oP)window.showPartyBuilder=function(r){achEvent('party_builder');return _oP(r);};
+  // Globe open
+  const _oG=window.openGlobe;if(_oG)window.openGlobe=function(){achEvent('globe_open');return _oG();};
+  // Share
+  const _oS=window.shareSeed;if(_oS)window.shareSeed=function(r){achEvent('share_copied');return _oS(r);};
+  // Voice mic
+  const _mic=document.getElementById('aimic');if(_mic)_mic.addEventListener('click',()=>achEvent('voice_used'));
+  // Vision (file input)
+  const _file=document.getElementById('aifile');if(_file)_file.addEventListener('change',e=>{if(e.target.files&&e.target.files.length)achEvent('vision_used');});
+  // Chat send → message counter
+  const _send=document.getElementById('chatSend');if(_send)_send.addEventListener('click',()=>achEvent('chat_msg'));
+})();
+
+// Initial achievements load + a poll on focus to catch updates
+window.addEventListener('load',()=>{setTimeout(loadAchievements,1800);});
+window.addEventListener('focus',()=>{if(_achDefs)loadAchievements();});
+
+// ============================================================
+// ⭐ CUSTOM PRESETS (localStorage) — save the current filter set
+// ============================================================
+const CPRESET_KEY='pku_presets';
+function getCustomPresets(){try{return JSON.parse(localStorage.getItem(CPRESET_KEY)||'[]');}catch(_){return[];}}
+function renderCustomPresets(){
+  const box=document.getElementById('presets');
+  // remove old custom chips, keep built-ins
+  box.querySelectorAll('.preset.custom').forEach(b=>b.remove());
+  getCustomPresets().forEach((p,idx)=>{
+    const b=document.createElement('button');b.className='preset custom';b.innerHTML=`⭐ ${p.name} <span style="opacity:.5;margin-left:4px">✕</span>`;
+    b.onclick=e=>{
+      if(e.offsetX>b.clientWidth-22){const l=getCustomPresets();l.splice(idx,1);localStorage.setItem(CPRESET_KEY,JSON.stringify(l));renderCustomPresets();toast('Preset removed');return;}
+      Object.entries(p.f).forEach(([k,v])=>{const el=document.getElementById(k);if(el&&v!=null&&v!=='')el.value=v;});
+      toast('⭐ '+p.name+' applied');maybeRealtime();
+    };
+    box.appendChild(b);
+  });
+}
+document.getElementById('savePreset').addEventListener('click',()=>{
+  const name=prompt('Name this preset:','My filter');if(!name)return;
+  const f={};['game','location','progress','stars','species','shiny','tera','ivs','max','nature','gender','hidden','scale','rewarditem','rewardqty','multispecies','startseed'].forEach(id=>{const el=document.getElementById(id);if(el&&el.value)f[id]=el.value;});
+  const l=getCustomPresets();l.push({name,f});localStorage.setItem(CPRESET_KEY,JSON.stringify(l));renderCustomPresets();toast('⭐ Saved preset: '+name);
+});
+window.addEventListener('load',()=>setTimeout(renderCustomPresets,300));
+
+// ============================================================
+// 📂 Hydrate a saved /list/<id> on load
+// ============================================================
+async function hydrateList(){
+  const m=location.pathname.match(/^\/list\/([0-9a-fA-F]{4,8})/);
+  if(!m)return;
+  const banner=document.getElementById('permabanner');
+  banner.innerHTML=`📂 <b>Loading saved list…</b>`;banner.classList.add('on');
+  try{
+    const r=await(await fetch('/api/lists/'+m[1])).json();
+    if(!r.ok||!r.list){banner.innerHTML='📂 List not found.';return;}
+    const L=r.list;
+    if(L.location)document.getElementById('location').value=L.location;
+    if(L.storyProgress)document.getElementById('progress').value=String(L.storyProgress);
+    // open the lookup panel + run the saved seeds through it
+    document.querySelector('.lookup').open=true;
+    document.getElementById('lookupinput').value=(L.seeds||[]).join('\n');
+    banner.innerHTML=`📂 <b>${L.name}</b> — ${(L.seeds||[]).length} seeds loaded into the lookup tool below.`;
+    document.getElementById('lookupbtn').click();
+  }catch(e){banner.innerHTML='📂 Couldn\'t load list — '+e.message;}
+}
+window.addEventListener('load',()=>setTimeout(hydrateList,60));
+
+// Hydrate permalink (waits until card() exists; this script runs after card is defined)
+window.addEventListener('load',()=>{setTimeout(hydratePermalink,40);});
+
+// --- Service Worker (PWA install) ---
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}
+
+const cv=document.getElementById('bgstars'),ctx=cv.getContext('2d');let W,H,ds;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;ds=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.3,s:Math.random()*.25+.05}));}rs();addEventListener('resize',rs);(function lp(){ctx.clearRect(0,0,W,H);for(const d of ds){d.y-=d.s;if(d.y<0){d.y=H;d.x=Math.random()*W;}ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,7);ctx.fillStyle='rgba(212,175,55,'+(d.r*.35)+')';ctx.fill();}requestAnimationFrame(lp);})();
+</script>
+</body>
+</html>

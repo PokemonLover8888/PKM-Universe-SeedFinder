@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PKM Universe · Pokédex</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d4af37'/%3E%3Ctext x='16' y='23' font-size='15' font-weight='800' text-anchor='middle' fill='%23000' font-family='sans-serif'%3EPU%3C/text%3E%3C/svg%3E" />
+<style>
+  :root{ --gold:#d4af37; --gold-lt:#f3d979; --gold-dim:#9c8128; --bg:#0a0a0d; --panel:#15151b; --panel2:#1e1e27; --line:#2c2c36; --text:#eef0f3; --muted:#9a9aa6; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1300px 760px at 50% -18%,#23232f,var(--bg));color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;}
+  /* subtle floating bokeh background */
+  .bokeh{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+  .bokeh i{position:absolute;border-radius:50%;filter:blur(1px);opacity:.5;animation:float linear infinite;}
+  @keyframes float{from{transform:translateY(20px);}to{transform:translateY(-40px);}}
+  .wrap{position:relative;z-index:1;}
+  .wrap{max-width:1240px;margin:0 auto;padding:22px 18px 90px;}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+  .logo{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;font-size:22px;box-shadow:0 0 34px rgba(212,175,55,.5);}
+  h1{font-size:26px;margin:0;font-weight:800;letter-spacing:-.3px;}
+  h1 .grad{background:linear-gradient(90deg,var(--gold),#fff6d8,var(--gold-lt),var(--gold));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 6s linear infinite;}@keyframes shimmer{to{background-position:200% center;}}
+  .livecount{margin-left:auto;background:linear-gradient(135deg,#10261a,#0c1c13);color:#7fe39a;border:1px solid #2e7d46;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:800;box-shadow:0 0 18px rgba(46,125,70,.25);}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 16px;}
+  .stickybar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--bg) 70%,transparent);padding:10px 0 8px;backdrop-filter:blur(6px);}
+  .controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+  .controls input[type=text]{flex:1;min-width:210px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px 16px;font-size:14px;}
+  .controls input:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(212,175,55,.16);}
+  .controls select{background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:11px;font-size:13px;cursor:pointer;}
+  .toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;user-select:none;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;transition:.15s;}
+  .toggle.on{background:#241f10;border-color:var(--gold-dim);color:var(--gold-lt);box-shadow:0 0 16px rgba(212,175,55,.2);}
+  .typefilter{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0 6px;}
+  .tf{font-size:11px;font-weight:700;border-radius:8px;padding:5px 11px;cursor:pointer;border:1px solid transparent;opacity:.45;transition:.15s;}
+  .tf:hover{opacity:.85;}
+  .tf.on{opacity:1;box-shadow:0 0 0 2px #fff4,0 0 12px currentColor;}
+  .bar2{display:flex;gap:12px;align-items:center;margin:8px 0 14px;flex-wrap:wrap;}
+  .count{color:var(--muted);font-size:12px;font-weight:700;}
+  .livedex-bar{flex:1;min-width:200px;display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);}
+  .ld-track{flex:1;height:9px;background:var(--panel2);border-radius:6px;overflow:hidden;}
+  .ld-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-lt));border-radius:6px;transition:width .5s;box-shadow:0 0 12px rgba(212,175,55,.4);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+  .dex{position:relative;border-radius:18px;padding:14px 12px 12px;text-align:center;cursor:pointer;overflow:hidden;border:1px solid var(--line);
+    background:linear-gradient(170deg,#1b1b24,#0f0f15);transition:transform .18s,box-shadow .18s,border-color .18s;
+    opacity:0;transform:translateY(10px);animation:cardIn .4s ease forwards;}
+  @keyframes cardIn{to{opacity:1;transform:translateY(0);}}
+  .dex::before{content:'';position:absolute;inset:0;opacity:.16;background:var(--tint,transparent);transition:opacity .18s;}
+  .dex::after{content:'';position:absolute;top:-60%;left:-60%;width:60%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);transform:rotate(18deg);transition:.5s;opacity:0;}
+  .dex:hover{transform:translateY(-5px) scale(1.02);border-color:var(--gold);box-shadow:0 16px 40px rgba(0,0,0,.55),0 0 0 1px rgba(212,175,55,.3);}
+  .dex:hover::before{opacity:.28;}
+  .dex:hover::after{left:120%;opacity:1;}
+  .dex.caught{border-color:#2e7d46;}
+  .dex.caught .cmark{display:grid;}
+  .cmark{display:none;position:absolute;bottom:8px;right:9px;width:20px;height:20px;border-radius:50%;background:#2e7d46;color:#fff;place-items:center;font-weight:900;font-size:12px;z-index:2;box-shadow:0 0 10px rgba(46,125,70,.6);}
+  .dex .num{position:absolute;top:9px;right:10px;font-size:10px;color:#cfd0d6;font-weight:800;z-index:2;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:3px 9px;}
+  .dex .raidbadge{position:absolute;top:9px;left:10px;font-size:9px;font-weight:800;background:#16261a;color:#7fe39a;border:1px solid #2e7d46;border-radius:999px;padding:3px 8px;z-index:2;}
+  .dex .imgwrap{position:relative;z-index:1;height:120px;display:grid;place-items:center;margin-top:8px;}
+  .dex img.art{width:124px;height:124px;object-fit:contain;filter:drop-shadow(0 8px 12px rgba(0,0,0,.55));transition:transform .2s;}
+  .dex:hover img.art{transform:scale(1.12) translateY(-3px);}
+  .dex .nm{font-weight:800;font-size:15px;margin-top:8px;position:relative;z-index:1;}
+  .dex .types{display:flex;gap:6px;justify-content:center;margin-top:9px;min-height:20px;position:relative;z-index:1;}
+  .typ{font-size:10px;font-weight:800;border-radius:999px;padding:3px 13px;text-transform:uppercase;letter-spacing:.5px;color:#fff;box-shadow:0 2px 5px rgba(0,0,0,.45);}
+  /* Modal */
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;backdrop-filter:blur(3px);}
+  #modal.on{display:flex;}
+  .dwrap{background:linear-gradient(180deg,#1b1b27,#0d0d13);border:1px solid var(--gold-dim);border-radius:20px;max-width:680px;width:100%;max-height:94vh;overflow-y:auto;position:relative;box-shadow:0 40px 110px rgba(0,0,0,.75);animation:modalIn .25s ease;}
+  @keyframes modalIn{from{transform:scale(.96) translateY(8px);opacity:0;}to{transform:none;opacity:1;}}
+  .hero{position:relative;padding:22px 22px 14px;border-radius:20px 20px 0 0;overflow:hidden;}
+  .hero::before{content:'';position:absolute;inset:0;opacity:.5;background:var(--htint,#222);}
+  .hero::after{content:'';position:absolute;inset:0;background:radial-gradient(420px 240px at 78% 30%,rgba(255,255,255,.18),transparent);}
+  .dclose{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.35);border:none;color:#fff;font-size:18px;cursor:pointer;z-index:3;width:30px;height:30px;border-radius:50%;}
+  .dnav{position:absolute;top:12px;left:14px;display:flex;gap:6px;z-index:3;}
+  .dnav button{background:rgba(0,0,0,.35);border:none;color:#fff;border-radius:8px;width:30px;height:28px;cursor:pointer;font-size:15px;}
+  .herorow{position:relative;z-index:2;display:flex;gap:18px;align-items:center;}
+  .herorow img{width:150px;height:150px;object-fit:contain;cursor:pointer;filter:drop-shadow(0 8px 14px rgba(0,0,0,.6));}
+  .dt-num{font-size:12px;color:rgba(255,255,255,.7);font-weight:800;}
+  .dt-name{font-size:30px;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.5);}
+  .dt-types{display:flex;gap:7px;margin-top:8px;}
+  .miscrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;position:relative;z-index:2;}
+  .chip{font-size:11px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,.85);}
+  .chip b{color:#fff;}
+  .caughtbtn{font-size:11px;font-weight:800;border-radius:8px;padding:4px 12px;cursor:pointer;border:1px solid #2e7d46;background:#10261a;color:#7fe39a;}
+  .caughtbtn.no{background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.18);color:rgba(255,255,255,.7);}
+  .flavor{position:relative;z-index:2;margin-top:12px;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.82);line-height:1.5;max-width:560px;}
+  .body{padding:6px 22px 22px;}
+  .tabs{display:flex;gap:4px;margin:8px 0 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .tab{font-size:12px;font-weight:700;padding:9px 13px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;}
+  .tab:hover{color:var(--text);}
+  .tab.on{color:var(--gold-lt);border-bottom-color:var(--gold);}
+  .tabpane{display:none;}.tabpane.on{display:block;animation:fadeIn .25s;}@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .sec-label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:800;margin:14px 0 9px;}
+  .statwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+  .stats{display:flex;flex-direction:column;gap:6px;flex:1;min-width:220px;}
+  .stat{display:grid;grid-template-columns:34px 1fr 32px;align-items:center;gap:9px;font-size:11px;}
+  .stat small{color:var(--muted);font-weight:700;}
+  .stat .bar{height:9px;background:var(--panel2);border-radius:5px;overflow:hidden;}
+  .stat .fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.2,.9,.3,1);}
+  .stat .v{text-align:right;font-weight:800;}
+  .gallery{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+  .gallery .g{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px;width:74px;text-align:center;}
+  .gallery .g img{width:58px;height:58px;object-fit:contain;}
+  .gallery .g small{font-size:9px;color:var(--muted);display:block;}
+  .abil{display:flex;gap:7px;flex-wrap:wrap;}
+  .abil span{font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 11px;}
+  .abil .ha{border-color:#6a4a8a;color:#d6a8ff;}
+  .evochain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .evostage{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:9px;text-align:center;cursor:pointer;width:98px;transition:.15s;}
+  .evostage:hover{border-color:var(--gold);transform:translateY(-2px);}
+  .evostage img{width:60px;height:60px;object-fit:contain;}
+  .evostage .en{font-size:10.5px;font-weight:700;}
+  .evoarrow{color:var(--muted);font-size:12px;text-align:center;}.evoarrow .cond{font-size:9px;display:block;max-width:70px;color:var(--gold-lt);}
+  .forms{display:flex;gap:6px;flex-wrap:wrap;}
+  .formbtn{font-size:11px;font-weight:700;background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:6px 12px;cursor:pointer;}
+  .formbtn.on{border-color:var(--gold);color:var(--gold-lt);background:#241f10;}
+  .matchgrid{display:flex;flex-direction:column;gap:8px;}
+  .matchrow{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+  .matchrow .ml{font-size:11px;font-weight:800;width:64px;color:var(--muted);}
+  .mx{font-size:10px;font-weight:800;border-radius:6px;padding:2px 7px;color:#fff;}
+  .raidcard{background:#13131a;border:1px solid var(--line);border-radius:13px;padding:13px;}
+  .raidcard.yes{border-color:#2e7d46;box-shadow:0 0 18px rgba(46,125,70,.15);}
+  .raidmap{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px;}
+  .stbadge{font-size:10px;font-weight:800;background:#241f10;color:var(--gold-lt);border:1px solid var(--gold-dim);border-radius:6px;padding:2px 8px;}
+  .counters{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .ctr{font-size:11px;font-weight:700;border-radius:8px;padding:4px 10px;color:#fff;}
+  .findbtn{width:100%;margin-top:13px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));color:#000;font-weight:800;border:none;border-radius:12px;padding:13px;font-size:14px;cursor:pointer;transition:.15s;}
+  .findbtn:hover:not(:disabled){filter:brightness(1.08);}
+  .findbtn:disabled{opacity:.4;cursor:not-allowed;}
+  .movelist{display:flex;flex-direction:column;gap:3px;max-height:280px;overflow-y:auto;}
+  .moverow{display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:center;font-size:12px;background:var(--panel2);border-radius:7px;padding:6px 10px;}
+  .moverow .lv{color:var(--gold-lt);font-weight:800;font-size:10px;}
+  .cmpwrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .cmpcol{text-align:center;}.cmpcol img{width:96px;height:96px;object-fit:contain;}
+  .loading{text-align:center;color:var(--muted);padding:44px;font-size:14px;}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;}@keyframes sp{to{transform:rotate(360deg);}}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:44px;}
+  #sentinel{height:40px;}
+  @media(max-width:560px){.cmpwrap{grid-template-columns:1fr;}.herorow{flex-direction:column;text-align:center;}.dt-types{justify-content:center;}}
+</style>
+</head>
+<body>
+<div class="bokeh" id="bokeh"></div>
+<div class="wrap">
+  <header>
+    <div class="logo">PU</div>
+    <h1>PKM Universe · <span class="grad">Pokédex</span></h1>
+    <span class="livecount" id="livecount">Living Dex 0%</span>
+  </header>
+  <p class="sub">Gen 1–9 · official artwork · evolution lines · forms · learnsets · type matchups · live Tera-raid intelligence from our own engine · click the artwork to hear its cry · ✦ shiny · ✓ track your Living Dex.</p>
+
+  <div class="stickybar">
+    <div class="controls">
+      <input type="text" id="q" placeholder="Search name or #dex…" autocomplete="off"/>
+      <select id="gen"><option value="">All Gens</option><option value="1">Gen 1</option><option value="2">Gen 2</option><option value="3">Gen 3</option><option value="4">Gen 4</option><option value="5">Gen 5</option><option value="6">Gen 6</option><option value="7">Gen 7</option><option value="8">Gen 8</option><option value="9">Gen 9</option></select>
+      <select id="sort"><option value="dex">Sort: Dex #</option><option value="name">Name A–Z</option><option value="bst">Highest BST</option><option value="hp">HP</option><option value="atk">Attack</option><option value="def">Defense</option><option value="spa">Sp. Atk</option><option value="spd">Sp. Def</option><option value="spe">Speed</option></select>
+      <select id="raidonly"><option value="">All Pokémon</option><option value="1">🟢 Raid bosses only</option><option value="caught">✓ Caught only</option><option value="uncaught">○ Uncaught only</option></select>
+      <div class="toggle" id="shinyToggle">✦ Shiny</div>
+      <div class="toggle" id="cmpToggle">⚖ Compare</div>
+    </div>
+    <div class="typefilter" id="typeFilter"></div>
+  </div>
+  <div class="bar2">
+    <div class="count" id="count"></div>
+    <div class="livedex-bar"><span>Living Dex</span><div class="ld-track"><div class="ld-fill" id="ldfill" style="width:0%"></div></div><span id="ldtext">0 / 1025</span></div>
+  </div>
+  <div class="grid" id="grid"><div class="loading"><span class="spinner"></span> Loading Pokédex…</div></div>
+  <div id="sentinel"></div>
+  <footer>PKM Universe Reborn · Pokédex · data from PokéAPI + the Raid-SV seed engine</footer>
+</div>
+
+<div id="modal"><div class="dwrap" id="dwrap"></div></div>
+
+<script>
+const TC={Normal:"#9099a1",Fighting:"#ce4069",Flying:"#8fa8dd",Poison:"#ab6ac8",Ground:"#d97746",Rock:"#c7b78b",Bug:"#90c12c",Ghost:"#5269ac",Steel:"#5a8ea1",Fire:"#ff9d55",Water:"#4d90d5",Grass:"#63bb5b",Electric:"#f3d23b",Psychic:"#f97176",Ice:"#74cec0",Dragon:"#0a6dc4",Dark:"#5a5366",Fairy:"#ec8fe6"};
+const TYPES=Object.keys(TC);
+const STAT_LABELS=["HP","Atk","Def","SpA","SpD","Spe"];
+const GEN_RANGES=[[1,151],[152,251],[252,386],[387,493],[494,649],[650,721],[722,809],[810,905],[906,1025]];
+const CHART={Normal:{Rock:.5,Ghost:0,Steel:.5},Fire:{Fire:.5,Water:.5,Grass:2,Ice:2,Bug:2,Rock:.5,Dragon:.5,Steel:2},Water:{Fire:2,Water:.5,Grass:.5,Ground:2,Rock:2,Dragon:.5},Electric:{Water:2,Electric:.5,Grass:.5,Ground:0,Flying:2,Dragon:.5},Grass:{Fire:.5,Water:2,Grass:.5,Poison:.5,Ground:2,Flying:.5,Bug:.5,Rock:2,Dragon:.5,Steel:.5},Ice:{Fire:.5,Water:.5,Grass:2,Ice:.5,Ground:2,Flying:2,Dragon:2,Steel:.5},Fighting:{Normal:2,Ice:2,Poison:.5,Flying:.5,Psychic:.5,Bug:.5,Rock:2,Ghost:0,Dark:2,Steel:2,Fairy:.5},Poison:{Grass:2,Poison:.5,Ground:.5,Rock:.5,Ghost:.5,Steel:0,Fairy:2},Ground:{Fire:2,Electric:2,Grass:.5,Poison:2,Flying:0,Bug:.5,Rock:2,Steel:2},Flying:{Electric:.5,Grass:2,Fighting:2,Bug:2,Rock:.5,Steel:.5},Psychic:{Fighting:2,Poison:2,Psychic:.5,Dark:0,Steel:.5},Bug:{Fire:.5,Grass:2,Fighting:.5,Poison:.5,Flying:.5,Psychic:2,Ghost:.5,Dark:2,Steel:.5,Fairy:.5},Rock:{Fire:2,Ice:2,Fighting:.5,Ground:.5,Flying:2,Bug:2,Steel:.5},Ghost:{Normal:0,Psychic:2,Ghost:2,Dark:.5},Dragon:{Dragon:2,Steel:.5,Fairy:0},Dark:{Fighting:.5,Psychic:2,Ghost:2,Dark:.5,Fairy:.5},Steel:{Fire:.5,Water:.5,Electric:.5,Ice:2,Rock:2,Steel:.5,Fairy:2},Fairy:{Fire:.5,Fighting:2,Poison:.5,Dragon:2,Dark:2,Steel:.5}};
+const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+const art=id=>id>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`:BLANK;
+const artS=id=>id>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${id}.png`:BLANK;
+const home=(id,s)=>id>0?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${s?'shiny/':''}${id}.png`:BLANK;
+const heroImg=(id)=>shiny?artS(id):art(id);
+
+let shiny=false, cmpMode=false, allDex=[], raidableSet=new Set(), filtered=[], renderLimit=60;
+let caught=new Set(JSON.parse(localStorage.getItem('pku_livingdex')||'[]'));
+let cmpPick=[];
+function saveCaught(){localStorage.setItem('pku_livingdex',JSON.stringify([...caught]));updateLivingDex();}
+function updateLivingDex(){const n=caught.size,t=allDex.length||1025,pct=Math.round(n/t*100);document.getElementById('ldfill').style.width=pct+'%';document.getElementById('ldtext').textContent=`${n} / ${t}`;document.getElementById('livecount').textContent=`Living Dex ${pct}%`;}
+
+// scatter soft bokeh dots
+(function(){const box=document.getElementById('bokeh');const cols=Object.values(TC);for(let i=0;i<22;i++){const d=document.createElement('i');const s=4+(i*37%10);d.style.width=d.style.height=s+'px';d.style.left=(i*53%100)+'%';d.style.top=(i*71%100)+'%';d.style.background=cols[i%cols.length];d.style.animationDuration=(6+i%7)+'s';d.style.animationDelay=(i%5)+'s';box.appendChild(d);}})();
+
+const tfBox=document.getElementById('typeFilter');let activeTypes=new Set();
+TYPES.forEach(t=>{const b=document.createElement('span');b.className='tf';b.textContent=t;b.style.background=TC[t]+'33';b.style.color=TC[t];b.style.border='1px solid '+TC[t]+'88';
+  b.onclick=()=>{activeTypes.has(t)?(activeTypes.delete(t),b.classList.remove('on')):(activeTypes.add(t),b.classList.add('on'));applyFilters();};tfBox.appendChild(b);});
+
+async function init(){
+  try{const sp=await(await fetch('/api/species?all=true')).json();allDex=sp.filter(s=>s.id>=1&&s.id<=1025).map(s=>({id:s.id,name:s.name}));}
+  catch(e){allDex=Array.from({length:1025},(_,i)=>({id:i+1,name:'#'+(i+1)}));}
+  try{for(const map of ['Paldea','Kitakami','Blueberry']){const r=await(await fetch(`/api/species?map=${map}&progress=6`)).json();r.forEach(s=>raidableSet.add(s.id));}}catch(_){}
+  updateLivingDex();applyFilters();
+}
+function genOf(id){for(let i=0;i<GEN_RANGES.length;i++)if(id>=GEN_RANGES[i][0]&&id<=GEN_RANGES[i][1])return i+1;return 9;}
+function cap(s){return s.split(/[\s-]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
+
+let typeCache={};
+async function getInfo(id){
+  if(typeCache[id])return typeCache[id];
+  try{const d=await(await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`)).json();
+    typeCache[id]={types:d.types.map(x=>cap(x.type.name)),stats:d.stats.map(s=>s.base_stat),abilities:d.abilities.map(a=>({name:cap(a.ability.name),hidden:a.is_hidden})),height:d.height,weight:d.weight,moves:d.moves,speciesUrl:d.species.url};
+    return typeCache[id];
+  }catch(_){return{types:[],stats:[],abilities:[],moves:[]};}
+}
+
+function applyFilters(){
+  const q=document.getElementById('q').value.trim().toLowerCase(),gen=document.getElementById('gen').value,raidonly=document.getElementById('raidonly').value;
+  filtered=allDex.filter(p=>{
+    if(q&&!(p.name.toLowerCase().includes(q)||String(p.id)===q.replace('#','')))return false;
+    if(gen&&genOf(p.id)!==parseInt(gen))return false;
+    if(raidonly==='1'&&!raidableSet.has(p.id))return false;
+    if(raidonly==='caught'&&!caught.has(p.id))return false;
+    if(raidonly==='uncaught'&&caught.has(p.id))return false;
+    return true;
+  });
+  renderLimit=60;render();
+}
+async function applySort(){
+  const s=document.getElementById('sort').value;
+  if(s==='dex'){filtered.sort((a,b)=>a.id-b.id);return;}
+  if(s==='name'){filtered.sort((a,b)=>a.name.localeCompare(b.name));return;}
+  const idx={bst:-1,hp:0,atk:1,def:2,spa:3,spd:4,spe:5}[s];
+  await Promise.all(filtered.slice(0,renderLimit).map(p=>getInfo(p.id)));
+  const val=p=>{const i=typeCache[p.id];if(!i||!i.stats.length)return -1;return idx===-1?i.stats.reduce((a,b)=>a+b,0):i.stats[idx];};
+  filtered.sort((a,b)=>val(b)-val(a));
+}
+
+async function render(){
+  await applySort();
+  const grid=document.getElementById('grid');
+  document.getElementById('count').textContent=`${filtered.length} Pokémon`;
+  if(!filtered.length){grid.innerHTML='<div class="loading">No matches.</div>';return;}
+  const show=filtered.slice(0,renderLimit);
+  grid.innerHTML=show.map((p,i)=>{const raid=raidableSet.has(p.id),isC=caught.has(p.id);
+    return `<div class="dex ${isC?'caught':''}" data-id="${p.id}" style="animation-delay:${Math.min(i*18,700)}ms">
+      <div class="num">#${String(p.id).padStart(4,'0')}</div>${raid?'<div class="raidbadge">🟢 RAID</div>':''}<div class="cmark">✓</div>
+      <div class="imgwrap"><img class="art" src="${home(p.id,shiny)}" loading="lazy" onerror="this.src='${shiny?artS(p.id):art(p.id)}';this.onerror=null;"/></div>
+      <div class="nm">${p.name}</div><div class="types" data-types="${p.id}"></div>
+    </div>`;}).join('');
+  grid.querySelectorAll('.dex').forEach(el=>{const id=+el.dataset.id;
+    el.onclick=()=>cmpMode?pickCompare(id):openDetail(id);
+    getInfo(id).then(info=>{const box=el.querySelector('.types');if(box&&info.types)box.innerHTML=info.types.map(t=>`<span class="typ" style="background:${TC[t]||'#555'}">${t}</span>`).join('');
+      if(info.types[0])el.style.setProperty('--tint',`radial-gradient(120px 90px at 50% 36%,${TC[info.types[0]]},transparent)`);
+      if(activeTypes.size&&!info.types.some(t=>activeTypes.has(t)))el.style.display='none';});
+  });
+}
+// infinite scroll
+new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&renderLimit<filtered.length){renderLimit+=60;render();}});}).observe(document.getElementById('sentinel'));
+
+function matchups(types){const mult={};TYPES.forEach(t=>mult[t]=1);types.forEach(def=>TYPES.forEach(atk=>{const m=(CHART[atk]&&CHART[atk][def]!==undefined)?CHART[atk][def]:1;mult[atk]*=m;}));
+  const b={'4×':[],'2×':[],'½×':[],'¼×':[],'0×':[]};TYPES.forEach(t=>{const m=mult[t];if(m===4)b['4×'].push(t);else if(m===2)b['2×'].push(t);else if(m===.5)b['½×'].push(t);else if(m===.25)b['¼×'].push(t);else if(m===0)b['0×'].push(t);});return b;}
+function matchHtml(types){const b=matchups(types),order=[['4×','Weak 4×'],['2×','Weak 2×'],['½×','Resist'],['¼×','Resist ¼×'],['0×','Immune']];
+  return `<div class="matchgrid">`+order.filter(([k])=>b[k].length).map(([k,l])=>`<div class="matchrow"><span class="ml">${l}</span>${b[k].map(t=>`<span class="mx" style="background:${TC[t]}">${t}</span>`).join('')}</div>`).join('')+`</div>`;}
+function bestCounterTypes(types){const sc={};TYPES.forEach(atk=>{let m=1;types.forEach(def=>m*=(CHART[atk]&&CHART[atk][def]!==undefined)?CHART[atk][def]:1);sc[atk]=m;});return Object.entries(sc).filter(([,m])=>m>1).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([t,m])=>({t,m}));}
+
+// animated radar
+function radar(stats){if(!stats||!stats.length)return '';const cx=70,cy=70,R=52,order=[0,1,2,5,4,3],labs=["HP","Atk","Def","Spe","SpD","SpA"];
+  let axes='',pts=[],lbl='';for(let k=0;k<6;k++){const a=(-90+k*60)*Math.PI/180,gx=cx+Math.cos(a)*R,gy=cy+Math.sin(a)*R;axes+=`<line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" stroke="#33333f"/>`;
+    const v=Math.min(stats[order[k]],200),rr=R*(v/200),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;pts.push(`${px},${py}`);
+    const lx=cx+Math.cos(a)*(R+13),ly=cy+Math.sin(a)*(R+13);lbl+=`<text x="${lx}" y="${ly+3}" fill="#9a9aa6" font-size="9" font-weight="700" text-anchor="middle">${labs[k]}</text>`;}
+  const rings=[1,.66,.33].map(f=>`<polygon points="${[0,1,2,3,4,5].map(k=>{const a=(-90+k*60)*Math.PI/180;return `${cx+Math.cos(a)*R*f},${cy+Math.sin(a)*R*f}`;}).join(' ')}" fill="none" stroke="#23232c"/>`).join('');
+  return `<svg width="148" height="148" viewBox="0 0 140 140">${rings}${axes}<polygon points="${pts.join(' ')}" fill="${'rgba(212,175,55,.33)'}" stroke="${'#d4af37'}" stroke-width="2"/>${lbl}</svg>`;}
+
+async function evoHtml(speciesUrl){try{const sp=await(await fetch(speciesUrl)).json(),ev=await(await fetch(sp.evolution_chain.url)).json(),stages=[];
+  function walk(n,cond){const m=n.species.url.match(/\/(\d+)\/$/),id=m?+m[1]:0;stages.push({id,name:cap(n.species.name),cond});
+    n.evolves_to.forEach(n2=>{const d=n2.evolution_details[0]||{};let c='';if(d.min_level)c='Lv '+d.min_level;else if(d.item)c=cap(d.item.name);else if(d.trigger&&d.trigger.name==='trade')c='Trade';else if(d.min_happiness)c='Friendship';else if(d.held_item)c=cap(d.held_item.name);else c='—';walk(n2,c);});}
+  walk(ev.chain,null);if(stages.length<2)return '<div style="color:var(--muted);font-size:12px">Does not evolve.</div>';
+  let h='<div class="evochain">';stages.forEach((s,i)=>{if(i>0&&s.cond)h+=`<div class="evoarrow">▶<span class="cond">${s.cond}</span></div>`;h+=`<div class="evostage" onclick="openDetail(${s.id})"><img src="${shiny?artS(s.id):art(s.id)}" onerror="this.src='${home(s.id,shiny)}';this.onerror=null"/><div class="en">${s.name}</div></div>`;});return h+'</div>';
+}catch(_){return '<div style="color:var(--muted);font-size:12px">Evolution data unavailable.</div>';}}
+
+async function formsHtml(speciesUrl,curId){try{const sp=await(await fetch(speciesUrl)).json();if(sp.varieties.length<2)return '';
+  const btns=sp.varieties.map(v=>{const m=v.pokemon.url.match(/\/(\d+)\/$/),id=m?+m[1]:0,label=cap(v.pokemon.name.replace(sp.name+'-',''))||'Base';return `<button class="formbtn ${id===curId?'on':''}" onclick="openDetail(${id})">${v.is_default?'Base':label}</button>`;}).join('');
+  return `<div class="sec-label">Forms</div><div class="forms">${btns}</div>`;}catch(_){return '';}}
+
+function learnHtml(moves){if(!moves||!moves.length)return '<div style="color:var(--muted);font-size:12px">No move data.</div>';
+  const latest=g=>{let best={};moves.forEach(mv=>mv.version_group_details.forEach(d=>{if(d.move_learn_method.name===g){const k=mv.move.name,lv=d.level_learned_at;if(!(k in best)||lv<best[k])best[k]=lv;}}));return best;};
+  const lvl=latest('level-up'),tm=latest('machine'),egg=latest('egg');
+  const rows=(o,tag)=>Object.entries(o).sort((a,b)=>(a[1]||0)-(b[1]||0)).map(([n,l])=>`<div class="moverow"><span class="lv">${tag==='lv'?(l||'—'):tag.toUpperCase()}</span><span>${cap(n)}</span></div>`).join('');
+  return `<div class="tabs" id="ltabs"><div class="tab on" data-lt="lv">Level-Up (${Object.keys(lvl).length})</div><div class="tab" data-lt="tm">TM (${Object.keys(tm).length})</div><div class="tab" data-lt="egg">Egg (${Object.keys(egg).length})</div></div>
+    <div class="movelist" id="lvmoves">${rows(lvl,'lv')||'—'}</div><div class="movelist" id="tmmoves" style="display:none">${rows(tm,'tm')||'—'}</div><div class="movelist" id="eggmoves" style="display:none">${rows(egg,'egg')||'—'}</div>`;}
+
+let evoLoaded={},raidLoaded={},flavorCache={};
+async function getFlavor(speciesUrl){if(flavorCache[speciesUrl])return flavorCache[speciesUrl];try{const sp=await(await fetch(speciesUrl)).json();const en=sp.flavor_text_entries.filter(e=>e.language.name==='en');const t=en.length?en[en.length-1].flavor_text.replace(/[\n\f]/g,' '):'';flavorCache[speciesUrl]=t;return t;}catch(_){return '';}}
+
+async function openDetail(id){
+  const p=allDex.find(x=>x.id===id)||{id,name:'#'+id},raid=raidableSet.has(id);
+  const modal=document.getElementById('modal'),w=document.getElementById('dwrap');
+  w.innerHTML='<div class="loading"><span class="spinner"></span> Loading…</div>';modal.classList.add('on');
+  const info=await getInfo(id);
+  const tint=info.types[0]?TC[info.types[0]]:'#333';
+  const bmax=Math.max(...(info.stats.length?info.stats:[100]),150);
+  const statRows=info.stats.map((v,i)=>{const c=v>=120?'#63bb5b':v>=90?'#c9b35a':v>=60?'#d97746':'#9c5a5a';return `<div class="stat"><small>${STAT_LABELS[i]}</small><div class="bar"><div class="fill" style="width:0%;background:${c}" data-w="${v/bmax*100}"></div></div><span class="v">${v}</span></div>`;}).join('');
+  const abils=info.abilities.map(a=>`<span class="${a.hidden?'ha':''}">${a.name}${a.hidden?' (HA)':''}</span>`).join('');
+  const bst=info.stats.reduce((a,b)=>a+b,0),isC=caught.has(id);
+  w.innerHTML=`<div class="hero" style="--htint:radial-gradient(420px 260px at 30% 40%,${tint},#111)">
+      <div class="dnav"><button onclick="openDetail(${id>1?id-1:1})">‹</button><button onclick="openDetail(${id<1025?id+1:1025})">›</button></div>
+      <button class="dclose" onclick="document.getElementById('modal').classList.remove('on')">✕</button>
+      <div class="herorow">
+        <img id="detimg" src="${heroImg(id)}" title="click for cry" onerror="this.src='${home(id,shiny)}';this.onerror=null"/>
+        <div><div class="dt-num">#${String(id).padStart(4,'0')} · Gen ${genOf(id)}</div><div class="dt-name">${p.name}</div>
+          <div class="dt-types">${info.types.map(t=>`<span class="typ" style="background:${TC[t]||'#555'}">${t}</span>`).join('')}</div></div>
+      </div>
+      <div class="miscrow"><span class="chip">BST <b>${bst}</b></span><span class="chip">Ht <b>${(info.height/10)||'?'}m</b></span><span class="chip">Wt <b>${(info.weight/10)||'?'}kg</b></span><button class="caughtbtn ${isC?'':'no'}" id="caughtBtn">${isC?'✓ Caught':'○ Mark caught'}</button></div>
+      <div class="flavor" id="flavor"></div>
+    </div>
+    <div class="body">
+      <div class="tabs" id="dtabs"><div class="tab on" data-pane="stats">Stats</div><div class="tab" data-pane="evo">Evolution</div><div class="tab" data-pane="match">Matchups</div><div class="tab" data-pane="raid">Raids</div><div class="tab" data-pane="moves">Moves</div></div>
+      <div class="tabpane on" id="pane-stats">
+        <div class="statwrap"><div class="stats">${statRows||'—'}</div><div>${radar(info.stats)}</div></div>
+        <div class="sec-label">Abilities</div><div class="abil">${abils||'—'}</div>
+        <div class="sec-label">Sprites</div><div class="gallery">
+          <div class="g"><img src="${home(id,false)}" onerror="this.style.visibility='hidden'"/><small>Normal</small></div>
+          <div class="g"><img src="${home(id,true)}" onerror="this.style.visibility='hidden'"/><small>Shiny ✦</small></div>
+          <div class="g"><img src="${art(id)}" onerror="this.style.visibility='hidden'"/><small>Artwork</small></div>
+        </div>
+        <div id="formsSlot"></div>
+      </div>
+      <div class="tabpane" id="pane-evo"><div class="loading"><span class="spinner"></span></div></div>
+      <div class="tabpane" id="pane-match"><div class="sec-label">Type Matchups (defending)</div>${info.types.length?matchHtml(info.types):'—'}</div>
+      <div class="tabpane" id="pane-raid"><div class="loading"><span class="spinner"></span></div></div>
+      <div class="tabpane" id="pane-moves">${learnHtml(info.moves)}</div>
+    </div>`;
+  // animate stat bars
+  setTimeout(()=>w.querySelectorAll('.stat .fill').forEach(f=>f.style.width=f.dataset.w+'%'),50);
+  // flavor
+  if(info.speciesUrl)getFlavor(info.speciesUrl).then(t=>{const el=document.getElementById('flavor');if(el&&t)el.textContent='“'+t+'”';});
+  document.getElementById('detimg').onclick=()=>{try{const a=new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`);a.volume=.4;a.play().catch(()=>{});}catch(_){}}
+  document.getElementById('caughtBtn').onclick=function(){if(caught.has(id)){caught.delete(id);this.className='caughtbtn no';this.textContent='○ Mark caught';}else{caught.add(id);this.className='caughtbtn';this.textContent='✓ Caught';}saveCaught();const c=document.querySelector(`.dex[data-id="${id}"]`);if(c)c.classList.toggle('caught',caught.has(id));};
+  document.querySelectorAll('#dtabs .tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('#dtabs .tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');document.querySelectorAll('.tabpane').forEach(x=>x.classList.remove('on'));document.getElementById('pane-'+t.dataset.pane).classList.add('on');if(t.dataset.pane==='evo')loadEvo(info.speciesUrl,id);if(t.dataset.pane==='raid')loadRaid(id,p.name);});
+  setTimeout(()=>{const lt=document.getElementById('ltabs');if(lt)lt.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{lt.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');document.getElementById('lvmoves').style.display=t.dataset.lt==='lv'?'':'none';document.getElementById('tmmoves').style.display=t.dataset.lt==='tm'?'':'none';document.getElementById('eggmoves').style.display=t.dataset.lt==='egg'?'':'none';});},0);
+  if(info.speciesUrl)formsHtml(info.speciesUrl,id).then(h=>{const s=document.getElementById('formsSlot');if(s)s.innerHTML=h;});
+}
+async function loadEvo(url,id){const pane=document.getElementById('pane-evo');if(evoLoaded[id])return;evoLoaded[id]=1;pane.innerHTML='<div class="sec-label">Evolution Line</div>'+(url?await evoHtml(url):'—');}
+async function loadRaid(id,name){const pane=document.getElementById('pane-raid');if(raidLoaded[id])return;raidLoaded[id]=1;const info=typeCache[id];let html='';
+  try{const ri=await(await fetch(`/api/dex/raidinfo?species=${id}`)).json();
+    if(ri.raidable){html+=`<div class="raidcard yes"><div style="color:#7fe39a;font-weight:800">🟢 Appears as a Tera Raid boss</div>`;ri.maps.forEach(m=>html+=`<div class="raidmap"><b>${m.map}</b> ${m.stars.map(s=>`<span class="stbadge">${s}★</span>`).join('')}</div>`);html+=`</div>`;}
+    else html+=`<div class="raidcard">⚪ Not found as a raid boss in the scanned pools.</div>`;
+  }catch(_){html+=`<div class="raidcard">Raid data unavailable.</div>`;}
+  if(info&&info.types.length){const ctr=bestCounterTypes(info.types);if(ctr.length)html+=`<div class="sec-label">Best Counter Types</div><div class="counters">${ctr.map(c=>`<span class="ctr" style="background:${TC[c.t]}">${c.t} ${c.m}×</span>`).join('')}</div>`;}
+  html+=`<button class="findbtn" ${raidableSet.has(id)?'':'disabled'} onclick="location.href='/?species='+encodeURIComponent('${name}')">${raidableSet.has(id)?'🔎 Find raid seeds for '+name:'Not raidable'}</button>`;pane.innerHTML=html;}
+
+function pickCompare(id){if(cmpPick.includes(id))cmpPick=cmpPick.filter(x=>x!==id);else cmpPick.push(id);if(cmpPick.length>2)cmpPick=cmpPick.slice(-2);
+  document.querySelectorAll('.dex').forEach(el=>el.style.outline=cmpPick.includes(+el.dataset.id)?'2px solid var(--gold)':'');if(cmpPick.length===2)openCompare();}
+async function openCompare(){const[a,b]=cmpPick,modal=document.getElementById('modal'),w=document.getElementById('dwrap');w.innerHTML='<div class="loading"><span class="spinner"></span> Comparing…</div>';modal.classList.add('on');
+  const[ia,ib]=await Promise.all([getInfo(a),getInfo(b)]),na=(allDex.find(x=>x.id===a)||{}).name,nb=(allDex.find(x=>x.id===b)||{}).name;
+  const col=(id,nm,inf)=>{const bst=inf.stats.reduce((x,y)=>x+y,0);return `<div class="cmpcol"><img src="${heroImg(id)}" onerror="this.src='${home(id,shiny)}';this.onerror=null"/><div class="dt-name" style="font-size:18px">${nm}</div><div class="dt-types" style="justify-content:center">${inf.types.map(t=>`<span class="typ" style="background:${TC[t]}">${t}</span>`).join('')}</div><div class="chip" style="margin-top:6px">BST <b>${bst}</b></div></div>`;};
+  const statCmp=STAT_LABELS.map((lbl,i)=>{const va=ia.stats[i]||0,vb=ib.stats[i]||0,ca=va>=vb?'#63bb5b':'#9a9aa6',cb=vb>=va?'#63bb5b':'#9a9aa6';return `<div class="stat" style="grid-template-columns:32px 1fr 34px 1fr 32px"><span class="v" style="color:${ca}">${va}</span><div class="bar"><div class="fill" style="width:${va/200*100}%;background:${ca};float:right"></div></div><small style="text-align:center">${lbl}</small><div class="bar"><div class="fill" style="width:${vb/200*100}%;background:${cb}"></div></div><span class="v" style="color:${cb}">${vb}</span></div>`;}).join('');
+  w.innerHTML=`<div class="body"><button class="dclose" onclick="document.getElementById('modal').classList.remove('on');cmpPick=[];document.querySelectorAll('.dex').forEach(e=>e.style.outline='')">✕</button><div class="sec-label" style="text-align:center">⚖ Compare</div><div class="cmpwrap">${col(a,na,ia)}${col(b,nb,ib)}</div><div class="sec-label" style="text-align:center;margin-top:14px">Base Stats</div><div class="stats">${statCmp}</div></div>`;
+  cmpPick=[];document.querySelectorAll('.dex').forEach(e=>e.style.outline='');}
+
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')e.currentTarget.classList.remove('on');});
+document.getElementById('q').addEventListener('input',applyFilters);
+document.getElementById('gen').addEventListener('change',applyFilters);
+document.getElementById('sort').addEventListener('change',()=>{renderLimit=60;render();});
+document.getElementById('raidonly').addEventListener('change',applyFilters);
+document.getElementById('shinyToggle').addEventListener('click',()=>{shiny=!shiny;document.getElementById('shinyToggle').classList.toggle('on',shiny);render();});
+document.getElementById('cmpToggle').addEventListener('click',()=>{cmpMode=!cmpMode;document.getElementById('cmpToggle').classList.toggle('on',cmpMode);cmpPick=[];document.querySelectorAll('.dex').forEach(e=>e.style.outline='');});
+init();
+</script>
+</body>
+</html>
