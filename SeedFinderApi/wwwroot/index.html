@@ -411,7 +411,7 @@ button.surprise:hover{border-color:var(--vio);box-shadow:0 0 20px rgba(168,85,24
 .qcard .qs{font-size:10px;color:var(--gold);letter-spacing:1px;}
 .qcard .qbadge{position:absolute;top:4px;left:6px;font-size:10px;color:var(--gold-lt);text-shadow:0 0 6px var(--gold);}
 .qcard .qnow{position:absolute;top:4px;right:5px;font-size:8px;font-weight:800;color:var(--green);letter-spacing:.5px;}
-.live-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;}
+.live-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:16px;margin-top:22px;}
 @media(max-width:760px){.live-cards{grid-template-columns:1fr;}}
 .live-card{position:relative;background:linear-gradient(180deg,rgba(17,17,26,.9),rgba(9,9,14,.94));border:1px solid var(--line);padding:20px;transition:.2s;cursor:pointer;overflow:hidden;
   clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);}
@@ -807,6 +807,40 @@ button.surprise:hover{border-color:var(--vio);box-shadow:0 0 20px rgba(168,85,24
 .th-feed .tf{font-size:12px;color:var(--muted);}
 .th-feed .tf b{color:var(--gold-lt);margin-right:6px;}
 /* shiny protocol veil */
+/* v4: map badge on omni-search cards */
+.mapbadge{position:absolute;bottom:10px;right:10px;z-index:4;font-size:9px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--cyan);background:rgba(8,14,18,.9);border:1px solid rgba(103,232,249,.4);padding:3px 9px;pointer-events:none;}
+/* v4: compare lab */
+#cmpModal{position:fixed;inset:0;background:rgba(0,0,0,.86);display:none;align-items:center;justify-content:center;z-index:126;padding:16px;backdrop-filter:blur(6px);}
+#cmpModal.on{display:flex;animation:rise .25s ease;}
+.cmp-wrap{background:linear-gradient(180deg,#171722,#0b0b11);border:1px solid var(--gold-dim);max-width:1080px;width:100%;max-height:92vh;overflow:auto;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.75);position:relative;clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);}
+.cmp-wrap .cmp-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+.cmp-title{font-family:var(--fd);font-weight:800;font-size:19px;color:var(--gold-lt);letter-spacing:1px;margin:0 0 16px;}
+.cmp-scroll{overflow-x:auto;}
+table.cmp{border-collapse:collapse;width:100%;min-width:560px;font-size:12.5px;}
+table.cmp th,table.cmp td{border:1px solid var(--line);padding:9px 11px;text-align:center;vertical-align:middle;}
+table.cmp th{background:rgba(23,18,4,.6);color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;text-align:left;white-space:nowrap;}
+table.cmp td img{width:56px;height:56px;object-fit:contain;}
+table.cmp td.best{background:rgba(212,175,55,.12);color:var(--gold-lt);font-weight:700;box-shadow:inset 0 0 0 1px var(--gold-dim);}
+table.cmp .cmp-seed{font-family:var(--fm);letter-spacing:1.5px;color:var(--gold-lt);cursor:pointer;}
+table.cmp .cmp-ivs{font-family:var(--fm);font-size:11px;}
+/* v4: boss dex scene */
+.dexctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
+.dexctl select{width:auto;min-width:150px;}
+.dexctl .dex-count{font-size:11px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;font-weight:700;}
+.bossgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px;}
+.bosstile{background:rgba(17,17,26,.9);border:1px solid var(--line);padding:12px 6px 9px;text-align:center;cursor:pointer;transition:.15s;position:relative;}
+.bosstile:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 12px 30px rgba(212,175,55,.15);}
+.bosstile img{width:64px;height:64px;object-fit:contain;}
+.bosstile .bn{font-size:10.5px;font-weight:700;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bossdetail{display:none;margin-bottom:18px;padding:20px;background:linear-gradient(180deg,rgba(23,18,4,.6),rgba(10,10,16,.9));border:1px solid var(--line-gold);position:relative;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);}
+.bossdetail.on{display:flex;gap:20px;align-items:center;flex-wrap:wrap;animation:rise .3s ease;}
+.bossdetail img{width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 0 24px rgba(212,175,55,.4));cursor:pointer;}
+.bossdetail .bd-name{font-family:var(--fd);font-weight:800;font-size:24px;color:#fff;letter-spacing:1px;}
+.bossdetail .bd-maps{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
+.bossdetail .bd-map{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold-lt);background:#241f10;border:1px solid var(--gold-dim);padding:6px 12px;}
+.bossdetail .bd-map .st{color:var(--gold);letter-spacing:2px;}
+.bossdetail .bd-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+.bossdetail .bd-x{position:absolute;top:10px;right:12px;background:transparent;border:none;color:var(--muted);font-size:17px;cursor:pointer;}
 #shineveil{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .8s;background:radial-gradient(70% 60% at 50% 30%,rgba(212,175,55,.14),transparent 70%),radial-gradient(40% 40% at 80% 80%,rgba(243,217,121,.10),transparent 70%);}
 body.shiny-protocol #shineveil{opacity:1;}
 body.shiny-protocol .grain{opacity:.09;}
@@ -865,6 +899,7 @@ body.shiny-protocol .grain{opacity:.09;}
   <button data-go="rep"><span class="ri">⭐</span><span class="rl">REP</span></button>
   <button data-go="guide"><span class="ri">📖</span><span class="rl">GUIDE</span></button>
   <button data-go="theater"><span class="ri">🎬</span><span class="rl">AIR</span></button>
+  <button data-go="dex"><span class="ri">📕</span><span class="rl">DEX</span></button>
   <div class="rail-foot"><a href="https://discord.gg/pkm-universe-reborn" target="_blank" rel="noopener" title="PKM Universe Reborn on Discord">💬</a><div class="rv">v3 · SEEDS</div></div>
 </nav>
 
@@ -943,7 +978,7 @@ body.shiny-protocol .grain{opacity:.09;}
             <button class="surprise" id="savePreset" type="button" style="padding:8px 14px;font-size:12px">⭐ Save preset</button>
           </div>
         </details>
-        <div class="actions"><button class="go" id="go">⚡ Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><label class="rtoggle" title="Search automatically as you change filters"><input type="checkbox" id="realtime"/> ⚡ Live</label><span class="status" id="status"></span></div>
+        <div class="actions"><button class="go" id="go">⚡ Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><button class="surprise" id="omniGo" title="Sweep Paldea, Kitakami and Blueberry in one search">🌍 All Maps</button><label class="rtoggle" title="Search automatically as you change filters"><input type="checkbox" id="realtime"/> ⚡ Live</label><span class="status" id="status"></span></div>
       </div>
     </div>
 
@@ -1018,6 +1053,11 @@ body.shiny-protocol .grain{opacity:.09;}
         <p>Raid codes drop in <b>#raid channels</b> on the PKM Universe Reborn Discord the moment a raid starts hosting.</p>
         <div class="lc-go">▶ Join the Discord</div>
       </a>
+      <div class="live-card" id="obsCard">
+        <div class="lc-ico">🎥</div><h3>STREAMER KIT</h3>
+        <p>Drop the live raid overlay straight into OBS as a <b>browser source</b> — now-hosting card, up-next queue, live feed.</p>
+        <div class="lc-go">▶ Copy overlay URL</div>
+      </div>
     </div>
   </section>
 
@@ -1136,6 +1176,18 @@ body.shiny-protocol .grain{opacity:.09;}
     </div>
   </section>
 
+  <!-- ═══ SCENE: DEX ═══ -->
+  <section class="scene" id="sc-dex" data-scene="dex">
+    <div class="sc-head">
+      <div class="sc-eyebrow">The Boss Index</div>
+      <h2 class="sc-title">KNOW EVERY <span class="g">BOSS</span>.</h2>
+      <p class="sc-sub">Every raid boss the engine indexes, map by map. Tap one to see exactly where it spawns — then jump straight into a seed hunt for it.</p>
+    </div>
+    <div class="bossdetail" id="bossDetail"><button class="bd-x" id="bdClose">✕</button><img id="bdSprite" alt=""/><div><div class="bd-name" id="bdName">—</div><div class="bd-maps" id="bdMaps"></div></div><div class="bd-actions" id="bdActions"></div></div>
+    <div class="dexctl"><label style="margin:0">Map</label><select id="dexMap"><option>Paldea</option><option selected>Kitakami</option><option>Blueberry</option></select><span class="dex-count" id="dexCount">—</span></div>
+    <div class="bossgrid" id="bossGrid"></div>
+  </section>
+
   <!-- ═══ SCENE: THEATER ═══ -->
   <section class="scene" id="sc-theater" data-scene="theater">
     <div class="sc-head">
@@ -1207,6 +1259,7 @@ body.shiny-protocol .grain{opacity:.09;}
   <div class="party-grid" id="partyGrid"></div>
   <div class="party-actions" id="partyActions"></div>
 </div></div>
+<div id="cmpModal"><div class="cmp-wrap"><button class="cmp-close">✕</button><div class="cmp-title">⚖ SEED COMPARE LAB</div><div id="cmpBody"></div></div></div>
 <div id="cmdk"><div class="cmdk-wrap">
   <div class="cmdk-in"><span style="color:var(--gold)">◆</span><input id="cmdkIn" placeholder="Type a command, scene, or Pokémon… (esc to close)" autocomplete="off"/><span class="kbd">ESC</span></div>
   <div id="cmdkList"></div>
@@ -2387,7 +2440,7 @@ try{$('bfYear').textContent=new Date().getFullYear();}catch(_){}
 })();
 
 /* ── scene router ────────────────────────────────────────────── */
-const SCENES=['hunt','live','fame','rep','guide','theater'];
+const SCENES=['hunt','live','fame','rep','guide','theater','dex'];
 function go(name){
   if(!SCENES.includes(name))name='hunt';
   const apply=()=>{
@@ -2662,6 +2715,9 @@ function paletteActions(){
     {i:'⚡',t:'Find seeds with current filters',k:'action',run:()=>{go('hunt');setMode('search');const b=$('go');if(b)b.click();}},
     {i:'🔁',t:'Decode seeds — reverse lookup',k:'action',run:()=>{go('hunt');setMode('decode');}},
     {i:'🔊',t:'Toggle interface sound',k:'setting',run:toggleSfx},
+    {i:'📕',t:'Go to DEX — the Boss Index',k:'scene',run:()=>go('dex')},
+    {i:'🌍',t:'Omni-search — sweep all 3 maps at once',k:'action',run:()=>{go('hunt');setMode('search');const b=$('omniGo');if(b)b.click();}},
+    {i:'⚖',t:'Compare selected seeds side-by-side',k:'tool',run:()=>openCompare()},
   ];
   document.querySelectorAll('#presets .preset').forEach(p=>{
     const label=p.textContent.replace(/✕\s*$/,'').trim();
@@ -2775,7 +2831,7 @@ addEventListener('keydown',e=>{
   const inField=e.target&&e.target.closest&&e.target.closest('input,textarea,select,[contenteditable="true"]');
   if(inField)return;
   const k=e.key.toLowerCase();
-  const map={'1':'hunt','2':'live','3':'fame','4':'rep','5':'guide','6':'theater','t':'theater'};
+  const map={'1':'hunt','2':'live','3':'fame','4':'rep','5':'guide','6':'theater','t':'theater','7':'dex'};
   if(map[k]){go(map[k]);return;}
   if(k==='g'){const f=$('globeFab');if(f)f.click();return;}
   if(k==='c'){const f=$('chatFab');if(f)f.click();return;}
@@ -2845,6 +2901,166 @@ if(typeof pushFeed==='function'){
       try{toast(on?'✦ SHINY PROTOCOL ENGAGED':'Shiny protocol disengaged');}catch(_){}
       sfx('ok');
     }
+  });
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   v4 POWER MODULES — omni-search · compare lab · rotation queue ·
+   boss dex · rarity index · streamer kit
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 🌍 omni-search: sweep all 3 maps in one shot ────────────── */
+async function omniSearch(){
+  const btn=$('omniGo'),status=$('status'),box=$('results');
+  if(!btn||!status||!box)return;
+  const orig=btn.textContent;btn.disabled=true;btn.textContent='🌍 Sweeping…';
+  $('empty').style.display='none';box.innerHTML='';
+  try{
+    const speciesRaw=$('species').value.trim();
+    let species=null;
+    if(speciesRaw)species=/^\d+$/.test(speciesRaw)?parseInt(speciesRaw):(nameToId[speciesRaw.toLowerCase()]||null);
+    const base={game:val('game'),storyProgress:parseInt(val('progress')||'6'),stars:val('stars')?parseInt(val('stars')):null,species,shiny:val('shiny')===null?null:val('shiny')==='true',teraType:val('tera')?parseInt(val('tera')):null,minFlawlessIVs:val('ivs')?parseInt(val('ivs')):null,maxResults:parseInt(val('max')||'25'),nature:val('nature'),gender:val('gender'),hiddenAbility:val('hidden')==='true'?true:null,scale:val('scale'),rewardItem:($('rewarditem').value.trim()||null),rewardMinQty:val('rewardqty')?parseInt(val('rewardqty')):null};
+    const maps=['Paldea','Kitakami','Blueberry'];
+    status.innerHTML='<span class="spinner"></span> Sweeping Paldea · Kitakami · Blueberry…';
+    const resps=await Promise.all(maps.map(m=>fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},base,{location:m}))}).then(r=>r.json()).catch(()=>null)));
+    let scanned=0;const merged=[];
+    resps.forEach((res,i)=>{if(!res)return;scanned+=res.scanned||0;(res.results||[]).forEach(r=>{r.__map=maps[i];merged.push(r);});});
+    merged.sort((a,b)=>((b.shiny?1:0)-(a.shiny?1:0))||((b.flawlessIVs||0)-(a.flawlessIVs||0)));
+    const cap=merged.slice(0,parseInt(val('max')||'25'));
+    cap.forEach((r,i)=>{
+      const el=card(r,i);
+      const badge=document.createElement('div');badge.className='mapbadge';badge.textContent='🌍 '+r.__map;
+      const front=el.querySelector('.face.front');if(front)front.appendChild(badge);
+      box.appendChild(el);
+    });
+    bindTilt();
+    const rar=cap.length?` · 💎 ≈1 in ${Math.max(1,Math.round(scanned/cap.length)).toLocaleString()}`:'';
+    status.innerHTML=`<b style="color:var(--gold)">${cap.length}</b>&nbsp;found across 3 maps · scanned ${scanned.toLocaleString()} seeds${rar}`;
+    if(!cap.length){const e=$('empty');e.style.display='block';e.textContent='No matches anywhere in Paldea, Kitakami, or Blueberry — widen the filters.';}
+    else toast('🌍 Tip: set Location to a card\'s map before hosting it.');
+  }catch(e){status.textContent='Omni-search failed: '+e.message;}
+  btn.disabled=false;btn.textContent=orig;
+}
+(function(){const b=$('omniGo');if(b)b.addEventListener('click',()=>{try{sfx('cast');}catch(_){}omniSearch();});})();
+
+/* ── 💎 rarity index on normal searches ──────────────────────── */
+if(typeof search==='function'){
+  const _oSearch=search;
+  window.search=async function(){
+    await _oSearch.apply(this,arguments);
+    try{
+      const st=$('status');if(!st)return;
+      const m=st.textContent.match(/(\d[\d,]*)\s*found · scanned ([\d,]+)/);
+      if(m){const found=parseInt(m[1].replace(/,/g,'')),sc=parseInt(m[2].replace(/,/g,''));
+        if(found>0&&sc>0)st.innerHTML+=` · 💎 ≈1 in ${Math.max(1,Math.round(sc/found)).toLocaleString()}`;}
+    }catch(_){}
+  };
+}
+
+/* ── ⚖ compare lab + 🚀 rotation queue (playlist bar upgrades) ─ */
+function openCompare(){
+  const list=[...selected.values()].slice(0,6);
+  if(list.length<2){toast('Tick ✓ on 2–6 cards, then compare.');return;}
+  const loc=$('location').value;
+  const flIdx=(()=>{let bi=-1,bv=-1;list.forEach((r,i)=>{if((r.flawlessIVs||0)>bv){bv=r.flawlessIVs||0;bi=i;}});return bi;})();
+  const rows=[
+    ['Sprite',r=>`<img src="${spriteChain(r.species,r.shiny)[0]}" onerror="this.style.visibility='hidden'"/>`],
+    ['Name',r=>`${r.shiny?'✦ ':''}${r.speciesName}`],
+    ['Map · Stars',r=>`${r.__map||loc} · ${'★'.repeat(r.stars)}`],
+    ['Tera',r=>{const c=TC[r.teraName]||'#888';return `<span style="color:${c};font-weight:700">${r.teraName}</span>`;}],
+    ['Perfect IVs',r=>`${r.flawlessIVs}/6`],
+    ['IV spread',r=>`<span class="cmp-ivs">${(r.iVs||[]).join('/')}</span>`],
+    ['Nature',r=>r.nature||'—'],
+    ['Ability',r=>`${r.ability||'—'}${r.hidden?' (HA)':''}`],
+    ['Scale',r=>`${r.scale} · ${scaleLabel(r.scale)}`],
+    ['Rare rewards',r=>((r.rewards||[]).filter(x=>RARE.includes(x.name)).map(x=>`${x.name} ×${x.qty}`).join('<br>'))||'—'],
+    ['Seed',r=>`<span class="cmp-seed" data-s="${r.seed}" title="Click to copy">${r.seed}</span>`],
+  ];
+  let html='<div class="cmp-scroll"><table class="cmp">';
+  rows.forEach(([label,fn])=>{
+    html+=`<tr><th>${label}</th>`+list.map((r,i)=>`<td class="${(label==='Perfect IVs'&&i===flIdx)?'best':''}">${fn(r)}</td>`).join('')+'</tr>';
+  });
+  html+='</table></div>';
+  const body=$('cmpBody');if(!body)return;
+  body.innerHTML=html;
+  $('cmpModal').classList.add('on');
+  body.querySelectorAll('.cmp-seed').forEach(s=>s.addEventListener('click',()=>{navigator.clipboard.writeText(s.dataset.s);toast('Seed copied: '+s.dataset.s);}));
+}
+async function queueRotation(){
+  const list=[...selected.values()];
+  if(!list.length){toast('Tick ✓ on the cards you want in the rotation first.');return;}
+  if(!authState.loggedIn){toast('Log in with Discord to host →');location.href='/api/auth/login';return;}
+  if(!authState.verified){toast('You need Elite Raid Bot Access to host — get it on Ko-fi.');return;}
+  const loc=$('location').value,prog=parseInt($('progress').value||'6');
+  toast(`🚀 Queuing ${list.length} raid(s) on ${loc}…`);
+  let ok=0;
+  for(const r of list){
+    try{const resp=await(await fetch('/api/host',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:r.seed,stars:r.stars,progress:prog,location:loc})})).json();if(resp.ok)ok++;}catch(_){}
+  }
+  confetti(innerWidth/2,innerHeight-140);
+  toast(`✓ Rotation queued: ${ok}/${list.length} on ${loc}!`);
+}
+(function(){
+  const pl=$('playlist'),clr=$('pl-clear');if(!pl||!clr)return;
+  const rot=document.createElement('button');rot.className='pl-host';rot.id='pl-rotation';rot.textContent='🚀 Queue rotation';
+  const cmp=document.createElement('button');cmp.className='pl-clear';cmp.id='pl-compare';cmp.textContent='⚖ Compare';
+  pl.insertBefore(rot,clr);pl.insertBefore(cmp,clr);
+  rot.addEventListener('click',queueRotation);
+  cmp.addEventListener('click',openCompare);
+  const m=$('cmpModal');if(m)m.addEventListener('click',e=>{if(e.target.id==='cmpModal'||e.target.classList.contains('cmp-close'))m.classList.remove('on');});
+})();
+
+/* ── 📕 boss dex scene ───────────────────────────────────────── */
+let _dexLoaded=false;
+async function loadBossDex(){
+  const grid=$('bossGrid'),mapSel=$('dexMap');if(!grid||!mapSel)return;
+  grid.innerHTML='<div class="lb-empty"><span class="spinner"></span> Loading the pool…</div>';
+  try{
+    const sp=await(await fetch(`/api/species?map=${encodeURIComponent(mapSel.value)}&progress=6`)).json();
+    const ct=$('dexCount');if(ct)ct.textContent=sp.length+' bosses';
+    grid.innerHTML=sp.map(s=>`<div class="bosstile" data-id="${s.id}" data-n="${s.name}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${s.id}.png" onerror="this.style.visibility='hidden'"/><div class="bn">${s.name}</div></div>`).join('');
+    grid.querySelectorAll('.bosstile').forEach(t=>t.addEventListener('click',()=>showBoss(+t.dataset.id,t.dataset.n)));
+  }catch(_){grid.innerHTML='<div class="lb-empty">Couldn\'t load the boss pool.</div>';}
+}
+async function showBoss(id,name){
+  const d=$('bossDetail');if(!d)return;
+  d.classList.add('on');
+  const img=$('bdSprite');img.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`;
+  img.onclick=()=>{try{playCry(id);}catch(_){}};
+  $('bdName').textContent=name;
+  $('bdMaps').innerHTML='<span class="dex-count">checking spawn maps…</span>';
+  $('bdActions').innerHTML='';
+  try{
+    const info=await(await fetch(`/api/dex/raidinfo?species=${id}`)).json();
+    $('bdMaps').innerHTML=((info.maps||[]).map(m=>`<span class="bd-map">${m.map} <span class="st">${m.stars.map(s=>s+'★').join(' ')}</span></span>`).join(''))||'<span class="dex-count">not currently raidable</span>';
+    (info.maps||[]).forEach(m=>{
+      const b=document.createElement('button');b.className='btn-ghost';b.style.padding='10px 16px';b.style.fontSize='11px';
+      b.textContent=`🔮 Hunt in ${m.map}`;
+      b.addEventListener('click',()=>{
+        $('location').value=m.map;$('progress').value='6';$('stars').value=String(m.stars[m.stars.length-1]);
+        go('hunt');setMode('search');
+        loadSpecies().then(()=>{$('species').value=name;window._lastQ=null;search();});
+      });
+      $('bdActions').appendChild(b);
+    });
+  }catch(_){$('bdMaps').innerHTML='<span class="dex-count">lookup failed</span>';}
+}
+(function(){
+  const mapSel=$('dexMap');if(mapSel)mapSel.addEventListener('change',()=>{$('bossDetail').classList.remove('on');loadBossDex();});
+  const x=$('bdClose');if(x)x.addEventListener('click',()=>$('bossDetail').classList.remove('on'));
+  const sc=$('sc-dex');
+  if(sc){
+    new MutationObserver(()=>{if(sc.classList.contains('act')&&!_dexLoaded){_dexLoaded=true;loadBossDex();}}).observe(sc,{attributes:true,attributeFilter:['class']});
+    if(sc.classList.contains('act')&&!_dexLoaded){_dexLoaded=true;loadBossDex();}
+  }
+})();
+
+/* ── 🎥 streamer kit ─────────────────────────────────────────── */
+(function(){
+  const c=$('obsCard');if(!c)return;
+  c.addEventListener('click',()=>{
+    const u=location.origin+'/overlay.html';
+    navigator.clipboard.writeText(u).then(()=>toast('🎥 Overlay URL copied — add it as an OBS browser source!')).catch(()=>prompt('Overlay URL:',u));
   });
 })();
 

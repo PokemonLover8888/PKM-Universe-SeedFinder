@@ -104,6 +104,19 @@ of site: a **full-screen game-HUD app shell**, like opening a AAA game's main me
 - **Typewriter command line** — the AI bar cycles real hunt ideas as a typed placeholder
 - **✦ Shiny Protocol** — a certain famous button sequence engages it
 
+### v4 power drop
+
+- **🌍 Omni-Search** — one click sweeps Paldea + Kitakami + Blueberry in parallel, merges and
+  ranks the results (shinies → most IVs), and stamps each card with a map badge
+- **💎 Rarity index** — every search reports how rare your result set is ("≈1 in 12,400 seeds")
+- **📕 BOSS DEX scene** (`#/dex`, key `7`) — the full raid-boss index per map as a sprite grid;
+  tap a boss → see every map/star tier it spawns in → one click drops you into a prefilled hunt
+- **⚖ Compare Lab** — tick 2–6 result cards → side-by-side table (IVs, nature, ability, scale,
+  rare rewards, seeds) with the best pick highlighted
+- **🚀 Queue rotation** — tick any number of cards and queue them ALL on the bot in one click
+  (Discord-gated like single hosting)
+- **🎥 Streamer kit** — copy-paste OBS browser-source overlay URL from the LIVE scene
+
 The pre-redesign UI is preserved verbatim at `wwwroot/index-legacy.html` for rollback/diffing.
 The engine `<script>` (search, SSE, AI suite, 3D viewer, globe, achievements, OAuth) was
 transplanted unchanged — every element ID it touches exists in the new DOM.
