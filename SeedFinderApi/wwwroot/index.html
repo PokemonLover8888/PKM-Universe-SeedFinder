@@ -807,6 +807,9 @@ button.surprise:hover{border-color:var(--vio);box-shadow:0 0 20px rgba(168,85,24
 .th-feed .tf{font-size:12px;color:var(--muted);}
 .th-feed .tf b{color:var(--gold-lt);margin-right:6px;}
 /* shiny protocol veil */
+/* v5 fix: playlist hides by visibility — translate distance can't cover its wrapped height on phones */
+#playlist:not(.show){opacity:0;visibility:hidden;pointer-events:none;}
+#playlist{transition:transform .35s cubic-bezier(.2,1.2,.4,1),opacity .3s,visibility .3s;}
 /* v4: map badge on omni-search cards */
 .mapbadge{position:absolute;bottom:10px;right:10px;z-index:4;font-size:9px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--cyan);background:rgba(8,14,18,.9);border:1px solid rgba(103,232,249,.4);padding:3px 9px;pointer-events:none;}
 /* v4: compare lab */
@@ -1000,16 +1003,17 @@ body{overflow-x:hidden;}
   .scr-top .scr-in{padding:14px 12px 22px;}
   .dv-hinge{padding:8px 12px;gap:8px;}
   .dv-grill{display:none;}
-  .dv-keys{order:2;width:100%;justify-content:space-between;gap:4px;}
+  .dv-keys{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:87;justify-content:space-between;gap:4px;background:rgba(7,7,12,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(243,217,121,.3);border-radius:15px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.75);}
   .dv-keys button{flex:1;justify-content:center;padding:9px 2px 8px;font-size:8.5px;letter-spacing:1px;gap:3px;flex-direction:column;}
   .dv-keys button i{font-size:15px;}
+  body{padding-bottom:calc(var(--dock-h) + 20px);}
   .ticker{display:flex;order:1;width:100%;flex:1 1 100%;}
   .scr-deck .scr-in{padding:12px 12px 14px;}
   .deck-row{flex-direction:column;}
   .scr-deck button.go{width:100%;}
   .dv-bottom{padding:10px 16px 14px;font-size:8.5px;gap:8px;}
   .dv-plate{font-size:7.5px;letter-spacing:1.6px;}
-  .chat-fab{bottom:18px;right:12px;width:52px;height:52px;}
+  .chat-fab{bottom:calc(var(--dock-h) + 30px);right:12px;width:52px;height:52px;}
   .globe-fab,.achfab{display:none;}
   .sc-title{font-size:clamp(20px,6vw,30px);}
 }
