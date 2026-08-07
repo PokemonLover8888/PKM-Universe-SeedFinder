@@ -939,8 +939,8 @@ app.MapGet("/api/lists", (HttpContext ctx) =>
 });
 
 // Permalink SPA fallback — /r/<seed> serves index.html; /list/<id> too
-app.MapFallbackToFile("/r/{seed}", "index.html");
-app.MapFallbackToFile("/list/{id}", "index.html");
+app.MapFallbackToFile("/r/{seed}", "console.html");
+app.MapFallbackToFile("/list/{id}", "console.html");
 
 app.Run();
 

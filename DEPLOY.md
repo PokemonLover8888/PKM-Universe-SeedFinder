@@ -19,21 +19,34 @@ cd SeedFinderApi
 dotnet run -c Release          # http://localhost:5000 (or set ASPNETCORE_URLS)
 ```
 
-## Docker (matches your tiktok-bridge / trade-bridge pattern)
+## Docker — current production setup (seeds.pkm-universe.com via cloudflared)
 ```
 docker build -t pkmu-seedfinder .
-docker run -d --name pkmu-seedfinder --restart unless-stopped -p 8089:8080 pkmu-seedfinder
+docker stop pkmu-seedfinder && docker rm pkmu-seedfinder
+docker run -d --name pkmu-seedfinder --restart unless-stopped ^
+  --network pkm-universe_pkm-network ^
+  --add-host host.docker.internal:host-gateway ^
+  --env-file .env pkmu-seedfinder
 ```
+- **`--add-host host.docker.internal:host-gateway` is required** — without it the container
+  cannot resolve the raid bots on the host (rotations show all maps offline/null). Same
+  convention as `pkmu-raidhub`.
+- No published ports: the `pkm-universe-tunnel` cloudflared container reaches it at
+  `pkmu-seedfinder:8080` over the `pkm-universe_pkm-network` network.
+- Bots: Paldea `host:9100`, Kitakami `host:9090`, Blueberry `host:9110`
+  (override with `BOT_URL_PALDEA` / `BOT_URL_KITAKAMI` / `BOT_URL_BLUEBERRY`).
 
-## nginx — expose at creator.pkm-universe.com/seeds
-```nginx
-location /seeds/ {
-    proxy_pass http://127.0.0.1:8089/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-For $remote_addr;
-}
-```
-(Or give it its own subdomain, e.g. `seeds.pkm-universe.com`, like your other tools.)
+## Front-end layout (since 2026-08-07)
+- `wwwroot/index.html` — the flagship **landing** (source of truth:
+  https://github.com/PokemonLover8888/seeds-pkm-universe — copy its `index.html`,
+  `assets/`, `reviews.json`, `icon.svg` here on updates)
+- `wwwroot/console.html` — the **Seed Console SPA** (the old index.html; permalinks
+  `/r/{seed}` + `/list/{id}` fall back to it, and the landing bounces `#/route` deep
+  links + `?login=` OAuth returns to it before paint)
+- `wwwroot/reviews.json` — ships **empty** until real reviews exist; the landing shows
+  the "Season One" founding state and switches to review cards automatically
+- `wwwroot/sw.js` — **bump the `pkmu-seeds-vNN` cache version on every deploy**
+  (network-first covers `.html`, `/assets/`, `reviews.json`; all `/api/` bypasses cache)
 
 ## Updating for new game versions
 When Scarlet/Violet updates, refresh the engine DLLs in `SeedFinderApi/libs/` from the

@@ -1,7 +1,7 @@
 // PKM Universe Seed Finder — Service Worker
 // Network-first for HTML + /api/species so updates are seen immediately. Cache-first for
 // static icons + external CDN sprites/cries (which are immutable URLs).
-const CACHE = 'pkmu-seeds-v17';
+const CACHE = 'pkmu-seeds-v18';
 const SHELL = ['/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', e => {
@@ -18,8 +18,8 @@ self.addEventListener('fetch', e => {
   // (Previously a hand-maintained list missed /api/rotations, so the live "Now Hosting" went stale
   // on normal refresh while a hard refresh — which bypasses the SW — looked correct.)
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/r/') || url.pathname.startsWith('/list/')) return;
-  // Network-first for the HTML shell (so deploys are seen instantly), cache-first for everything else
-  if (url.pathname === '/' || url.pathname.endsWith('.html')) {
+  // Network-first for the HTML shell + landing assets + reviews (so deploys are seen instantly), cache-first for everything else
+  if (url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.startsWith('/assets/') || url.pathname.endsWith('reviews.json')) {
     e.respondWith(fetch(e.request).then(resp => {
       if (resp && resp.ok && url.origin === self.location.origin) {
         const clone = resp.clone();

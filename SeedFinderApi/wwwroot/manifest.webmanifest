@@ -2,7 +2,7 @@
   "name": "PKM Universe · Seed Finder",
   "short_name": "PKM Seeds",
   "description": "Find a seed for any shiny Tera Raid Pokémon, then host it on Raid-SV.",
-  "start_url": "/",
+  "start_url": "/console.html#/hunt",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
