@@ -1762,7 +1762,7 @@ document.getElementById('aigo').addEventListener('click',async()=>{
   window._lastQ=q;
   try{
     const res=await(await fetch('/api/ai/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})})).json();
-    if(!res.ok){toast('Couldn''t parse that — try rewording it.');btn.disabled=false;btn.textContent=orig;return;}
+    if(!res.ok){toast("Couldn't parse that — try rewording it.");btn.disabled=false;btn.textContent=orig;return;}
     applyAiFilters(res.filters||{});
     toast('✨ Filters locked — searching…');
     search();
