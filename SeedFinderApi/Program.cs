@@ -36,7 +36,11 @@ app.UseStaticFiles(new StaticFileOptions
     OnPrepareResponse = ctx =>
     {
         var name = ctx.File.Name;
-        if (name == "sw.js" || name == "index.html" || name == "overlay.html" || name == "demo.html")
+        var path = ctx.Context.Request.Path.Value ?? "";
+        // everything that changes on deploy must revalidate — heuristic caching of
+        // reviews.json/assets served day-old files after the 2026-08-07 redesign
+        if (name == "sw.js" || name == "index.html" || name == "console.html" || name == "overlay.html" || name == "demo.html"
+            || name == "reviews.json" || path.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase))
         {
             ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             ctx.Context.Response.Headers["Pragma"] = "no-cache";
