@@ -174,7 +174,7 @@ button,input,select,textarea{font-family:var(--fu);}
 .aibar{display:flex;gap:9px;margin:0 0 18px;align-items:center;flex-wrap:wrap;position:relative;padding:16px;
   background:linear-gradient(135deg,rgba(42,31,74,.55),rgba(13,13,20,.8));border:1px solid rgba(168,85,247,.35);
   clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut));}
-.aibar::before{content:'THE ORACLE — TYPE IT · SAY IT · SCREENSHOT IT';position:absolute;top:7px;left:20px;font-size:8.5px;font-weight:700;letter-spacing:2.6px;color:#c9a3ff;opacity:.85;}
+.aibar::before{content:'COMMAND LINE — TYPE IT · SAY IT · SCREENSHOT IT';position:absolute;top:7px;left:20px;font-size:8.5px;font-weight:700;letter-spacing:2.6px;color:#c9a3ff;opacity:.85;}
 .aibar-inputwrap{flex:1;min-width:250px;position:relative;margin-top:12px;}
 .aibar-inputwrap input{width:100%;}
 .aibar input{background:rgba(8,8,13,.9);border:1px solid var(--line);border-radius:0;color:var(--text);padding:14px 16px;font-size:14px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);}
@@ -939,7 +939,7 @@ body.shiny-protocol .grain{opacity:.09;}
         <button class="ai-icon" id="aimic" title="🎤 Voice search">🎤</button>
         <button class="ai-icon" id="aiimg" title="📷 Identify from screenshot (drag/paste/click)">📷</button>
         <button class="ai-icon" id="aichat" title="💬 Open chat assistant">💬</button>
-        <button id="aigo">🔮 Ask the Oracle</button>
+        <button id="aigo">Ask</button>
         <input type="file" id="aifile" accept="image/*" style="display:none"/>
       </div>
       <div class="ai-vision-preview" id="aiVisionPreview"></div>
@@ -1132,7 +1132,7 @@ body.shiny-protocol .grain{opacity:.09;}
       <div class="how-card">
         <div class="how-num">1</div><div class="how-ico">🔮</div>
         <h3>Find it</h3>
-        <p>In <b>HUNT</b>, set filters — or <b>ask the Oracle</b> in plain English, <b>speak</b> into the mic, or <b>paste a screenshot</b>. The finder scans the seed space with the exact RNG engine the bot runs, so what you see is what spawns.</p>
+        <p>In <b>HUNT</b>, set filters — or just <b>describe it</b> in plain English, <b>speak</b> into the mic, or <b>paste a screenshot</b>. The finder scans the seed space with the exact RNG engine the bot runs, so what you see is what spawns.</p>
       </div>
       <div class="how-card">
         <div class="how-num">2</div><div class="how-ico">🚀</div>
@@ -1147,7 +1147,7 @@ body.shiny-protocol .grain{opacity:.09;}
     </div>
     <div class="trust">
       <span>✅ <b>100% accurate</b> — bot's own RNG engine</span>
-      <span>🔮 <b>Oracle</b> search &amp; coaching</span>
+      <span>🧠 <b>Smart search</b> &amp; raid coaching</span>
       <span>📱 <b>Installable</b> phone app</span>
       <span>⚡ <b>Real-time</b> raid feed</span>
       <span>🔗 <b>Shareable</b> seed permalinks</span>
@@ -1221,7 +1221,7 @@ body.shiny-protocol .grain{opacity:.09;}
 <!-- ═══ BANNERS + FABS + MODALS (engine-owned ids) ═══ -->
 <div class="permabanner" id="permabanner"></div>
 <div class="wishalert" id="wishAlert"></div>
-<button class="chat-fab" id="chatFab" title="Chat with the Oracle">💬</button>
+<button class="chat-fab" id="chatFab" title="Open the chat assistant">💬</button>
 <button class="achfab" id="achFab" title="🏆 Achievements">🏆<span class="achbadge" id="achBadge" style="display:none">0</span></button>
 <button class="globe-fab" id="globeFab" title="🌐 Live world map of PKM Universe raid hosts">🌐</button>
 <div class="ach-modal" id="achModal"><div class="ach-wrap"><button class="ach-close" id="achClose">✕</button>
@@ -1238,7 +1238,7 @@ body.shiny-protocol .grain{opacity:.09;}
   <div class="globe-help">drag to rotate · scroll to zoom · click a glow to inspect</div>
 </div></div>
 <div class="chat-panel" id="chatPanel">
-  <div class="chat-head"><span class="chat-orb">🤖</span><div class="chat-title"><b>THE ORACLE</b><div class="chat-sub">Hunt seeds · get coached · ask anything</div></div><button class="chat-close" id="chatClose">✕</button></div>
+  <div class="chat-head"><span class="chat-orb">🤖</span><div class="chat-title"><b>COMMAND CHAT</b><div class="chat-sub">Hunt seeds · get coached · ask anything</div></div><button class="chat-close" id="chatClose">✕</button></div>
   <div class="chat-body" id="chatBody"><div class="chat-msg ai">Hi! I'm your PKM Universe raid partner.<br><br>Try: <b>"shiny 6IV Dragapult"</b> · <b>"how do I counter dragon-tera Charizard?"</b> · <b>"surprise me with a good kitakami raid"</b></div></div>
   <div class="chat-input"><input id="chatIn" placeholder="Type a message…" autocomplete="off"/><button id="chatSend">➤</button></div>
 </div>
@@ -1762,11 +1762,11 @@ document.getElementById('aigo').addEventListener('click',async()=>{
   window._lastQ=q;
   try{
     const res=await(await fetch('/api/ai/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})})).json();
-    if(!res.ok){toast('Oracle: '+(res.error||'failed'));btn.disabled=false;btn.textContent=orig;return;}
+    if(!res.ok){toast('Couldn''t parse that — try rewording it.');btn.disabled=false;btn.textContent=orig;return;}
     applyAiFilters(res.filters||{});
     toast('✨ Filters locked — searching…');
     search();
-  }catch(e){toast('Oracle failed: '+e.message);}
+  }catch(e){toast('Search failed: '+e.message);}
   btn.disabled=false;btn.textContent=orig;
 });
 document.getElementById('aiq').addEventListener('keydown',e=>{
@@ -1843,7 +1843,7 @@ async function aiSummarizeResults(query,results){
   try{
     const rows=results.slice(0,5).map(r=>({speciesName:r.speciesName,shiny:r.shiny,stars:r.stars,teraType:r.teraName,flawlessIVs:r.flawlessIVs,nature:r.nature||'?'}));
     const r=await(await fetch('/api/ai/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query||'a search',results:rows})})).json();
-    if(r.ok&&r.text){banner.innerHTML='<b>🧠 Oracle read:</b> '+r.text;banner.classList.add('on');}
+    if(r.ok&&r.text){banner.innerHTML='<b>🧠</b> '+r.text;banner.classList.add('on');}
     else banner.classList.remove('on');
   }catch(_){banner.classList.remove('on');}
 }
@@ -2522,7 +2522,6 @@ function setCount(id,val){
 const TK_STATIC=[
   ['◆','SAME ENGINE AS THE BOT','100% accurate seeds'],
   ['✦','SHINY ON DEMAND','search the whole seed space'],
-  ['🎙','ASK THE ORACLE','type it · say it · screenshot it'],
   ['🚀','ONE-CLICK HOSTING','straight onto Raid-SV'],
   ['📱','INSTALL THE APP','works on your phone'],
 ];
@@ -2602,7 +2601,7 @@ const RV_FALLBACK=[
   {name:"PaldeaPeach",role:"Community Member",stars:5,when:"May 2026",text:"I've used every seed tool out there. Nothing else shows <b>IV radars, rewards, and the Discord embed preview</b> before you commit. Premium doesn't even cover it."},
   {name:"Blueberry_Ben",role:"Raid Regular",stars:5,when:"June 2026",text:"Wishlisted a shiny Clefable and got a <b>browser notification the second the bot hosted one</b>. Joined, caught it, done. Feels illegal."},
   {name:"TeraQueenV",role:"Elite Raid Host",stars:5,when:"July 2026",text:"Batch-pasted 40 community seeds into the Decoder and it identified every single one, flagged the <b>flawless 6IVs</b>, and queued my picks in one click."},
-  {name:"KitakamiKid",role:"New Trainer",stars:5,when:"May 2026",text:"I'm new and the Oracle chat literally <b>coached me through countering</b> a 6★ dragon tera Charizard. Won on the first try with the party it built."},
+  {name:"KitakamiKid",role:"New Trainer",stars:5,when:"May 2026",text:"I'm new and the chat assistant literally <b>coached me through countering</b> a 6★ dragon tera Charizard. Won on the first try with the party it built."},
   {name:"NuzlockeNina",role:"Streamer",stars:5,when:"June 2026",text:"The OBS overlay + the live board = my whole stream setup. Chat watches the rotation and calls the next raid before I do."},
   {name:"HerbaMysticaHank",role:"Item Farmer",stars:4,when:"May 2026",text:"Filtering raids by <b>reward drops</b> (Herba Mystica gang rise up) changed my farming routine completely. Docked one star only because I want it for SwSh too."},
   {name:"IndyRaider317",role:"Day-One Member",stars:5,when:"April 2026",text:"Been here since the first bot. The fact that seeds from this site <b>always match what the bot hosts</b> — same engine, zero dupes-gone-wrong — is why this community wins."},
@@ -2708,7 +2707,7 @@ function paletteActions(){
     {i:'📖',t:'Go to GUIDE — Field Guide',k:'scene',run:()=>go('guide')},
     {i:'🎬',t:'Theater mode — full-screen broadcast',k:'scene',run:()=>go('theater')},
     {i:'🌐',t:'Open the live host globe',k:'tool',run:()=>{const f=$('globeFab');if(f)f.click();}},
-    {i:'💬',t:'Open the Oracle — chat assistant',k:'tool',run:()=>{const f=$('chatFab');if(f)f.click();}},
+    {i:'💬',t:'Open the chat assistant',k:'tool',run:()=>{const f=$('chatFab');if(f)f.click();}},
     {i:'🏅',t:'Open achievements',k:'tool',run:()=>{const f=$('achFab');if(f)f.click();}},
     {i:'▦',t:'Browse the raid boss deck',k:'tool',run:openDex},
     {i:'🎲',t:'Surprise me — roll a themed hunt',k:'action',run:()=>{go('hunt');setMode('search');const b=$('surprise');if(b)b.click();}},
