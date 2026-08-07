@@ -92,6 +92,8 @@
     for (const r of rots) {
       const n = r.now || {};
       bits.push(`<span><i class="dot">●</i> LIVE · ${esc(r.map).toUpperCase()} <span class="dim">—</span> ${n.shiny ? "✦ SHINY " : ""}${esc(n.species || "?").toUpperCase()} ${stars(n.stars)}</span>`);
+      const q = (r.queue || [])[0];
+      if (q) bits.push(`<span><i class="dot">⏭</i> QUEUE · ${esc(r.map).toUpperCase()} <span class="dim">— NEXT UP:</span> ${q.shiny ? "✦ " : ""}${esc(q.name).toUpperCase()} ${stars(q.stars)}</span>`);
     }
     bits.push(`<span><i class="dot">◆</i> SAME ENGINE AS THE BOT <span class="dim">— 100% ACCURATE SEEDS</span></span>`);
     bits.push(`<span><i class="dot">✦</i> 4,294,967,296 SEEDS INDEXED <span class="dim">— THE FULL 2³² SPACE</span></span>`);
@@ -157,7 +159,7 @@
           <div class="wl-txt"><span><b>${fmtInt(n.completed)}</b> RAIDS</span><span><b>${fmtInt(n.wins)}</b> WINS · ${winPct}%</span></div>
         </div>
         <div class="arena-queue">
-          <b class="q-label">NEXT UP</b>
+          <b class="q-label">NEXT UP · THE QUEUE</b>
           <div class="q-pills">${queue || '<span class="q-pill">rotation loading…</span>'}</div>
         </div>
         <div class="arena-cta"><a class="btn btn-ghost" href="${APP("live")}">⚔️ WATCH ${esc(r.map).toUpperCase()} LIVE</a></div>
