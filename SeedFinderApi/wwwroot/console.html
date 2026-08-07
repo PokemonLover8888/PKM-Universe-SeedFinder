@@ -1314,7 +1314,7 @@ nav.pill .authchip a,nav.pill .authchip button{border-radius:24px;}
       <div class="ptile"><div class="pv"><span style="color:var(--gold-lt)">✦</span> <span class="count" id="stat-shinies" data-to="0">—</span></div><div class="pl">Shinies Delivered</div></div>
       <div class="ptile"><div class="pv" id="stat-bots">—<span class="pu">/3</span></div><div class="pl"><span class="lv"></span>Bots Online</div></div>
       <div class="ptile"><div class="pv"><span class="count" id="stat-species" data-to="0">—</span></div><div class="pl">Raid Bosses Indexed</div></div>
-      <div class="ptile"><div class="pv" id="stat-rating">★ 5.0</div><div class="pl">Trainer Rating</div></div>
+      <div class="ptile"><div class="pv" id="stat-rating">★ NEW</div><div class="pl">Trainer Rating</div></div>
     </div>
     <div class="board" id="depBoard">
       <div class="board-top"><span class="t">◆ DEPARTURES</span>
@@ -1520,7 +1520,7 @@ nav.pill .authchip a,nav.pill .authchip button{border-radius:24px;}
       <h2 class="sc-title">TRAINERS <span class="g">TALK</span>.</h2>
     </div>
     <div class="rv-agg">
-      <div class="rv-score" id="rvScore">5.0</div>
+      <div class="rv-score" id="rvScore">—</div>
       <div>
         <div class="rv-stars-big" id="rvStarsBig">★★★★★</div>
         <div class="rv-agg-sub"><b id="rvCount">0</b> reviews from the PKM Universe community</div>
@@ -2984,27 +2984,23 @@ if(typeof renderRotations==='function'){
 }
 
 /* ── reviews wall ────────────────────────────────────────────── */
-const RV_FALLBACK=[
-  {name:"ShinyHuntKat",role:"Elite Raid Host",stars:5,when:"June 2026",text:"Asked for a <b>shiny 6IV Dragapult</b>, had the seed in 4 seconds and it was hosting two minutes later. Exactly what spawned. This thing is black magic."},
-  {name:"DracoMike",role:"Shiny Hunter",stars:5,when:"June 2026",text:"The screenshot search is unreal — I pasted a pic from a YouTube thumbnail and it identified the mon, set the filters, and found <b>12 matching seeds</b>."},
-  {name:"PaldeaPeach",role:"Community Member",stars:5,when:"May 2026",text:"I've used every seed tool out there. Nothing else shows <b>IV radars, rewards, and the Discord embed preview</b> before you commit. Premium doesn't even cover it."},
-  {name:"Blueberry_Ben",role:"Raid Regular",stars:5,when:"June 2026",text:"Wishlisted a shiny Clefable and got a <b>browser notification the second the bot hosted one</b>. Joined, caught it, done. Feels illegal."},
-  {name:"TeraQueenV",role:"Elite Raid Host",stars:5,when:"July 2026",text:"Batch-pasted 40 community seeds into the Decoder and it identified every single one, flagged the <b>flawless 6IVs</b>, and queued my picks in one click."},
-  {name:"KitakamiKid",role:"New Trainer",stars:5,when:"May 2026",text:"I'm new and the chat assistant literally <b>coached me through countering</b> a 6★ dragon tera Charizard. Won on the first try with the party it built."},
-  {name:"NuzlockeNina",role:"Streamer",stars:5,when:"June 2026",text:"The OBS overlay + the live board = my whole stream setup. Chat watches the rotation and calls the next raid before I do."},
-  {name:"HerbaMysticaHank",role:"Item Farmer",stars:4,when:"May 2026",text:"Filtering raids by <b>reward drops</b> (Herba Mystica gang rise up) changed my farming routine completely. Docked one star only because I want it for SwSh too."},
-  {name:"IndyRaider317",role:"Day-One Member",stars:5,when:"April 2026",text:"Been here since the first bot. The fact that seeds from this site <b>always match what the bot hosts</b> — same engine, zero dupes-gone-wrong — is why this community wins."},
-  {name:"GholdengoGoals",role:"Collector",stars:5,when:"July 2026",text:"Leaderboard, achievements, a world map of hosts?! It plays like a AAA game menu. My whole squad migrated to PKM Universe."},
-  {name:"VioletVal",role:"Community Member",stars:5,when:"June 2026",text:"Voice search while my hands were full of controller: '<b>shiny water tera Quagsire five star</b>'. It heard me, found it, hosted it. We live in the future."},
-  {name:"MossyMawile",role:"Raid Regular",stars:5,when:"July 2026",text:"The 3D viewer with the tera lighting is pure flex and I'm here for it. Also the seeds just… work. Every time. <b>★ Copy, !ra, catch.</b>"}
-];
+/* Real reviews come from /reviews.json only — never bake samples here.
+   Empty file → honest "Season One" empty state below. */
 function stars(n){return '★'.repeat(n)+(n<5?`<span class="off">${'★'.repeat(5-n)}</span>`:'');}
 function rvCard(r){
   const init=(r.name||'?').slice(0,1).toUpperCase();
   return `<div class="rv-card"><div class="rv-head"><div class="rv-ava">${init}</div><div class="rv-who"><b>${r.name}</b><span class="rv-role">${r.role||'Trainer'}</span></div></div><div class="rv-stars">${stars(r.stars||5)}</div><div class="rv-txt">${r.text}</div><div class="rv-date"><span class="rv-src">DISCORD</span> ${r.when||''}</div></div>`;
 }
 function renderReviews(list){
-  if(!Array.isArray(list)||!list.length)list=RV_FALLBACK;
+  if(!Array.isArray(list))list=[];
+  if(!list.length){
+    const sc=$('rvScore');if(sc)sc.textContent='—';
+    const sb=$('rvStarsBig');if(sb)sb.innerHTML=stars(0);
+    const ct=$('rvCount');if(ct)ct.textContent='0';
+    const rt=$('stat-rating');if(rt)rt.textContent='★ NEW';
+    const wall=$('rvWall');if(wall)wall.innerHTML='<div class="rv-card"><div class="rv-head"><div class="rv-ava">✦</div><div class="rv-who"><b>Season One — reviews open</b><span class="rv-role">Founding Trainer slots available</span></div></div><div class="rv-stars">'+stars(0)+'</div><div class="rv-txt">No reviews yet — the plaque is waiting for its first name. Caught something good? Drop a line in Discord and it goes up here.</div><div class="rv-date"><span class="rv-src">DISCORD</span> PKM Universe Reborn</div></div>';
+    return;
+  }
   const avg=list.reduce((a,r)=>a+(r.stars||5),0)/list.length;
   const sc=$('rvScore');if(sc)sc.textContent=(Math.round(avg*10)/10).toFixed(1);
   const sb=$('rvStarsBig');if(sb)sb.innerHTML=stars(Math.round(avg));
