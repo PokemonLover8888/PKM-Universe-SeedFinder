@@ -750,7 +750,8 @@
   }
 
   async function loadReviews() {
-    const res = await getJSON("/reviews.json");
+    // unique query defeats any stale service-worker cache of the old reviews file
+    const res = await getJSON("/reviews.json?ts=" + Date.now(), { cache: "no-store" });
     const reviews = res && res.data && Array.isArray(res.data.reviews) ? res.data.reviews : SNAP.reviews;
     renderReviews(reviews);
   }
