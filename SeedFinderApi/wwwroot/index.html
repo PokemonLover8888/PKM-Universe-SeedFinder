@@ -852,6 +852,173 @@ body.shiny-protocol .grain{opacity:.09;}
   .scene.act{animation:none;}
   #boot{display:none!important;}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   v5 SEED CONSOLE — collector-edition dual-screen device chrome
+   The page IS the hardware. Old shell selectors are superseded.
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  --frame1:#2a2418; --frame2:#171307; --frame3:#0c0a05;
+  --goldedge:rgba(243,217,121,.55); --carbon:#0b0b0e;
+  --scr-bg:#07070c; --keycap:#1a1710;
+}
+body{overflow-x:hidden;}
+.dv-wrap{position:relative;z-index:2;max-width:1320px;margin:0 auto;padding:26px 14px 40px;min-height:100vh;display:flex;flex-direction:column;justify-content:center;}
+.device{position:relative;border-radius:34px;padding:0;
+  background:linear-gradient(160deg,var(--frame1),var(--frame2) 40%,var(--frame3));
+  border:1px solid rgba(243,217,121,.35);
+  box-shadow:0 60px 140px rgba(0,0,0,.85),0 0 90px rgba(212,175,55,.10),
+    inset 0 2px 0 rgba(255,246,216,.22),inset 0 -3px 0 rgba(0,0,0,.6),
+    inset 2px 0 0 rgba(255,246,216,.06),inset -2px 0 0 rgba(0,0,0,.35);}
+.device::before{content:'';position:absolute;inset:0;border-radius:34px;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(115deg,transparent 0 3px,rgba(255,255,255,.012) 3px 4px);}
+.dv-screw{position:absolute;width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#4a3f22,#100d06 70%);box-shadow:inset 0 1px 2px rgba(0,0,0,.9),0 1px 0 rgba(255,246,216,.12);}
+.dv-screw::before{content:'';position:absolute;left:50%;top:50%;width:7px;height:1.6px;background:#000;transform:translate(-50%,-50%) rotate(38deg);}
+.dv-screw.s1{top:12px;left:14px;}.dv-screw.s2{top:12px;right:14px;}.dv-screw.s3{bottom:12px;left:14px;}.dv-screw.s4{bottom:12px;right:14px;}
+
+/* ── top bezel ─────────────────────────────────────────────── */
+.dv-top{display:flex;align-items:center;gap:14px;padding:16px 34px 12px;flex-wrap:wrap;}
+.dv-brand{display:flex;align-items:center;gap:11px;min-width:0;}
+.dv-brand .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dim));display:grid;place-items:center;color:#000;font-weight:800;font-size:17px;font-family:var(--fd);box-shadow:0 0 18px rgba(212,175,55,.4),inset 0 1px 0 rgba(255,255,255,.5);flex:0 0 38px;}
+.dv-brand .en{line-height:1.1;}
+.dv-brand .en b{display:block;font-family:var(--fd);font-size:13.5px;letter-spacing:3px;color:#f7ecd0;text-shadow:0 1px 0 rgba(0,0,0,.8);white-space:nowrap;}
+.dv-brand .en span{font-size:8.5px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:700;white-space:nowrap;}
+.dv-top .hud-live{margin-left:auto;background:rgba(5,5,9,.8);border:1px solid rgba(243,217,121,.22);border-radius:11px;padding:8px 13px;display:flex;align-items:center;gap:11px;max-width:42vw;min-width:0;box-shadow:inset 0 2px 6px rgba(0,0,0,.7);}
+.dv-top #hudClock{display:none;}
+@media(min-width:1240px){.dv-top #hudClock{display:block;}}
+.dv-top .authchip a,.dv-top .authchip button{padding:8px 13px;font-size:12px;}
+
+/* ── screens ───────────────────────────────────────────────── */
+.dv-screen{position:relative;margin:4px 26px;border-radius:16px;background:var(--scr-bg);
+  border:1px solid #000;box-shadow:inset 0 0 0 2px rgba(243,217,121,.14),inset 0 14px 40px rgba(0,0,0,.85),inset 0 -6px 22px rgba(0,0,0,.6),0 1px 0 rgba(255,246,216,.10);overflow:hidden;}
+.dv-screen::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:3;opacity:.5;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.016) 0 1px,transparent 1px 3px);}
+.dv-screen::after{content:'';position:absolute;top:-30%;left:-16%;width:34%;height:160%;transform:rotate(16deg);pointer-events:none;z-index:3;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.028),transparent);}
+.scr-top{height:clamp(430px,56vh,700px);}
+.scr-top .scr-in{position:relative;z-index:2;height:100%;overflow-y:auto;overflow-x:hidden;padding:22px 24px 30px;scrollbar-width:thin;scrollbar-color:var(--gold-dim) transparent;}
+.scr-top .scr-in::-webkit-scrollbar{width:9px;}
+.scr-top .scr-in::-webkit-scrollbar-thumb{background:linear-gradient(var(--gold-dim),#5a4a14);border-radius:6px;}
+.scr-top .scr-in::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
+.scr-deck{margin-top:4px;}
+.scr-deck .scr-in{position:relative;z-index:2;padding:16px 20px 18px;}
+
+/* scene shells inside the display */
+.scene{display:none;}
+.scene.act{display:block;animation:crtIn .34s ease;}
+@keyframes crtIn{0%{opacity:0;transform:scaleY(.94);filter:brightness(2.4) saturate(.4);}60%{filter:brightness(1.25);}100%{opacity:1;transform:none;filter:none;}}
+.sc-head{margin:0 0 20px;}
+.sc-title{font-size:clamp(24px,3.4vw,40px);}
+
+/* ── hinge: mode keys + LED marquee ────────────────────────── */
+.dv-hinge{display:flex;align-items:center;gap:16px;padding:10px 34px;flex-wrap:wrap;}
+.dv-grill{display:flex;gap:4px;flex:0 0 auto;}
+.dv-grill i{width:4px;height:22px;border-radius:3px;background:linear-gradient(180deg,#0a0803,#1c160a);box-shadow:inset 0 1px 2px rgba(0,0,0,.9),0 1px 0 rgba(255,246,216,.08);}
+.dv-keys{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
+.dv-keys button{position:relative;display:flex;align-items:center;gap:7px;padding:10px 15px 9px;cursor:pointer;
+  color:#b9a86a;font-family:var(--fu);font-size:10.5px;font-weight:700;letter-spacing:2.2px;
+  background:linear-gradient(180deg,#241f12,var(--keycap) 55%,#0e0c06);
+  border:1px solid rgba(0,0,0,.85);border-radius:9px;
+  box-shadow:0 3px 0 #060503,0 5px 8px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,246,216,.16);
+  transition:transform .08s,box-shadow .08s,color .15s;}
+.dv-keys button i{font-style:normal;font-size:14px;line-height:1;}
+.dv-keys button:hover{color:var(--gold-lt);}
+.dv-keys button:active{transform:translateY(2px);box-shadow:0 1px 0 #060503,0 2px 4px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,246,216,.12);}
+.dv-keys button.act{color:#000;background:linear-gradient(180deg,#fff3c4,var(--gold) 55%,#8a6a14);box-shadow:0 3px 0 #4a3a0e,0 6px 14px rgba(212,175,55,.35),inset 0 1px 0 rgba(255,255,255,.75);text-shadow:none;}
+.dv-keys button.act::after{content:'';position:absolute;left:20%;right:20%;bottom:-7px;height:2px;border-radius:2px;background:var(--gold-lt);box-shadow:0 0 8px var(--gold);}
+/* LED marquee strip (ticker rehomed) */
+.ticker{position:relative;flex:1;min-width:220px;height:30px;border-radius:8px;overflow:hidden;display:flex;align-items:center;
+  background:#050403;border:1px solid rgba(0,0,0,.9);box-shadow:inset 0 2px 8px rgba(0,0,0,.9),0 1px 0 rgba(255,246,216,.08);}
+.ticker::before,.ticker::after{content:'';position:absolute;top:0;bottom:0;width:34px;z-index:2;pointer-events:none;}
+.ticker::before{left:0;background:linear-gradient(90deg,#050403,transparent);}
+.ticker::after{right:0;background:linear-gradient(-90deg,#050403,transparent);}
+.tk-item{font-family:var(--fm);font-size:10px;letter-spacing:1.6px;color:#ffca3a;text-shadow:0 0 7px rgba(255,202,58,.7);padding:0 22px;}
+.tk-item .tk-dim{color:#8a6f2a;text-shadow:none;}
+.tk-gem{color:#ffca3a;font-size:8px;}
+
+/* ── control deck ──────────────────────────────────────────── */
+.deck-row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;}
+.scr-deck .aibar{flex:1;min-width:280px;margin:0;padding:13px 14px 12px;clip-path:none;border-radius:12px;background:linear-gradient(135deg,rgba(42,31,74,.38),rgba(8,8,13,.85));box-shadow:inset 0 2px 8px rgba(0,0,0,.6);}
+.scr-deck .aibar::before{top:4px;left:16px;font-size:8px;}
+.scr-deck .aibar-inputwrap{margin-top:10px;}
+.scr-deck .aibar-kbd{display:none;}
+.scr-deck .aibar button{margin-top:10px;}
+.deck-actions{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;justify-content:flex-end;}
+.scr-deck .actions{margin:0;gap:8px;align-items:center;}
+.scr-deck button.go{padding:16px 34px;font-size:15px;clip-path:none;border-radius:14px;
+  background:linear-gradient(180deg,#fff3c4,var(--gold) 52%,#8a6a14);
+  box-shadow:0 5px 0 #4a3a0e,0 9px 20px rgba(212,175,55,.4),inset 0 2px 0 rgba(255,255,255,.8);
+  transition:transform .08s,box-shadow .08s;}
+.scr-deck button.go:hover{filter:brightness(1.05);}
+.scr-deck button.go:active{transform:translateY(3px);box-shadow:0 2px 0 #4a3a0e,0 4px 10px rgba(212,175,55,.35),inset 0 2px 0 rgba(255,255,255,.7);}
+.scr-deck button.go::after{display:none;}
+.scr-deck button.surprise{clip-path:none;border-radius:11px;padding:11px 15px;font-size:12px;background:linear-gradient(180deg,#2c2350,#1a1530);box-shadow:0 3px 0 #0c0a18,inset 0 1px 0 rgba(214,184,255,.2);}
+.scr-deck button.surprise:active{transform:translateY(2px);box-shadow:0 1px 0 #0c0a18;}
+.scr-deck .status{width:100%;font-family:var(--fm);font-size:11.5px;background:#050403;border:1px solid rgba(0,0,0,.9);border-radius:8px;padding:9px 12px;color:#ffca3a;text-shadow:0 0 6px rgba(255,202,58,.5);box-shadow:inset 0 2px 8px rgba(0,0,0,.9);min-height:36px;}
+.scr-deck .status:empty::before{content:'READY — DIAL IN THE CONSOLE AND FIND SEEDS';color:#6d5a22;letter-spacing:1.4px;font-size:9.5px;}
+.scr-deck .status b{color:#ffe08a;}
+.scr-deck .rtoggle{font-size:11px;}
+
+/* ── bottom bezel ──────────────────────────────────────────── */
+.dv-bottom{display:flex;align-items:center;gap:14px;padding:12px 34px 18px;flex-wrap:wrap;color:#8d7c4a;font-size:10px;letter-spacing:.6px;}
+.dv-plate{font-family:var(--fm);font-size:9px;letter-spacing:2.4px;color:#a8925a;border:1px solid rgba(243,217,121,.25);border-radius:6px;padding:5px 12px;background:linear-gradient(180deg,rgba(36,31,16,.6),rgba(12,10,5,.8));box-shadow:inset 0 1px 0 rgba(255,246,216,.12);white-space:nowrap;}
+.dv-bottom .df-r{margin-left:auto;text-align:right;}
+.dv-bottom a{color:var(--gold);text-decoration:none;}
+.dv-bottom b{color:var(--gold-lt);}
+
+/* ── boot: power-on sequence ───────────────────────────────── */
+#boot{background:#020203;}
+.pwr-in{text-align:center;}
+.pwr-led{width:12px;height:12px;border-radius:50%;background:#3ee06a;box-shadow:0 0 16px #3ee06a;margin:0 auto 20px;animation:pwrblink .9s steps(2) infinite;}
+@keyframes pwrblink{50%{opacity:.25;box-shadow:none;}}
+.pwr-t{font-family:var(--fd);font-weight:800;letter-spacing:7px;font-size:17px;color:#f7ecd0;}
+.pwr-s{margin-top:8px;font-family:var(--fm);font-size:9.5px;letter-spacing:3.5px;color:var(--gold);text-transform:uppercase;}
+.pwr-bar{width:230px;height:3px;background:#141007;margin:20px auto 0;overflow:hidden;border-radius:3px;}
+.pwr-bar i{display:block;height:100%;width:45%;background:linear-gradient(90deg,transparent,#ffca3a,transparent);animation:bootbar .9s ease-in-out infinite;}
+
+/* ── inside-screen component recalibration ─────────────────── */
+.scr-top .hpanel{clip-path:none;border-radius:12px;}
+.scr-top .htag{border-radius:6px;}
+.scr-top .results{grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));}
+.scr-top .pulse-in{clip-path:none;border-radius:12px;}
+.scr-top .rotcol,.scr-top .live-card,.scr-top .how-card,.scr-top .mysec,.scr-top .gl-col,.scr-top .rv-card,.scr-top .bossdetail{clip-path:none;border-radius:12px;}
+.scr-top .modeseg{clip-path:none;border-radius:10px;overflow:hidden;}
+.scr-top .rv-wall{columns:2 300px;}
+.scr-top .th-stage{min-height:0;height:calc(clamp(430px,56vh,700px) - 44px);clip-path:none;border-radius:12px;margin:-22px -24px -30px;border:none;}
+#sc-theater .sc-head{display:none;}
+
+/* ── mobile: handheld held upright ─────────────────────────── */
+@media(max-width:1000px){
+  .dv-wrap{padding:8px 6px 20px;}
+  .device{border-radius:22px;}
+  .dv-screw{display:none;}
+  .dv-top{padding:12px 16px 8px;gap:8px;}
+  .dv-top .hud-live{max-width:none;flex:1;order:3;margin-left:0;}
+  .dv-top .hud-live .hl-txt{display:block;font-size:10.5px;}
+  .dv-screen{margin:4px 10px;}
+  .scr-top{height:58vh;}
+  .scr-top .scr-in{padding:14px 12px 22px;}
+  .dv-hinge{padding:8px 12px;gap:8px;}
+  .dv-grill{display:none;}
+  .dv-keys{order:2;width:100%;justify-content:space-between;gap:4px;}
+  .dv-keys button{flex:1;justify-content:center;padding:9px 2px 8px;font-size:8.5px;letter-spacing:1px;gap:3px;flex-direction:column;}
+  .dv-keys button i{font-size:15px;}
+  .ticker{display:flex;order:1;width:100%;flex:1 1 100%;}
+  .scr-deck .scr-in{padding:12px 12px 14px;}
+  .deck-row{flex-direction:column;}
+  .scr-deck button.go{width:100%;}
+  .dv-bottom{padding:10px 16px 14px;font-size:8.5px;gap:8px;}
+  .dv-plate{font-size:7.5px;letter-spacing:1.6px;}
+  .chat-fab{bottom:18px;right:12px;width:52px;height:52px;}
+  .globe-fab,.achfab{display:none;}
+  .sc-title{font-size:clamp(20px,6vw,30px);}
+}
+@media(min-width:1001px){
+  .chat-fab{bottom:26px;}
+  .globe-fab{bottom:98px;}
+  .achfab{bottom:170px;}
+}
+
 </style>
 </head>
 <body>
@@ -865,18 +1032,14 @@ body.shiny-protocol .grain{opacity:.09;}
 <div class="portalring r2" aria-hidden="true"></div>
 <div class="grain" aria-hidden="true"></div>
 
-<div id="boot" aria-hidden="true"><div class="boot-in">
-  <div class="boot-ring"><div class="boot-pu">PU</div></div>
-  <div class="boot-t">PKM UNIVERSE</div>
-  <div class="boot-s">Raid Command · Initializing</div>
-  <div class="boot-bar"><i></i></div>
-</div></div>
+<div id="boot" aria-hidden="true"><div class="pwr-in"><div class="pwr-led"></div><div class="pwr-t">PKM UNIVERSE</div><div class="pwr-s">Seed Console · Power On</div><div class="pwr-bar"><i></i></div></div></div>
 
-<!-- ═══ HUD TOP ═══ -->
-<header class="hud-top">
-  <div class="logo">PU</div>
-  <div class="wordmark"><b>PKM UNIVERSE</b><span>Raid Command</span></div>
-  <div class="hud-live" id="hudLive">
+<div class="dv-wrap"><div class="device">
+  <span class="dv-screw s1"></span><span class="dv-screw s2"></span><span class="dv-screw s3"></span><span class="dv-screw s4"></span>
+
+  <div class="dv-top">
+    <div class="dv-brand"><div class="logo">PU</div><div class="en"><b>PKM UNIVERSE</b><span>Seed Console</span></div></div>
+    <div class="hud-live" id="hudLive">
     <div class="hud-leds">
       <span class="led" data-map="paldea"><i></i>P</span>
       <span class="led" data-map="kitakami"><i></i>K</span>
@@ -885,26 +1048,14 @@ body.shiny-protocol .grain{opacity:.09;}
     <span class="hl-txt" id="hudLiveTxt">Scanning the network…</span>
     <span id="hudPulse" title="Live network activity"></span>
   </div>
-  <span id="hudClock"></span>
-  <button class="hud-ic" id="sfxBtn" title="Toggle interface sound">🔇</button>
-  <button class="hud-ic" id="cmdkBtn" title="Command palette (Ctrl+K)">⌘</button>
-  <div class="authchip" id="authchip"><a href="/api/auth/login">🔑 Login with Discord</a></div>
-</header>
+    <span id="hudClock"></span>
+    <button class="hud-ic" id="sfxBtn" title="Toggle interface sound">🔇</button>
+    <button class="hud-ic" id="cmdkBtn" title="Command palette (Ctrl+K)">⌘</button>
+    <div class="authchip" id="authchip"><a href="/api/auth/login">🔑 Login with Discord</a></div>
+  </div>
 
-<!-- ═══ SCENE RAIL ═══ -->
-<nav class="rail" id="rail">
-  <button data-go="hunt" class="act"><span class="ri">🔮</span><span class="rl">HUNT</span></button>
-  <button data-go="live"><span class="ri">⚔️</span><span class="rl">LIVE</span></button>
-  <button data-go="fame"><span class="ri">🏆</span><span class="rl">FAME</span></button>
-  <button data-go="rep"><span class="ri">⭐</span><span class="rl">REP</span></button>
-  <button data-go="guide"><span class="ri">📖</span><span class="rl">GUIDE</span></button>
-  <button data-go="theater"><span class="ri">🎬</span><span class="rl">AIR</span></button>
-  <button data-go="dex"><span class="ri">📕</span><span class="rl">DEX</span></button>
-  <div class="rail-foot"><a href="https://discord.gg/pkm-universe-reborn" target="_blank" rel="noopener" title="PKM Universe Reborn on Discord">💬</a><div class="rv">v3 · SEEDS</div></div>
-</nav>
+  <div class="dv-screen scr-top"><div class="scr-in">
 
-<!-- ═══ STAGE ═══ -->
-<main class="stage"><div class="stage-in">
 
   <!-- legacy widgets: engine still writes into them -->
   <div class="nowhosting" id="nowhosting">
@@ -930,18 +1081,7 @@ body.shiny-protocol .grain{opacity:.09;}
     </div>
 
     <div id="modeSearch">
-      <div class="aibar">
-        <div class="aibar-inputwrap">
-          <input id="aiq" placeholder="✨ “shiny 6IV dragon tera Dragapult, 6 stars”…" autocomplete="off"/>
-          <span class="aibar-kbd" aria-hidden="true"><span class="kbd">CTRL</span><span class="kbd">K</span></span>
-          <div class="ai-suggest" id="aiSuggest"></div>
-        </div>
-        <button class="ai-icon" id="aimic" title="🎤 Voice search">🎤</button>
-        <button class="ai-icon" id="aiimg" title="📷 Identify from screenshot (drag/paste/click)">📷</button>
-        <button class="ai-icon" id="aichat" title="💬 Open chat assistant">💬</button>
-        <button id="aigo">Ask</button>
-        <input type="file" id="aifile" accept="image/*" style="display:none"/>
-      </div>
+      
       <div class="ai-vision-preview" id="aiVisionPreview"></div>
       <div class="ai-summary" id="aiSummary"></div>
 
@@ -978,7 +1118,7 @@ body.shiny-protocol .grain{opacity:.09;}
             <button class="surprise" id="savePreset" type="button" style="padding:8px 14px;font-size:12px">⭐ Save preset</button>
           </div>
         </details>
-        <div class="actions"><button class="go" id="go">⚡ Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><button class="surprise" id="omniGo" title="Sweep Paldea, Kitakami and Blueberry in one search">🌍 All Maps</button><label class="rtoggle" title="Search automatically as you change filters"><input type="checkbox" id="realtime"/> ⚡ Live</label><span class="status" id="status"></span></div>
+        
       </div>
     </div>
 
@@ -1198,25 +1338,57 @@ body.shiny-protocol .grain{opacity:.09;}
     <div class="th-stage" id="thStage"><div class="th-quiet"><b>STANDING BY</b>Tuning into the raid network…</div></div>
   </section>
 
-  <div class="stage-foot">
-    <div><b>PKM Universe Reborn</b> · Indianapolis, Indiana · © <span id="bfYear">2026</span></div>
-    <div>Not affiliated with Nintendo, Creatures Inc., GAME FREAK, or The Pokémon Company.</div>
+  
+  </div></div>
+
+  <div class="dv-hinge">
+    <div class="dv-grill"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="dv-keys">
+      <button data-go="hunt" class="act"><i>🔮</i>HUNT</button>
+      <button data-go="live"><i>⚔️</i>LIVE</button>
+      <button data-go="fame"><i>🏆</i>FAME</button>
+      <button data-go="rep"><i>⭐</i>REP</button>
+      <button data-go="guide"><i>📖</i>GUIDE</button>
+      <button data-go="theater"><i>🎬</i>AIR</button>
+      <button data-go="dex"><i>📕</i>DEX</button>
+    </div>
+    <div class="ticker" id="ticker" aria-hidden="true"><div class="tk-track" id="tkTrack"></div></div>
+    <div class="dv-grill"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   </div>
-</div></main>
+
+  <div class="dv-screen scr-deck"><div class="scr-in">
+    <div class="deck-row">
+      <div class="aibar">
+        <div class="aibar-inputwrap">
+          <input id="aiq" placeholder="✨ “shiny 6IV dragon tera Dragapult, 6 stars”…" autocomplete="off"/>
+          <span class="aibar-kbd" aria-hidden="true"><span class="kbd">CTRL</span><span class="kbd">K</span></span>
+          <div class="ai-suggest" id="aiSuggest"></div>
+        </div>
+        <button class="ai-icon" id="aimic" title="🎤 Voice search">🎤</button>
+        <button class="ai-icon" id="aiimg" title="📷 Identify from screenshot (drag/paste/click)">📷</button>
+        <button class="ai-icon" id="aichat" title="💬 Open chat assistant">💬</button>
+        <button id="aigo">Ask</button>
+        <input type="file" id="aifile" accept="image/*" style="display:none"/>
+      </div>
+      <div class="deck-actions">
+        <div class="actions"><button class="go" id="go">⚡ Find Seeds</button><button class="surprise" id="surprise">🎲 Surprise me</button><button class="surprise" id="omniGo" title="Sweep Paldea, Kitakami and Blueberry in one search">🌍 All Maps</button><label class="rtoggle" title="Search automatically as you change filters"><input type="checkbox" id="realtime"/> ⚡ Live</label><span class="status" id="status"></span></div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="dv-bottom">
+    <span class="dv-plate">PKM UNIVERSE · SEED CONSOLE · № IND-2026 · EST. INDIANAPOLIS</span>
+    <span><b>PKM Universe Reborn</b> · © <span id="bfYear">2026</span> · <a href="https://discord.gg/pkm-universe-reborn" target="_blank" rel="noopener">Discord</a></span>
+    <span class="df-r">Not affiliated with Nintendo, Creatures Inc., GAME FREAK, or The Pokémon Company.</span>
+  </div>
+</div></div>
+
 
 <!-- ═══ HUD BOTTOM TICKER ═══ -->
-<div class="ticker" id="ticker" aria-hidden="true"><div class="tk-track" id="tkTrack"></div></div>
+
 
 <!-- ═══ MOBILE DOCK ═══ -->
-<nav class="dock" id="dock">
-  <div class="dock-in">
-    <button data-go="hunt" class="act"><span class="di">🔮</span>HUNT</button>
-    <button data-go="live"><span class="di">⚔️</span>LIVE</button>
-    <button data-go="fame"><span class="di">🏆</span>FAME</button>
-    <button data-go="rep"><span class="di">⭐</span>REP</button>
-    <button data-go="guide"><span class="di">📖</span>GUIDE</button>
-  </div>
-</nav>
+
 
 <!-- ═══ BANNERS + FABS + MODALS (engine-owned ids) ═══ -->
 <div class="permabanner" id="permabanner"></div>
@@ -2432,9 +2604,9 @@ try{$('bfYear').textContent=new Date().getFullYear();}catch(_){}
 (function(){
   const b=$('boot');if(!b)return;
   const kill=()=>{b.classList.add('off');setTimeout(()=>b.remove(),500);};
-  let seen=false;try{seen=sessionStorage.getItem('pku_boot_v2')==='1';}catch(_){}
+  let seen=false;try{seen=sessionStorage.getItem('pku_boot_v5')==='1';}catch(_){}
   if(seen||reduceMotion){b.remove();return;}
-  try{sessionStorage.setItem('pku_boot_v2','1');}catch(_){}
+  try{sessionStorage.setItem('pku_boot_v5','1');}catch(_){}
   b.addEventListener('click',kill);
   setTimeout(kill,1350);
 })();
